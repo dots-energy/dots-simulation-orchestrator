@@ -1,0 +1,6 @@
+kubernetes==19.*
+overrides==6.1.0
+paho-mqtt==1.6.1
+protobuf==3.19
+python-dotenv==0.20.0
+typing-utils==0.1.0

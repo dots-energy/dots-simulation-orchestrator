@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+message EnvironmentVariable {
+  string name = 1;
+  string value = 2;
+}
+
+message ModelConfiguration {
+  string modelID = 1;
+  string containerURL = 2; // Including hostname, port & container name
+  repeated EnvironmentVariable environmentVariables = 3; // Contains at least SIMULATION_ID, MODEL_ID (node id), MQTT_HOST & MQTT_PORT
+}
+
+message DeployModels {
+  string essimID = 1;
+  repeated ModelConfiguration modelConfigurations = 2;
+}
+
+message ReadyForProcessing {
+}
+
+message ModelsReady {
+}
+
+message ModelParameters {
+    string parameters_dict = 1;
+    string receiving_services = 2;
+}
+
+message Parametrized {
+}
+
+message NewStep {
+    string new_step_dict = 1;
+}
+
+message CalculationsDone {
+}
+
+message SimulationDone {
+}
+
+enum UnhealthyModelStatus {
+  NOPROGRESS = 0;
+}
+
+message UnhealthyModel {
+  UnhealthyModelStatus status = 1;
+}
+
+enum TerminationStatus {
+  SUCCESSFULL = 0;
+  FAILED = 1;
+}
+
+message ModelHasTerminated {
+  TerminationStatus status = 1;
+  int32 exitCode = 2;
+}
+
+message AllModelsHaveTerminated {
+}
