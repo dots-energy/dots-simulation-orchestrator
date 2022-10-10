@@ -12,7 +12,7 @@ message ModelConfiguration {
 }
 
 message DeployModels {
-  string essimID = 1;
+  string SOID = 1;
   repeated ModelConfiguration modelConfigurations = 2;
 }
 
@@ -23,18 +23,21 @@ message ModelsReady {
 }
 
 message ModelParameters {
-    string parameters_dict = 1;
-    string receiving_services = 2;
+  string parameters_dict = 1;
 }
 
 message Parametrized {
 }
 
 message NewStep {
-    string new_step_dict = 1;
+  string parameters_dict = 1;
 }
 
 message CalculationsDone {
+}
+
+message ErrorOccurred {
+  string error_message = 1;
 }
 
 message SimulationDone {

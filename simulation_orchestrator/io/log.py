@@ -1,8 +1,5 @@
 import os
 import logging
-from dotenv import load_dotenv
-
-load_dotenv()  # take environment variables from .env
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 print('Will use log level:', LOG_LEVEL)

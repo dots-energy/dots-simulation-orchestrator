@@ -1,14 +1,45 @@
 #!/usr/bin/env python
 import os
-import time
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env
+
 import threading
 import typing
 
 from simulation_orchestrator.io.mqtt_broker import MqttBroker
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory
-import simulation_orchestrator.requests as requests
-
+import simulation_orchestrator.actions as actions
 from simulation_orchestrator.io.log import LOGGER
+
+import uvicorn
+from pathlib import Path
+from fastapi import FastAPI, APIRouter, Request, Depends
+from fastapi.templating import Jinja2Templates
+
+from rest.api.api_v1.api import api_router
+from rest.core.config import settings
+
+BASE_PATH = Path(__file__).resolve().parent
+TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
+
+root_router = APIRouter()
+app = FastAPI(title="DOTS Simulation Orchestrator API")
+
+
+@root_router.get("/", status_code=200)
+def root(request: Request) -> dict:
+    """
+    Root GET
+    """
+    return TEMPLATES.TemplateResponse(
+        "index.html",
+        {"request": request},
+    )
+
+
+app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(root_router)
 
 
 class EnvConfig:
@@ -39,7 +70,7 @@ class EnvConfig:
         return result
 
 
-def main():
+def start():
     config = EnvConfig.load(EnvConfig.CONFIG_KEYS)
 
     simulation_inventory = SimulationInventory()
@@ -53,20 +84,15 @@ def main():
         simulation_inventory=simulation_inventory
     )
 
-    requests.simulation_inventory = simulation_inventory
-    requests.mqtt_broker = mqtt_broker
+    actions.simulation_inventory = simulation_inventory
+    actions.mqtt_broker = mqtt_broker
 
     t = threading.Thread(target=mqtt_broker.start, name='mqtt broker')
     t.daemon = True
     t.start()
 
-    time.sleep(1)
-
-    LOGGER.debug("POST Request for testing")
-    requests.post_request_esdl_file()
-
-    t.join()
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
 
 
 if __name__ == '__main__':
-    main()
+    start()

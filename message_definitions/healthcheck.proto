@@ -5,13 +5,13 @@ enum HealthStatus {
     UNHEALTHY = 1;
 }
 
-message PingHealthESSIMToMSO {
+message PingHealthSOToMSO {
     HealthStatus healthy = 1;
-    repeated string reasons = 2; // Why is ESSIM unhealthy?
+    repeated string reasons = 2; // Why is SO unhealthy?
     repeated string activeSimulations = 3;
 }
 
-message PongHealthMSOToEssim {
+message PongHealthMSOToSO {
     HealthStatus healthy = 1;
     repeated string reasons = 2; // Why is MSO unhealthy?
 }

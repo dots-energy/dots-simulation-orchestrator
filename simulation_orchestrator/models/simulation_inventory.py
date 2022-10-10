@@ -1,34 +1,58 @@
 import typing
+from threading import Lock
+from datetime import datetime, timedelta
 
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.models.model_inventory import ModelInventory, Model
-from simulation_orchestrator.types import SimulationId, EssimId, ModelId, ProgressState, progress_state_description
+from simulation_orchestrator.types import SimulationId, SO_ID, ModelId, ProgressState, progress_state_description
 
 
 class Simulation:
-    essim_id: EssimId
+    so_id: SO_ID
     simulation_id: SimulationId
-    sim_time_start: int
-    sim_time_increment: int
-    sim_nr_of_time_steps: int
+    simulation_name: str
+
+    start_date: datetime
+    time_step_seconds: int
+    nr_of_time_steps: int
+
+    calculation_services: typing.List[dict]
+    esdl_base64string: str
+
+    log_level: str
 
     current_time_step: int
     model_inventory: ModelInventory
+    error_message: str
 
-    def __init__(self,
-                 essim_id: EssimId,
-                 simulation_id: SimulationId,
-                 sim_time_start: int,
-                 sim_time_increment: int,
-                 sim_nr_of_steps):
-        self.essim_id = essim_id
-        self.simulation_id = simulation_id
-        self.sim_time_start = sim_time_start
-        self.sim_time_increment = sim_time_increment
-        self.sim_nr_of_time_steps = sim_nr_of_steps
+    lock: Lock
+
+    def __init__(
+            self,
+            so_id: SO_ID,
+            simulation_name: str,
+            start_date: datetime,
+            time_step_seconds: int,
+            sim_nr_of_steps: int,
+            calculation_services: typing.List[dict],
+            esdl_base64string: str,
+            log_level: str,
+    ):
+        self.so_id = so_id
+        self.simulation_name = simulation_name
+        self.start_date = start_date
+        self.time_step_seconds = time_step_seconds
+        self.nr_of_time_steps = sim_nr_of_steps
+
+        self.calculation_services = calculation_services
+        self.esdl_base64string = esdl_base64string
+
+        self.log_level = log_level
 
         self.current_time_step = 0
         self.model_inventory = ModelInventory()
+        self.error_message = ""
+        self.lock = Lock()
 
 
 class SimulationInventory:
@@ -37,8 +61,15 @@ class SimulationInventory:
     def __init__(self):
         self.activeSimulations = {}
 
-    def add_simulation(self, new_simulation: Simulation):
+    def add_simulation(self, new_simulation: Simulation) -> SimulationId:
+        id_nr = 0
+        for sim_id in self.activeSimulations:
+            if int(sim_id.replace('sim-', '')) > id_nr:
+                id_nr = int(sim_id.replace('sim-', ''))
+        new_simulation.simulation_id = 'sim-' + str(id_nr)
+
         self.activeSimulations.update({new_simulation.simulation_id: new_simulation})
+        return new_simulation.simulation_id
 
     def remove_simulation(self, simulation_id: SimulationId):
         LOGGER.info(f'Removing simulation {simulation_id} from inventory')
@@ -46,6 +77,12 @@ class SimulationInventory:
 
         if not popped:
             LOGGER.warning(f'Simulation {simulation_id} was unknown. This should not happen.')
+
+    def get_simulation_ids(self) -> typing.List[SimulationId]:
+        return list(self.activeSimulations.keys())
+
+    def get_simulation(self, simulation_id: SimulationId) -> Simulation | None:
+        return self.activeSimulations.get(simulation_id)
 
     def add_models_to_simulation(self, simulation_id: SimulationId, new_models: typing.List[Model]):
         self.activeSimulations.get(simulation_id).model_inventory.add_models_to_simulation(simulation_id,
@@ -97,22 +134,37 @@ class SimulationInventory:
 
         return min_model_state
 
-    def set_status_for_all_models(self, simulation_id: SimulationId, new_state: ProgressState):
+    def set_state_for_all_models(self, simulation_id: SimulationId, new_state: ProgressState):
         for model in self.get_all_models(simulation_id):
             model.current_state = new_state
 
-    def increment_time_step_and_get_timestamp(self, simulation_id: SimulationId) -> int:
+    def increment_time_step_and_get_time_start_end_date_dict(self, simulation_id: SimulationId) -> dict:
         simulation = self.activeSimulations.get(simulation_id)
         simulation.current_time_step += 1
         LOGGER.info(
-            f'Starting calculation step {simulation.current_time_step} (of {simulation.sim_nr_of_time_steps})')
-        return simulation.sim_time_start + simulation.sim_time_increment * simulation.current_time_step
+            f'Starting calculation step {simulation.current_time_step} (of {simulation.nr_of_time_steps})')
+        return {
+            "start_time_stamp": str(
+                simulation.start_date + timedelta(0, (simulation.current_time_step + 1) * simulation.time_step_seconds)
+            ), "end_time_stamp": str(
+                simulation.start_date + timedelta(0, (simulation.current_time_step + 2) * simulation.time_step_seconds)
+            )
+        }
 
     def on_last_time_step(self, simulation_id: SimulationId) -> bool:
         simulation = self.activeSimulations.get(simulation_id)
-        return simulation.current_time_step == simulation.sim_nr_of_time_steps
+        return simulation.current_time_step == simulation.nr_of_time_steps
 
     def get_status_description(self, simulation_id: SimulationId) -> str:
-        if self.get_simulation_state(simulation_id) == ProgressState.STEP_STARTED:
+        state = self.get_simulation_state(simulation_id)
+        if state == ProgressState.STEP_STARTED:
             simulation = self.activeSimulations.get(simulation_id)
-            return f"Calculating time step {simulation.current_time_step} (of {simulation.sim_nr_of_time_steps})"
+            return f"Calculating time step {simulation.current_time_step} (of {simulation.nr_of_time_steps})"
+        else:
+            return str(state)
+
+    def lock_simulation(self, simulation_id: SimulationId):
+        self.activeSimulations.get(simulation_id).lock.acquire()
+
+    def release_simulation(self, simulation_id: SimulationId):
+        self.activeSimulations.get(simulation_id).lock.release()
