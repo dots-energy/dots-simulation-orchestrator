@@ -1,7 +1,7 @@
 import enum
 from uuid import UUID
 
-SO_ID = str
+SimulatorId = str
 SimulationId = str
 ModelId = UUID
 

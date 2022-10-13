@@ -37,7 +37,7 @@ def list_simulations() -> SimulationList:
 def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus:
     parse_esdl.get_energy_system(simulation_post.esdl_base64string)
 
-    so_id = 'SO-v-0-0-1'
+    simulator_id = 'SO-v-0-0-1'
 
     calculation_services = [
         {
@@ -49,14 +49,15 @@ def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus
     ]
 
     simulation_id = actions.start_new_simulation(Simulation(
-        so_id=so_id,
+        simulator_id=simulator_id,
         simulation_name=simulation_post.name,
         start_date=simulation_post.start_date,
         time_step_seconds=simulation_post.time_step_seconds,
         sim_nr_of_steps=simulation_post.nr_of_time_steps,
+        keep_logs_hours=simulation_post.keep_logs_hours,
+        log_level=simulation_post.log_level,
         calculation_services=calculation_services,
-        esdl_base64string=simulation_post.esdl_base64string,
-        log_level=simulation_post.log_level
+        esdl_base64string=simulation_post.esdl_base64string
     ))
 
     simulation_status = SimulationStatus.from_simulation_and_status(*actions.get_simulation_and_status(simulation_id))

@@ -4,11 +4,11 @@ from datetime import datetime, timedelta
 
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.models.model_inventory import ModelInventory, Model
-from simulation_orchestrator.types import SimulationId, SO_ID, ModelId, ProgressState, progress_state_description
+from simulation_orchestrator.types import SimulationId, SimulatorId, ModelId, ProgressState, progress_state_description
 
 
 class Simulation:
-    so_id: SO_ID
+    simulator_id: SimulatorId
     simulation_id: SimulationId
     simulation_name: str
 
@@ -16,10 +16,11 @@ class Simulation:
     time_step_seconds: int
     nr_of_time_steps: int
 
+    keep_logs_hours: float
+    log_level: str
+
     calculation_services: typing.List[dict]
     esdl_base64string: str
-
-    log_level: str
 
     current_time_step: int
     model_inventory: ModelInventory
@@ -29,25 +30,27 @@ class Simulation:
 
     def __init__(
             self,
-            so_id: SO_ID,
+            simulator_id: SimulatorId,
             simulation_name: str,
             start_date: datetime,
             time_step_seconds: int,
             sim_nr_of_steps: int,
+            keep_logs_hours: float,
+            log_level: str,
             calculation_services: typing.List[dict],
             esdl_base64string: str,
-            log_level: str,
     ):
-        self.so_id = so_id
+        self.simulator_id = simulator_id
         self.simulation_name = simulation_name
         self.start_date = start_date
         self.time_step_seconds = time_step_seconds
         self.nr_of_time_steps = sim_nr_of_steps
 
+        self.keep_logs_hours = keep_logs_hours
+        self.log_level = log_level
+
         self.calculation_services = calculation_services
         self.esdl_base64string = esdl_base64string
-
-        self.log_level = log_level
 
         self.current_time_step = 0
         self.model_inventory = ModelInventory()
@@ -58,15 +61,14 @@ class Simulation:
 class SimulationInventory:
     activeSimulations: typing.Dict[SimulationId, Simulation]
 
+    id_nr: int = 0
+
     def __init__(self):
         self.activeSimulations = {}
 
     def add_simulation(self, new_simulation: Simulation) -> SimulationId:
-        id_nr = 0
-        for sim_id in self.activeSimulations:
-            if int(sim_id.replace('sim-', '')) > id_nr:
-                id_nr = int(sim_id.replace('sim-', ''))
-        new_simulation.simulation_id = 'sim-' + str(id_nr)
+        self.id_nr += 1
+        new_simulation.simulation_id = 'sim-' + str(self.id_nr)
 
         self.activeSimulations.update({new_simulation.simulation_id: new_simulation})
         return new_simulation.simulation_id

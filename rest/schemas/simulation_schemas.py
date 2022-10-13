@@ -16,9 +16,10 @@ class SimulationPost(BaseModel):
     start_date: datetime = '2023-01-25 00:00:00'
     time_step_seconds: int = '3600'
     nr_of_time_steps: int = '24'
+    keep_logs_hours: float = '24.0'
+    log_level: str = 'info'
     calculation_services: list[CalculationService]
     esdl_base64string: str = '<esdl_file_base64encoded_string>'
-    log_level: str = 'info'
 
 
 class SimulationStatus(SimulationPost):

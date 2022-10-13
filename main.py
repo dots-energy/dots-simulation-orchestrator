@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 from dotenv import load_dotenv
+from starlette.templating import _TemplateResponse
 
 load_dotenv()  # take environment variables from .env
 
@@ -14,21 +15,21 @@ from simulation_orchestrator.io.log import LOGGER
 
 import uvicorn
 from pathlib import Path
-from fastapi import FastAPI, APIRouter, Request, Depends
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
 from rest.api.api_v1.api import api_router
 from rest.core.config import settings
 
 BASE_PATH = Path(__file__).resolve().parent
-TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
+TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "rest/templates"))
 
 root_router = APIRouter()
 app = FastAPI(title="DOTS Simulation Orchestrator API")
 
 
 @root_router.get("/", status_code=200)
-def root(request: Request) -> dict:
+def root(request: Request) -> _TemplateResponse:
     """
     Root GET
     """

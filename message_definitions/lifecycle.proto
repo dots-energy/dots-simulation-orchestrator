@@ -12,8 +12,9 @@ message ModelConfiguration {
 }
 
 message DeployModels {
-  string SOID = 1;
+  string simulatorId = 1;
   repeated ModelConfiguration modelConfigurations = 2;
+  double keepLogsHours = 3;
 }
 
 message ReadyForProcessing {

@@ -8,7 +8,7 @@ from paho.mqtt.client import Client
 import messages as messages
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory
-from simulation_orchestrator.types import SimulationId, SO_ID, ProgressState
+from simulation_orchestrator.types import SimulationId, SimulatorId, ProgressState
 
 MODEL_PARAMETERS = 'model_parameters'
 NEW_STEP = 'new_step'
@@ -106,21 +106,22 @@ class MqttBroker:
 
     def _subscribe_lifecycle_topics(self):
         topics = [
-            f'/lifecycle/mso/so/#',
-            f'/lifecycle/model/so/#'
+            f'/lifecycle/mso/dots-so/#',
+            f'/lifecycle/model/dots-so/#'
         ]
         for topic in topics:
             self.mqtt_client.subscribe(topic, self.qos)
             self.subscribed_topics.append(topic)
 
-    def send_deploy_models(self, so_id: SO_ID, simulation_id: SimulationId, log_level: typing.Union[int, str]):
+    def send_deploy_models(self, simulator_id: SimulatorId, simulation_id: SimulationId, keep_logs_hours: float,
+                           log_level: typing.Union[int, str]):
         model_configs = []
         for model in self.simulation_inventory.get_all_models(simulation_id):
             env_vars = [
                 messages.EnvironmentVariable(name='MQTT_HOST', value='host.docker.internal'),
                 messages.EnvironmentVariable(name='MQTT_PORT', value=str(self.port)),
                 messages.EnvironmentVariable(name='MQTT_QOS', value=str(self.qos)),
-                messages.EnvironmentVariable(name='SO_ID', value=so_id),
+                messages.EnvironmentVariable(name='SIMULATOR_ID', value=simulator_id),
                 messages.EnvironmentVariable(name='SIMULATION_ID', value=simulation_id),
                 messages.EnvironmentVariable(name='MODEL_ID', value=str(model.model_id)),
                 messages.EnvironmentVariable(name='MODEL_NAME', value=model.model_name),
@@ -133,9 +134,13 @@ class MqttBroker:
                 containerURL=model.service_image_url,
                 environmentVariables=env_vars)
             )
-            self.mqtt_client.subscribe(f"/log/model/so/{simulation_id}/{model.model_id}")
-        message = messages.DeployModels(SOID=so_id, modelConfigurations=model_configs)
-        topic = f'/lifecycle/so/mso/{simulation_id}/DeployModels'
+            self.mqtt_client.subscribe(f"/log/model/dots-so/{simulation_id}/{model.model_id}")
+        message = messages.DeployModels(
+            simulatorId=simulator_id,
+            modelConfigurations=model_configs,
+            keepLogsHours=keep_logs_hours,
+        )
+        topic = f'/lifecycle/dots-so/mso/{simulation_id}/DeployModels'
         self.mqtt_client.publish(topic, message.SerializeToString())
         LOGGER.info(f" [sent] {topic}")
 
@@ -149,10 +154,10 @@ class MqttBroker:
                 })
             )
             self.mqtt_client.publish(
-                topic=f"/lifecycle/so/model/{model.model_id}/ModelParameters",
+                topic=f"/lifecycle/dots-so/model/{model.model_id}/ModelParameters",
                 payload=model_parameters_message.SerializeToString()
             )
-        LOGGER.info(f" [sent] lifecycle/so/model/+/ModelParameters")
+        LOGGER.info(f" [sent] lifecycle/dots-so/model/+/ModelParameters")
 
     def _send_new_step(self, simulation_id: SimulationId):
         self.simulation_inventory.set_state_for_all_models(simulation_id, ProgressState.STEP_STARTED)
@@ -165,15 +170,15 @@ class MqttBroker:
         )
         for model in self.simulation_inventory.get_all_models(simulation_id):
             self.mqtt_client.publish(
-                topic=f"/lifecycle/so/model/{model.model_id}/NewStep",
+                topic=f"/lifecycle/dots-so/model/{model.model_id}/NewStep",
                 payload=new_step_message.SerializeToString()
             )
-        LOGGER.debug(f" [sent] lifecycle/so/model/+/NewStep")
+        LOGGER.debug(f" [sent] lifecycle/dots-so/model/+/NewStep")
 
     def _send_simulation_done(self, simulation_id: SimulationId):
         for model in self.simulation_inventory.get_all_models(simulation_id):
             self.mqtt_client.publish(
-                topic=f"/lifecycle/so/model/{model.model_id}/SimulationDone",
+                topic=f"/lifecycle/dots-so/model/{model.model_id}/SimulationDone",
                 payload=messages.SimulationDone().SerializeToString()
             )
-        LOGGER.info(f" [sent] lifecycle/so/model/+/SimulationDone")
+        LOGGER.info(f" [sent] lifecycle/dots-so/model/+/SimulationDone")

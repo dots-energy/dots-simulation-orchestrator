@@ -20,7 +20,8 @@ def start_new_simulation(new_simulation: Simulation) -> SimulationId:
 
     simulation_id = simulation_inventory.add_simulation(new_simulation)
     simulation_inventory.add_models_to_simulation(new_simulation.simulation_id, model_list)
-    mqtt_broker.send_deploy_models(new_simulation.so_id, new_simulation.simulation_id, new_simulation.log_level)
+    mqtt_broker.send_deploy_models(new_simulation.simulator_id, new_simulation.simulation_id,
+                                   new_simulation.keep_logs_hours, new_simulation.log_level)
 
     return simulation_id
 
