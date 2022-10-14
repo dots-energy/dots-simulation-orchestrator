@@ -117,13 +117,16 @@ class MqttBroker:
                            log_level: typing.Union[int, str]):
         model_configs = []
         for model in self.simulation_inventory.get_all_models(simulation_id):
+            if len(f'{simulator_id.lower()}-{simulation_id.lower()}-{model.model_id}') > 62:
+                raise IOError(f"Choose shorter ESDL asset name '{model.model_name}' (~30 chars max).")
             env_vars = [
                 messages.EnvironmentVariable(name='MQTT_HOST', value='host.docker.internal'),
                 messages.EnvironmentVariable(name='MQTT_PORT', value=str(self.port)),
                 messages.EnvironmentVariable(name='MQTT_QOS', value=str(self.qos)),
                 messages.EnvironmentVariable(name='SIMULATOR_ID', value=simulator_id),
                 messages.EnvironmentVariable(name='SIMULATION_ID', value=simulation_id),
-                messages.EnvironmentVariable(name='MODEL_ID', value=str(model.model_id)),
+                messages.EnvironmentVariable(name='ESDL_UUID', value=str(model.esdl_uuid)),
+                messages.EnvironmentVariable(name='MODEL_ID', value=model.model_id),
                 messages.EnvironmentVariable(name='MODEL_NAME', value=model.model_name),
                 messages.EnvironmentVariable(name='MQTT_USERNAME', value=self.username),
                 messages.EnvironmentVariable(name='MQTT_PASSWORD', value=self.password),

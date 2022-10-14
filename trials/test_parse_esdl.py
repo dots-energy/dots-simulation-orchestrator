@@ -62,6 +62,7 @@ calc_service_image_urls: Dict[Type[esdl.EnergyAsset], str] = {
 models_input = []
 # Iterate over all contents of an EnergySystem
 for obj in energy_system.eAllContents():
+    print(type(obj).__name__)
     # Filter out EnergyAssets (which have ports)
     if isinstance(obj, tuple(calc_service_image_urls)):
         receiving_services = {}

@@ -35,9 +35,10 @@ def list_simulations() -> SimulationList:
 
 @router.post("/", status_code=201, response_model=SimulationStatus)
 def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus:
+    # check if esdl is readable
     parse_esdl.get_energy_system(simulation_post.esdl_base64string)
 
-    simulator_id = 'SO-v-0-0-1'
+    simulator_id = 'SO'
 
     calculation_services = [
         {

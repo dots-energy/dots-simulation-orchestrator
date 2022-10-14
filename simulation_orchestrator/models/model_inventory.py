@@ -1,4 +1,5 @@
 import typing
+import uuid
 
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.types import SimulationId, ModelId, ProgressState
@@ -7,6 +8,7 @@ from simulation_orchestrator.types import SimulationId, ModelId, ProgressState
 class Model:
     model_id: ModelId
     model_name: str
+    esdl_uuid: uuid
     calc_service_name: str
     service_image_url: str
     current_state: ProgressState
@@ -14,11 +16,13 @@ class Model:
     def __init__(self,
                  model_id: ModelId,
                  model_name: str,
+                 esdl_uuid: uuid,
                  calc_service_name: str,
                  service_image_url: str,
                  current_state: ProgressState):
         self.model_id = model_id
         self.model_name = model_name
+        self.esdl_uuid = esdl_uuid
         self.calc_service_name = calc_service_name
         self.service_image_url = service_image_url
         self.current_state = current_state

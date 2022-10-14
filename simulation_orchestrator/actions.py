@@ -3,7 +3,6 @@ import typing
 from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.io.mqtt_broker import MqttBroker
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory, Simulation
-from pprint import pprint
 
 from simulation_orchestrator.types import SimulationId
 
@@ -13,7 +12,7 @@ mqtt_broker: MqttBroker
 
 def start_new_simulation(new_simulation: Simulation) -> SimulationId:
     try:
-        model_list = parse_esdl.get_models_list(new_simulation.calculation_services, new_simulation.esdl_base64string)
+        model_list = parse_esdl.get_model_list(new_simulation.calculation_services, new_simulation.esdl_base64string)
     except Exception as ex:
         raise IOError(f"The ESDL Base64 Encoded string could not be read: {ex},"
                       f"input Base64 string: {new_simulation.esdl_base64string}")

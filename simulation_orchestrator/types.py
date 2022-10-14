@@ -1,9 +1,8 @@
 import enum
-from uuid import UUID
 
 SimulatorId = str
 SimulationId = str
-ModelId = UUID
+ModelId = str
 
 
 class ProgressState(enum.IntEnum):
