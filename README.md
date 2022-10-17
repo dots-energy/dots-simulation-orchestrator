@@ -28,7 +28,7 @@ In the root directory of this repository, compile and install the `requirements(
 
 ```console
 pip-compile ./requirements.in --output-file ./requirements.txt
-pip install -r requirements.txt
+python3.9 -m pip install -r requirements.txt
 ```
 
 ## Local Test Deployment
