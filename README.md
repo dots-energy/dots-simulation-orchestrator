@@ -4,7 +4,7 @@ Build for GO-e WP3
 This simulation orchestrator is controlled by api calls (fastapi) and communicates with the Model Services
 Orchestrator (MSO) via MQTT protobuf messages.
 
-## Set up Python Environment
+## Set Up Python Environment
 
 If not already present, create the Python3.9 development environment in Ubuntu/WSL.
 
@@ -13,11 +13,12 @@ sudo apt-get install python3.9
 sudo apt-get install python3.9-distutils
 sudo apt-get install python3.9-dev
 ```
-Then in a folder with write permission, install pip and venv for Python3.9.
+Then in a folder with write permission, install pip, pip-tools and venv for Python3.9.
 
 ```console
 sudo curl -O https://bootstrap.pypa.io/get-pip.py
 python3.9 get-pip.py
+python3.9 -m pip install pip-tools
 sudo apt-get install python3.9-venv
 ```
 
