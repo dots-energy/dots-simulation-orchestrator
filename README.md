@@ -6,8 +6,22 @@ Orchestrator (MSO) via MQTT protobuf messages.
 
 ## Development
 
-Use Python 3.9.*  
-Compile and install the `requirements(-dev).in` by:
+If not already present, create the Python3.9 development environment in Ubuntu/WSL. In a folder
+
+```console
+sudo apt-get install python3.9
+sudo apt-get install python3.9-distutils
+sudo apt-get install python3.9-dev
+```
+Then in a folder with write permission, install pip and venv for Python3.9.
+
+```console
+sudo curl -O https://bootstrap.pypa.io/get-pip.py
+python3.9 get-pip.py
+sudo apt-get install python3.9-venv
+```
+
+In the root directory of this repository, compile and install the `requirements(-dev).in` by:
 
 ```console
 pip-compile .\requirements.in --output-file .\requirements.txt
