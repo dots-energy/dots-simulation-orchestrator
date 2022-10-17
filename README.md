@@ -71,7 +71,7 @@ In each project follow the 'Deployment - For local simulation testing' section.
 
 Now the docker images for the calculation services should be loaded on the Kind cluster.
 
-### Run Test Simulation
+## Run Test Simulation
 
 Run `main.py` in the root of this repository.  
 Go to localhost:8001/docs  
@@ -106,7 +106,7 @@ Go to localhost:8001/docs
 }
 ```
 
-### View Calculation Service Logs
+## View Calculation Service Logs
 Install Lens Desktop (https://docs.k8slens.dev/main/#download-lens-desktop).
 To view the logs from the calculation services, go to the cluster, Workloads, Pods.
 The output is quite boring since nothing is done in the calculations, but it shows the data flow and the order of the
