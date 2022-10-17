@@ -13,13 +13,14 @@ sudo apt-get install python3.9
 sudo apt-get install python3.9-distutils
 sudo apt-get install python3.9-dev
 ```
-Then in a folder with write permission, install pip, pip-tools and venv for Python3.9.
+Then in a folder with write permission, install pip, pip-tools, venv and cookiecutter for Python3.9.
 
 ```console
 sudo curl -O https://bootstrap.pypa.io/get-pip.py
 python3.9 get-pip.py
 python3.9 -m pip install pip-tools
 sudo apt-get install python3.9-venv
+python3.9 -m pip install cookiecutter
 ```
 
 ## Compile Requirements
