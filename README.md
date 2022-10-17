@@ -58,9 +58,9 @@ Create three calculation services by using config files in the base directory (f
 will be placed):
 
 ```console
-cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_system_service.yaml -f
-cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_pvpanel_service.yaml -f
-cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_battery_service.yaml -f
+cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_system_service.yaml -f
+cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_pvpanel_service.yaml -f
+cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_battery_service.yaml -f
 ```
 
 This creates a project folder for each calculation service.  
