@@ -4,9 +4,9 @@ Build for GO-e WP3
 This simulation orchestrator is controlled by api calls (fastapi) and communicates with the Model Services
 Orchestrator (MSO) via MQTT protobuf messages.
 
-## Development
+## Set up Python Environment
 
-If not already present, create the Python3.9 development environment in Ubuntu/WSL. In a folder
+If not already present, create the Python3.9 development environment in Ubuntu/WSL.
 
 ```console
 sudo apt-get install python3.9
@@ -21,6 +21,8 @@ python3.9 get-pip.py
 sudo apt-get install python3.9-venv
 ```
 
+## Compile Requirements
+
 In the root directory of this repository, compile and install the `requirements(-dev).in` by:
 
 ```console
@@ -28,9 +30,9 @@ pip-compile .\requirements.in --output-file .\requirements.txt
 pip install -r requirements.txt
 ```
 
-## Local testing
+## Local Test Deployment
 
-Several components need to be up and running for local testing:
+Several components need to be up and running for local test deployment:
 
 - Model Services Orchestrator (MSO)
 - MQTT client (Mosquitto)
