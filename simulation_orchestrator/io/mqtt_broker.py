@@ -134,7 +134,7 @@ class MqttBroker:
             ]
             model_configs.append(messages.ModelConfiguration(
                 modelID=model.model_id,
-                containerURL=model.service_image_url,
+                imageUrl=model.service_image_url,
                 environmentVariables=env_vars)
             )
             self.mqtt_client.subscribe(f"/log/model/dots-so/{simulation_id}/{model.model_id}")

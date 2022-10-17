@@ -34,30 +34,31 @@ for obj in energy_system.eAllContents():
     else:
         obj_id = ''
     print(f"{type(obj).__name__}, {obj_id}")
-    # # Filter out EnergyAssets (which have ports)
-    # if isinstance(obj, tuple(calc_service_image_urls)):
-    #     receiving_services = {}
-    #     # Iterate over all ports of this asset
-    #     for port in obj.port:
-    #         # only InPorts to find connected receiving services
-    #         if isinstance(port, esdl.InPort):
-    #             # Iterate over all connected ports of this port
-    #             for ct_port in port.connectedTo:
-    #                 # Get the asset to which the connected port belongs to
-    #                 ct_asset = ct_port.eContainer()
-    #                 # print(
-    #                 #     f"{type(obj).__name__}, {obj.name}, {obj.id} connected to: {ct_asset.name}, {ct_asset.id}"
-    #                 # )
-    #                 if type(ct_asset).__name__ not in tuple(receiving_services):
-    #                     receiving_services[type(ct_asset).__name__] = {
-    #                         "number_of": 1,
-    #                         "model_ids": [ct_asset.id],
-    #                     }
-    #                 else:
-    #                     receiving_services[type(ct_asset).__name__]["number_of"] += 1
-    #                     receiving_services[type(ct_asset).__name__]["model_ids"].append(
-    #                         ct_asset.id
-    #                     )
+    # Filter out EnergyAssets (which have ports)
+    if isinstance(obj, tuple(calc_service_image_urls)):
+        receiving_services = {}
+        # Iterate over all ports of this asset
+        for port in obj.port:
+            # only InPorts to find connected receiving services
+            if isinstance(port, esdl.InPort):
+                # Iterate over all connected ports of this port
+                for ct_port in port.connectedTo:
+                    # Get the asset to which the connected port belongs to
+                    ct_asset = ct_port.eContainer()
+                    print(f"ct_asset name: {ct_asset.name}")
+                    # print(
+                    #     f"{type(obj).__name__}, {obj.name}, {obj.id} connected to: {ct_asset.name}, {ct_asset.id}"
+                    # )
+                    if type(ct_asset).__name__ not in tuple(receiving_services):
+                        receiving_services[type(ct_asset).__name__] = {
+                            "number_of": 1,
+                            "model_ids": [ct_asset.id],
+                        }
+                    else:
+                        receiving_services[type(ct_asset).__name__]["number_of"] += 1
+                        receiving_services[type(ct_asset).__name__]["model_ids"].append(
+                            ct_asset.id
+                        )
     #
     #     print(json.dumps(receiving_services))
     #     models_input.append(

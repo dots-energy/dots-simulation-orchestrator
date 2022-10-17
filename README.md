@@ -7,23 +7,25 @@ Orchestrator (MSO) via MQTT protobuf messages.
 ## Development
 
 Use Python 3.9.*  
-Compile the `requirements(-dev).in` by:
+Compile and install the `requirements(-dev).in` by:
 
-```bash
+```console
 pip-compile .\requirements.in --output-file .\requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Local testing
 
 Several components need to be up and running for local testing:
 
-- Calculation services
-- Local Kind cluster (to run Kubernetes on)  
-  (with loaded 'calculation service' docker images)
+- Model Services Orchestrator (MSO)
 - MQTT client (Mosquitto)
-- Model Services Orchestrator
+- Local Kind cluster
+- DOTS Calculation Services
+- DOTS Simulation Orchestrator
+- Lens Desktop
 
-These can be setup by the steps in the repositories below.
+These can be setup by the steps below.
 
 ### Model Services Orchestrator repository
 
@@ -38,7 +40,7 @@ https://ci.tno.nl/gitlab/dots/service-template
 Create three calculation services by using config files in the base directory (from the directory in which the projects
 will be placed):
 
-```bash
+```console
 cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_system_service.yaml -f
 cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_pvpanel_service.yaml -f
 cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_battery_service.yaml -f
@@ -57,7 +59,7 @@ Now the docker images for the calculation services should be loaded on the Kind 
 
 Run `main.py` in the root of this repository.  
 Go to localhost:8001/docs  
-'Try it out': POST '/api/v1/simulation/' with the following body:
+'Try it out': POST '/api/v1/simulation/' with the following json body:
 
 ```json
 {
@@ -88,6 +90,8 @@ Go to localhost:8001/docs
 }
 ```
 
-The logs from the calculation services can be viewed in Lens.
+### View Calculation Service Logs
+Install Lens Desktop (https://docs.k8slens.dev/main/#download-lens-desktop).
+To view the logs from the calculation services, go to the cluster, Workloads, Pods.
 The output is quite boring since nothing is done in the calculations, but it shows the data flow and the order of the
-calculations.
+calculations. The log level is set be the POST json body.

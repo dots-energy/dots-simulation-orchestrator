@@ -21,8 +21,8 @@ def get_model_list(calculation_services: List[dict], esdl_base64string: str) -> 
 
     model_list: List[Model] = []
     # Iterate over all contents of an EnergySystem
-    for obj in energy_system.eAllContents():
-        add_model(model_list, calculation_services, obj)
+    for esdl_obj in energy_system.eAllContents():
+        add_model(model_list, calculation_services, esdl_obj)
 
     if next((True for calc_service in calculation_services if
              calc_service["esdl_type"] == esdl.EnergySystem.__name__), False):
@@ -31,12 +31,12 @@ def get_model_list(calculation_services: List[dict], esdl_base64string: str) -> 
     return model_list
 
 
-def add_model(model_list: List[Model], calculation_services: List[dict], obj: esdl):
+def add_model(model_list: List[Model], calculation_services: List[dict], esdl_obj: esdl):
     calc_service = next(
         (
             calc_service
             for calc_service in calculation_services
-            if calc_service["esdl_type"] == type(obj).__name__
+            if calc_service["esdl_type"] == type(esdl_obj).__name__
         ),
         None,
     )
@@ -44,12 +44,12 @@ def add_model(model_list: List[Model], calculation_services: List[dict], obj: es
     # print(f"{type(asset).__name__}, {calc_service}")
 
     if calc_service:
-        model_id = f'{type(obj).__name__.lower()}-{str(obj.id)[0:8]}'
+        model_id = f'{esdl_obj.name.lower()[0:20]}-{str(esdl_obj.id).lower()[0:8]}'
         model_list.append(
             Model(
                 model_id=model_id,
-                model_name=obj.name,
-                esdl_uuid=obj.id,
+                model_name=esdl_obj.name,
+                esdl_uuid=esdl_obj.id,
                 calc_service_name=calc_service['calc_service_name'],
                 service_image_url=calc_service['service_image_url'],
                 current_state=ProgressState.REGISTERED,

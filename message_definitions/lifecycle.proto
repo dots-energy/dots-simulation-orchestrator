@@ -7,7 +7,7 @@ message EnvironmentVariable {
 
 message ModelConfiguration {
   string modelID = 1;
-  string containerURL = 2; // Including hostname, port & container name
+  string imageUrl = 2; // Including hostname, port & container name
   repeated EnvironmentVariable environmentVariables = 3; // Contains at least SIMULATION_ID, MODEL_ID (node id), MQTT_HOST & MQTT_PORT
 }
 

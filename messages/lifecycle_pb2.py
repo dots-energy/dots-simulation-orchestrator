@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0flifecycle.proto\"2\n\x13\x45nvironmentVariable\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"o\n\x12ModelConfiguration\x12\x0f\n\x07modelID\x18\x01 \x01(\t\x12\x14\n\x0c\x63ontainerURL\x18\x02 \x01(\t\x12\x32\n\x14\x65nvironmentVariables\x18\x03 \x03(\x0b\x32\x14.EnvironmentVariable\"l\n\x0c\x44\x65ployModels\x12\x13\n\x0bsimulatorId\x18\x01 \x01(\t\x12\x30\n\x13modelConfigurations\x18\x02 \x03(\x0b\x32\x13.ModelConfiguration\x12\x15\n\rkeepLogsHours\x18\x03 \x01(\x01\"\x14\n\x12ReadyForProcessing\"\r\n\x0bModelsReady\"*\n\x0fModelParameters\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x0e\n\x0cParametrized\"\"\n\x07NewStep\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x12\n\x10\x43\x61lculationsDone\"&\n\rErrorOccurred\x12\x15\n\rerror_message\x18\x01 \x01(\t\"\x10\n\x0eSimulationDone\"7\n\x0eUnhealthyModel\x12%\n\x06status\x18\x01 \x01(\x0e\x32\x15.UnhealthyModelStatus\"J\n\x12ModelHasTerminated\x12\"\n\x06status\x18\x01 \x01(\x0e\x32\x12.TerminationStatus\x12\x10\n\x08\x65xitCode\x18\x02 \x01(\x05\"\x19\n\x17\x41llModelsHaveTerminated*&\n\x14UnhealthyModelStatus\x12\x0e\n\nNOPROGRESS\x10\x00*0\n\x11TerminationStatus\x12\x0f\n\x0bSUCCESSFULL\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0flifecycle.proto\"2\n\x13\x45nvironmentVariable\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"k\n\x12ModelConfiguration\x12\x0f\n\x07modelID\x18\x01 \x01(\t\x12\x10\n\x08imageUrl\x18\x02 \x01(\t\x12\x32\n\x14\x65nvironmentVariables\x18\x03 \x03(\x0b\x32\x14.EnvironmentVariable\"l\n\x0c\x44\x65ployModels\x12\x13\n\x0bsimulatorId\x18\x01 \x01(\t\x12\x30\n\x13modelConfigurations\x18\x02 \x03(\x0b\x32\x13.ModelConfiguration\x12\x15\n\rkeepLogsHours\x18\x03 \x01(\x01\"\x14\n\x12ReadyForProcessing\"\r\n\x0bModelsReady\"*\n\x0fModelParameters\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x0e\n\x0cParametrized\"\"\n\x07NewStep\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x12\n\x10\x43\x61lculationsDone\"&\n\rErrorOccurred\x12\x15\n\rerror_message\x18\x01 \x01(\t\"\x10\n\x0eSimulationDone\"7\n\x0eUnhealthyModel\x12%\n\x06status\x18\x01 \x01(\x0e\x32\x15.UnhealthyModelStatus\"J\n\x12ModelHasTerminated\x12\"\n\x06status\x18\x01 \x01(\x0e\x32\x12.TerminationStatus\x12\x10\n\x08\x65xitCode\x18\x02 \x01(\x05\"\x19\n\x17\x41llModelsHaveTerminated*&\n\x14UnhealthyModelStatus\x12\x0e\n\nNOPROGRESS\x10\x00*0\n\x11TerminationStatus\x12\x0f\n\x0bSUCCESSFULL\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x62\x06proto3')
 
 _UNHEALTHYMODELSTATUS = DESCRIPTOR.enum_types_by_name['UnhealthyModelStatus']
 UnhealthyModelStatus = enum_type_wrapper.EnumTypeWrapper(_UNHEALTHYMODELSTATUS)
@@ -141,36 +141,36 @@ _sym_db.RegisterMessage(AllModelsHaveTerminated)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _UNHEALTHYMODELSTATUS._serialized_start=665
-  _UNHEALTHYMODELSTATUS._serialized_end=703
-  _TERMINATIONSTATUS._serialized_start=705
-  _TERMINATIONSTATUS._serialized_end=753
+  _UNHEALTHYMODELSTATUS._serialized_start=661
+  _UNHEALTHYMODELSTATUS._serialized_end=699
+  _TERMINATIONSTATUS._serialized_start=701
+  _TERMINATIONSTATUS._serialized_end=749
   _ENVIRONMENTVARIABLE._serialized_start=19
   _ENVIRONMENTVARIABLE._serialized_end=69
   _MODELCONFIGURATION._serialized_start=71
-  _MODELCONFIGURATION._serialized_end=182
-  _DEPLOYMODELS._serialized_start=184
-  _DEPLOYMODELS._serialized_end=292
-  _READYFORPROCESSING._serialized_start=294
-  _READYFORPROCESSING._serialized_end=314
-  _MODELSREADY._serialized_start=316
-  _MODELSREADY._serialized_end=329
-  _MODELPARAMETERS._serialized_start=331
-  _MODELPARAMETERS._serialized_end=373
-  _PARAMETRIZED._serialized_start=375
-  _PARAMETRIZED._serialized_end=389
-  _NEWSTEP._serialized_start=391
-  _NEWSTEP._serialized_end=425
-  _CALCULATIONSDONE._serialized_start=427
-  _CALCULATIONSDONE._serialized_end=445
-  _ERROROCCURRED._serialized_start=447
-  _ERROROCCURRED._serialized_end=485
-  _SIMULATIONDONE._serialized_start=487
-  _SIMULATIONDONE._serialized_end=503
-  _UNHEALTHYMODEL._serialized_start=505
-  _UNHEALTHYMODEL._serialized_end=560
-  _MODELHASTERMINATED._serialized_start=562
-  _MODELHASTERMINATED._serialized_end=636
-  _ALLMODELSHAVETERMINATED._serialized_start=638
-  _ALLMODELSHAVETERMINATED._serialized_end=663
+  _MODELCONFIGURATION._serialized_end=178
+  _DEPLOYMODELS._serialized_start=180
+  _DEPLOYMODELS._serialized_end=288
+  _READYFORPROCESSING._serialized_start=290
+  _READYFORPROCESSING._serialized_end=310
+  _MODELSREADY._serialized_start=312
+  _MODELSREADY._serialized_end=325
+  _MODELPARAMETERS._serialized_start=327
+  _MODELPARAMETERS._serialized_end=369
+  _PARAMETRIZED._serialized_start=371
+  _PARAMETRIZED._serialized_end=385
+  _NEWSTEP._serialized_start=387
+  _NEWSTEP._serialized_end=421
+  _CALCULATIONSDONE._serialized_start=423
+  _CALCULATIONSDONE._serialized_end=441
+  _ERROROCCURRED._serialized_start=443
+  _ERROROCCURRED._serialized_end=481
+  _SIMULATIONDONE._serialized_start=483
+  _SIMULATIONDONE._serialized_end=499
+  _UNHEALTHYMODEL._serialized_start=501
+  _UNHEALTHYMODEL._serialized_end=556
+  _MODELHASTERMINATED._serialized_start=558
+  _MODELHASTERMINATED._serialized_end=632
+  _ALLMODELSHAVETERMINATED._serialized_start=634
+  _ALLMODELSHAVETERMINATED._serialized_end=659
 # @@protoc_insertion_point(module_scope)
