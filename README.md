@@ -26,7 +26,7 @@ sudo apt-get install python3.9-venv
 In the root directory of this repository, compile and install the `requirements(-dev).in` by:
 
 ```console
-pip-compile .\requirements.in --output-file .\requirements.txt
+pip-compile ./requirements.in --output-file ./requirements.txt
 pip install -r requirements.txt
 ```
 
