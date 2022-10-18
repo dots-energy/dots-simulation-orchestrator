@@ -4,19 +4,37 @@ Build for GO-e WP3
 This simulation orchestrator is controlled by api calls (fastapi) and communicates with the Model Services
 Orchestrator (MSO) via MQTT protobuf messages.
 
-## Development
+## Set Up Python Environment
 
-Use Python 3.9.*  
-Compile and install the `requirements(-dev).in` by:
+If not already present, create the Python3.9 development environment in Ubuntu/WSL.
 
 ```console
-pip-compile .\requirements.in --output-file .\requirements.txt
-pip install -r requirements.txt
+sudo apt-get install python3.9
+sudo apt-get install python3.9-distutils
+sudo apt-get install python3.9-dev
+```
+Then in a folder with write permission, install pip, pip-tools, venv and cookiecutter for Python3.9.
+
+```console
+sudo curl -O https://bootstrap.pypa.io/get-pip.py
+python3.9 get-pip.py
+python3.9 -m pip install pip-tools
+sudo apt-get install python3.9-venv
+python3.9 -m pip install cookiecutter
 ```
 
-## Local testing
+## Compile Requirements
 
-Several components need to be up and running for local testing:
+In the root directory of this repository, compile and install the `requirements(-dev).in` by:
+
+```console
+pip-compile ./requirements.in --output-file ./requirements.txt
+python3.9 -m pip install -r requirements.txt
+```
+
+## Local Test Deployment
+
+Several components need to be up and running for local test deployment:
 
 - Model Services Orchestrator (MSO)
 - MQTT client (Mosquitto)
@@ -41,9 +59,9 @@ Create three calculation services by using config files in the base directory (f
 will be placed):
 
 ```console
-cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_system_service.yaml -f
-cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_pvpanel_service.yaml -f
-cookiecutter ..\service-template --no-input --config-file ..\service-template\test_dev\test_service_configs\test1_battery_service.yaml -f
+cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_system_service.yaml -f
+cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_pvpanel_service.yaml -f
+cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_battery_service.yaml -f
 ```
 
 This creates a project folder for each calculation service.  
@@ -55,7 +73,7 @@ In each project follow the 'Deployment - For local simulation testing' section.
 
 Now the docker images for the calculation services should be loaded on the Kind cluster.
 
-### Run Test Simulation
+## Run Test Simulation
 
 Run `main.py` in the root of this repository.  
 Go to localhost:8001/docs  
@@ -90,7 +108,7 @@ Go to localhost:8001/docs
 }
 ```
 
-### View Calculation Service Logs
+## View Calculation Service Logs
 Install Lens Desktop (https://docs.k8slens.dev/main/#download-lens-desktop).
 To view the logs from the calculation services, go to the cluster, Workloads, Pods.
 The output is quite boring since nothing is done in the calculations, but it shows the data flow and the order of the
