@@ -25,14 +25,14 @@ def start_new_simulation(new_simulation: Simulation) -> SimulationId:
     return simulation_id
 
 
-def get_simulation_and_status(simulation_id: SimulationId) -> typing.Tuple[Simulation | None, str]:
+def get_simulation_and_status(simulation_id: SimulationId) -> typing.Tuple[typing.Union[Simulation,None], str]:
     return (
         simulation_inventory.get_simulation(simulation_id),
         simulation_inventory.get_status_description(simulation_id)
     )
 
 
-def get_simulation_and_status_list() -> typing.List[typing.Tuple[Simulation | None, str]]:
+def get_simulation_and_status_list() -> typing.List[typing.Tuple[typing.Union[Simulation,None], str]]:
     simulation_ids = simulation_inventory.get_simulation_ids()
     return [
         get_simulation_and_status(simulation_id)

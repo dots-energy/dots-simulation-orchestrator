@@ -83,7 +83,7 @@ class SimulationInventory:
     def get_simulation_ids(self) -> typing.List[SimulationId]:
         return list(self.activeSimulations.keys())
 
-    def get_simulation(self, simulation_id: SimulationId) -> Simulation | None:
+    def get_simulation(self, simulation_id: SimulationId) -> typing.Union[Simulation,None]:
         return self.activeSimulations.get(simulation_id)
 
     def add_models_to_simulation(self, simulation_id: SimulationId, new_models: typing.List[Model]):
