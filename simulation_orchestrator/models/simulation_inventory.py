@@ -22,7 +22,7 @@ class Simulation:
     calculation_services: typing.List[dict]
     esdl_base64string: str
 
-    current_time_step: int
+    current_time_step_nr: int
     model_inventory: ModelInventory
     error_message: str
 
@@ -52,7 +52,7 @@ class Simulation:
         self.calculation_services = calculation_services
         self.esdl_base64string = esdl_base64string
 
-        self.current_time_step = 0
+        self.current_time_step_nr = 0
         self.model_inventory = ModelInventory()
         self.error_message = ""
         self.lock = Lock()
@@ -142,26 +142,24 @@ class SimulationInventory:
 
     def increment_time_step_and_get_time_start_end_date_dict(self, simulation_id: SimulationId) -> dict:
         simulation = self.activeSimulations.get(simulation_id)
-        simulation.current_time_step += 1
+        simulation.current_time_step_nr += 1
         LOGGER.info(
-            f'Starting calculation step {simulation.current_time_step} (of {simulation.nr_of_time_steps})')
+            f'Starting calculation step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})')
         return {
-            "start_time_stamp": str(
-                simulation.start_date + timedelta(0, (simulation.current_time_step + 1) * simulation.time_step_seconds)
-            ), "end_time_stamp": str(
-                simulation.start_date + timedelta(0, (simulation.current_time_step + 2) * simulation.time_step_seconds)
-            )
+            "time_step_nr": str(simulation.current_time_step_nr),
+            "start_time_stamp": (simulation.start_date + timedelta(0, (
+                    simulation.current_time_step_nr + 1) * simulation.time_step_seconds)).timestamp()
         }
 
     def on_last_time_step(self, simulation_id: SimulationId) -> bool:
         simulation = self.activeSimulations.get(simulation_id)
-        return simulation.current_time_step == simulation.nr_of_time_steps
+        return simulation.current_time_step_nr == simulation.nr_of_time_steps
 
     def get_status_description(self, simulation_id: SimulationId) -> str:
         state = self.get_simulation_state(simulation_id)
         if state == ProgressState.STEP_STARTED:
             simulation = self.activeSimulations.get(simulation_id)
-            return f"Calculating time step {simulation.current_time_step} (of {simulation.nr_of_time_steps})"
+            return f"Calculating time step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
         else:
             return str(state)
 

@@ -117,8 +117,9 @@ class MqttBroker:
                            log_level: typing.Union[int, str]):
         model_configs = []
         for model in self.simulation_inventory.get_all_models(simulation_id):
-            if len(f'{simulator_id.lower()}-{simulation_id.lower()}-{model.model_id}') > 62:
-                raise IOError(f"Choose shorter ESDL asset name '{model.model_name}' (~30 chars max).")
+            pod_name = f'{simulator_id.lower()}-{simulation_id.lower()}-{model.model_id}'
+            if len(pod_name) > 62:
+                raise IOError(f"Pod name is too long for Kubernetes '{pod_name}' (max 63 characters)")
             env_vars = [
                 messages.EnvironmentVariable(name='MQTT_HOST', value='host.docker.internal'),
                 messages.EnvironmentVariable(name='MQTT_PORT', value=str(self.port)),
@@ -152,6 +153,10 @@ class MqttBroker:
         for model in self.simulation_inventory.get_all_models(simulation_id):
             model_parameters_message = messages.ModelParameters(
                 parameters_dict=json.dumps({
+                    'simulation_name': simulation.simulation_name,
+                    'start_timestamp': simulation.start_date.timestamp(),
+                    'time_step_seconds': simulation.time_step_seconds,
+                    'nr_of_time_steps': simulation.nr_of_time_steps,
                     'calculation_services': simulation.calculation_services,
                     'esdl_base64string': simulation.esdl_base64string,
                 })
