@@ -4,44 +4,43 @@ Build for GO-e WP3
 This simulation orchestrator is controlled by api calls (fastapi) and communicates with the Model Services
 Orchestrator (MSO) via MQTT protobuf messages.
 
-## Set Up Python Environment
+## Usage
 
-If not already present, create the Python3.9 development environment in Ubuntu/WSL.
+If the DOTS infrastructure is up and running (on Azure) the following two steps are needed to run a simulation:
 
-```console
-sudo apt-get install python3.9
-sudo apt-get install python3.9-distutils
-sudo apt-get install python3.9-dev
-```
-Then in a folder with write permission, install pip, pip-tools, venv and cookiecutter for Python3.9.
+### Create Calculation Services
 
-```console
-sudo curl -O https://bootstrap.pypa.io/get-pip.py
-python3.9 get-pip.py
-python3.9 -m pip install pip-tools
-sudo apt-get install python3.9-venv
-python3.9 -m pip install cookiecutter
-```
+The DOTS code generator (https://ci.tno.nl/gitlab/dots/code-generator) can be used to create a template project, with a
+readme on how to develop and push the project when it is ready for testing.
 
-## Compile Requirements
+### Start Simulation POST request
 
-In the root directory of this repository, compile and install the `requirements(-dev).in` by:
+Fill in a simulation POST request with an ESDL file on <link to come> (see [example POST body](#run-test-simulation)
+below).
 
-```console
-pip-compile ./requirements.in --output-file ./requirements.txt
-python3.9 -m pip install -r requirements.txt
-```
+### Viewing results
 
-## Local Test Deployment
+The logs can be viewed in [Lens](#lens-model-service-calculation-logs).
+The database results can be viewed using [InfluxDB Studio](#InfluxDB Studio) or [Grafana](#Grafana).
+
+## Test on local cluster
 
 Several components need to be up and running for local test deployment:
 
-- Model Services Orchestrator (MSO)
+For running a simulation:
+
 - MQTT client (Mosquitto)
+- InfluxDB
 - Local Kind cluster
+- DOTS Model Services Orchestrator (MSO)
 - DOTS Calculation Services
 - DOTS Simulation Orchestrator
+
+For viewing the results:
+
 - Lens Desktop
+- InfluxDB Studio
+- Grafana
 
 These can be setup by the steps below.
 
@@ -73,9 +72,19 @@ In each project follow the 'Deployment - For local simulation testing' section.
 
 Now the docker images for the calculation services should be loaded on the Kind cluster.
 
-## Run Test Simulation
+### Simulation Orchestrator (this repository)
 
-Run `main.py` in the root of this repository.  
+Copy the .env.template file and start the components:
+
+```console
+copy .env.template .env
+docker compose --file .\docker-compose.local.yml up --build
+```
+
+Now InfluxDB, Grafana and the Simulation Orchestrator should be up and running
+
+### Run Test Simulation
+
 Go to localhost:8001/docs  
 'Try it out': POST '/api/v1/simulation/' with the following json body:
 
@@ -85,8 +94,8 @@ Go to localhost:8001/docs
   "start_date": "2023-01-25 00:00:00",
   "time_step_seconds": 3600,
   "nr_of_time_steps": 24,
-  "keep_logs_hours": 0.1,
-  "log_level": "info",
+  "keep_logs_hours": 0.05,
+  "log_level": "debug",
   "calculation_services": [
     {
       "esdl_type": "EnergySystem",
@@ -108,8 +117,29 @@ Go to localhost:8001/docs
 }
 ```
 
-## View Calculation Service Logs
+### View Results
+
+#### Lens: model service calculation logs
+
 Install Lens Desktop (https://docs.k8slens.dev/main/#download-lens-desktop).
 To view the logs from the calculation services, go to the cluster, Workloads, Pods.
 The output is quite boring since nothing is done in the calculations, but it shows the data flow and the order of the
 calculations. The log level is set be the POST json body.
+
+#### InfluxDB Studio
+
+The database entries can be viewed using InfluxDB studio (https://github.com/CymaticLabs/InfluxDBStudio/releases,
+Assets).
+
+#### Grafana
+
+The data from the influxdb can also viewed using grafana, go to http://localhost:3000 and login with admin, admin.
+
+## Development
+
+Create a python virtual environment (3.10) and install the dependencies:
+
+```console
+pip-compile ./requirements.in --output-file ./requirements.txt
+python -m pip install -r requirements.txt
+```

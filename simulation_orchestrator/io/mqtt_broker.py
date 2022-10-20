@@ -16,13 +16,20 @@ STOP_SERVICE = 'stop_service'
 
 
 class MqttBroker:
-    def __init__(self, host: str, port: int, qos: int, username: str, password: str,
+    def __init__(self, host: str, port: int, qos: int, username: str, password: str, influxdb_host: str,
+                 influxdb_port: str, influxdb_user: str, influxdb_password: str, influxdb_name: str,
                  simulation_inventory: SimulationInventory):
         self.host = host
         self.port = port
         self.qos = qos
         self.username = username
         self.password = password
+        self.influxdb_host = influxdb_host
+        self.influxdb_port = influxdb_port
+        self.influxdb_user = influxdb_user
+        self.influxdb_password = influxdb_password
+        self.influxdb_name = influxdb_name
+
         self.simulation_inventory = simulation_inventory
 
         self.mqtt_client = None
@@ -131,6 +138,11 @@ class MqttBroker:
                 messages.EnvironmentVariable(name='MODEL_NAME', value=model.model_name),
                 messages.EnvironmentVariable(name='MQTT_USERNAME', value=self.username),
                 messages.EnvironmentVariable(name='MQTT_PASSWORD', value=self.password),
+                messages.EnvironmentVariable(name='INFLUXDB_HOST', value=self.influxdb_host),
+                messages.EnvironmentVariable(name='INFLUXDB_PORT', value=self.influxdb_port),
+                messages.EnvironmentVariable(name='INFLUXDB_USER', value=self.influxdb_user),
+                messages.EnvironmentVariable(name='INFLUXDB_PASSWORD', value=self.influxdb_password),
+                messages.EnvironmentVariable(name='INFLUXDB_NAME', value=self.influxdb_name),
                 messages.EnvironmentVariable(name='LOG_LEVEL', value=log_level.upper())
             ]
             model_configs.append(messages.ModelConfiguration(

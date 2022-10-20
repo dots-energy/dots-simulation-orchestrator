@@ -44,7 +44,7 @@ def add_model(model_list: List[Model], calculation_services: List[dict], esdl_ob
     # print(f"{type(asset).__name__}, {calc_service}")
 
     if calc_service:
-        model_id = f'{esdl_obj.name.lower()[0:20]}-{str(esdl_obj.id).lower()[0:8]}'
+        model_id = f"{esdl_obj.name.lower().replace(' ', '-')[:20]}-{str(esdl_obj.id).lower()[:8]}"
         model_list.append(
             Model(
                 model_id=model_id,

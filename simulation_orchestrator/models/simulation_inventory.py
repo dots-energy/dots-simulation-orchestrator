@@ -1,4 +1,5 @@
 import typing
+import uuid
 from threading import Lock
 from datetime import datetime, timedelta
 
@@ -61,14 +62,12 @@ class Simulation:
 class SimulationInventory:
     activeSimulations: typing.Dict[SimulationId, Simulation]
 
-    id_nr: int = 0
-
     def __init__(self):
         self.activeSimulations = {}
 
     def add_simulation(self, new_simulation: Simulation) -> SimulationId:
-        self.id_nr += 1
-        new_simulation.simulation_id = 'sim-' + str(self.id_nr)
+        new_simulation.simulation_id = f"{new_simulation.simulation_name.lower().replace(' ', '-')[:20]}" \
+                                       f"-{str(uuid.uuid4())[:8]}"
 
         self.activeSimulations.update({new_simulation.simulation_id: new_simulation})
         return new_simulation.simulation_id
@@ -83,7 +82,7 @@ class SimulationInventory:
     def get_simulation_ids(self) -> typing.List[SimulationId]:
         return list(self.activeSimulations.keys())
 
-    def get_simulation(self, simulation_id: SimulationId) -> typing.Union[Simulation,None]:
+    def get_simulation(self, simulation_id: SimulationId) -> typing.Union[Simulation, None]:
         return self.activeSimulations.get(simulation_id)
 
     def add_models_to_simulation(self, simulation_id: SimulationId, new_models: typing.List[Model]):

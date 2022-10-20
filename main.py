@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from starlette.templating import _TemplateResponse
 
+from simulation_orchestrator.influxdb_connector import InfluxDBConnector
+
 load_dotenv()  # take environment variables from .env
 
 import threading
@@ -48,7 +50,12 @@ class EnvConfig:
                    ('MQTT_PORT', '1883', int, False),
                    ('MQTT_QOS', '0', int, False),
                    ('MQTT_USERNAME', '', str, False),
-                   ('MQTT_PASSWORD', '', str, True)]
+                   ('MQTT_PASSWORD', '', str, True),
+                   ('INFLUXDB_HOST', '', str, False),
+                   ('INFLUXDB_PORT', '', str, False),
+                   ('INFLUXDB_USER', '', str, False),
+                   ('INFLUXDB_PASSWORD', '', str, True),
+                   ('INFLUXDB_NAME', '', str, False)]
 
     @staticmethod
     def load(keys: typing.List[typing.Tuple[str,
@@ -82,6 +89,11 @@ def start():
         qos=config['MQTT_QOS'],
         username=config['MQTT_USERNAME'],
         password=config['MQTT_PASSWORD'],
+        influxdb_host=config['INFLUXDB_HOST'],
+        influxdb_port=config['INFLUXDB_PORT'],
+        influxdb_user=config['INFLUXDB_USER'],
+        influxdb_password=config['INFLUXDB_PASSWORD'],
+        influxdb_name=config['INFLUXDB_NAME'],
         simulation_inventory=simulation_inventory
     )
 
@@ -91,6 +103,11 @@ def start():
     t = threading.Thread(target=mqtt_broker.start, name='mqtt broker')
     t.daemon = True
     t.start()
+
+    influxdb_client: InfluxDBConnector = InfluxDBConnector(config['INFLUXDB_HOST'], config['INFLUXDB_PORT'],
+                                                           config['INFLUXDB_USER'], config['INFLUXDB_PASSWORD'],
+                                                           config['INFLUXDB_NAME'])
+    influxdb_client.create_database()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
 

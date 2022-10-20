@@ -9,3 +9,4 @@ python-multipart==0.0.5
 pydantic==1.9
 Jinja2==3.0.1
 pyESDL==22.7.0
+influxdb~=5.3.1
