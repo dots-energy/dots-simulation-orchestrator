@@ -4,6 +4,8 @@ Build for GO-e WP3
 This simulation orchestrator is controlled by api calls (fastapi) and communicates with the Model Services
 Orchestrator (MSO) via MQTT protobuf messages.
 
+To use the simulation infrastructure, see the *Usage* section. To test the infrastructure locally, see the section *Test on local cluster*.
+
 ## Usage
 
 If the DOTS infrastructure is up and running (on Azure) the following two steps are needed to run a simulation:
@@ -78,7 +80,7 @@ Copy the .env.template file and start the components:
 
 ```console
 copy .env.template .env
-docker compose --file .\docker-compose.local.yml up --build
+docker compose --file ./docker-compose.local.yml up --build
 ```
 
 Now InfluxDB, Grafana and the Simulation Orchestrator should be up and running
