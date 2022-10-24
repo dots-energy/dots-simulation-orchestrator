@@ -51,22 +51,22 @@ In the model services orchestrator repository readme, follow the 'Quickstart' se
 Mosquitto and the MSO itself' section.  
 Now the Kind cluster, MSO and Mosquitto client should be up and running
 
-### Service Template repository @Ruduan update to Code Generator repo
+### Code Generator repository
 
+https://ci.tno.nl/gitlab/dots/code-generator
 https://ci.tno.nl/gitlab/dots/service-template  
-Create three calculation services by using config files in the base directory (from the directory in which the projects
-will be placed):
+
+
+Create three calculation services using the code generator by using config files from the service template. Run the following command in the root folder of the code-generator from the WSL/Ubuntu terminal with admin/root privileges. This will generate the services in the root folder of the code generator.
 
 ```console
-cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_system_service.yaml -f
-cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_pvpanel_service.yaml -f
-cookiecutter ../service-template --no-input --config-file ../service-template/test_dev/test_service_configs/test1_battery_service.yaml -f
+./build.sh -c ../service-template/test_dev/test_service_configs/test1_battery_service.yaml
+./build.sh -c ../service-template/test_dev/test_service_configs/test1_pvpanel_service.yaml
+./build.sh -c ../service-template/test_dev/test_service_configs/test1_system_service.yaml
 ```
 
 This creates a project folder for each calculation service.  
 Optionally: test the services locally by following the readme in the newly created projects.
-
-@Ruduan: Protoc .proto message definitions to create _b2.py files
 
 In each project follow the 'Deployment - For local simulation testing' section.
 
