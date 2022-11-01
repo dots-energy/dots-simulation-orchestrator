@@ -2,6 +2,7 @@
 import json
 import threading
 import typing
+import logging
 
 from paho.mqtt.client import Client
 
