@@ -1,7 +1,7 @@
 # DOTS Simulation Orchestrator
 
 Build for GO-e WP3
-This simulation orchestrator is controlled by api calls (fastapi) and communicates with the Model Services
+This simulation orchestrator is controlled by api calls (FastAPI) and communicates with the Model Services
 Orchestrator (MSO) via MQTT protobuf messages.
 
 To use the simulation infrastructure, see the *Usage* section. To test the infrastructure locally, see the section *Test on local cluster*.
@@ -12,18 +12,18 @@ If the DOTS infrastructure is up and running (on Azure) the following two steps 
 
 ### Create Calculation Services
 
-The DOTS code generator (https://ci.tno.nl/gitlab/dots/code-generator) can be used to create a template project, with a
-readme on how to develop and push the project when it is ready for testing.
+The DOTS [Calculation Service Generator](https://ci.tno.nl/gitlab/dots/calculation-service-generator) can be used to create template calculation service projects, with a
+readme on how to develop and deploy the project when it is ready for testing.
 
 ### Start Simulation POST request
 
-Fill in a simulation POST request with an ESDL file on <link to come> (see [example POST body](#run-test-simulation)
+Fill in a simulation `POST` request on the `/api/v1/simulation/` endpoint with an ESDL file using the [Simulation Orchestrator API](localhost:8001/docs) (see [example POST body](#run-test-simulation)
 below).
 
 ### Viewing results
 
-The logs can be viewed in [Lens](#lens-model-service-calculation-logs).
-The database results can be viewed using [InfluxDB Studio](#InfluxDB Studio) or [Grafana](#Grafana).
+The logs can be viewed in [Lens](#lens-model-service-calculation-logs) after connecting to the Kubernetes backplane.
+The database results can be viewed using [InfluxDB Studio](#InfluxDB Studio) or [Grafana](#Grafana) after connecting to the InfluxDB instance.
 
 ## Test on local cluster
 
@@ -53,18 +53,16 @@ In the model services orchestrator repository readme, follow the 'Quickstart' se
 Mosquitto and the MSO itself' section.  
 Now the Kind cluster, MSO and Mosquitto client should be up and running
 
-### Code Generator repository
+### Calculation Service Generator repository
 
-https://ci.tno.nl/gitlab/dots/code-generator
-https://ci.tno.nl/gitlab/dots/service-template  
+https://ci.tno.nl/gitlab/dots/calculation-service-generator
 
-
-Create three calculation services using the code generator by using config files from the service template. Run the following command in the root folder of the code-generator from the WSL/Ubuntu terminal with admin/root privileges. This will generate the services in the root folder of the code generator.
+Create three calculation services with the Calculation Service Generator by using config files from the service template. Run the following command in the root folder of the calculation-service-generator from the WSL/Ubuntu terminal with admin/root privileges. This will generate the services in the root folder of the Calculation Service Generator.
 
 ```console
-./build.sh -c ../service-template/test_dev/test_service_configs/test1_battery_service.yaml
-./build.sh -c ../service-template/test_dev/test_service_configs/test1_pvpanel_service.yaml
-./build.sh -c ../service-template/test_dev/test_service_configs/test1_system_service.yaml
+./build.sh -c ./test_dev/test_service_configs/test1_battery_service.yaml
+./build.sh -c ./test_dev/test_service_configs/test1_pvpanel_service.yaml
+./build.sh -c ./test_dev/test_service_configs/test1_system_service.yaml
 ```
 
 This creates a project folder for each calculation service.  
