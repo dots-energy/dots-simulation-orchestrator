@@ -1,0 +1,27 @@
+# kind-cluster-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: dots-kind
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 3000 # grafana
+    hostPort: 3010
+    # optional: set the bind address on the host
+    # 0.0.0.0 is the current default
+    listenAddress: "127.0.0.1"
+    # optional: set the protocol to one of TCP, UDP, SCTP.
+    # TCP is the default
+    protocol: TCP
+  - containerPort: 8086 # influxdb
+    hostPort: 8096
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+  - containerPort: 8088 # influxdb
+    hostPort: 8098
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+  - containerPort: 8001 # so-rest
+    hostPort: 8011
+    listenAddress: "127.0.0.1"
+    protocol: TCP

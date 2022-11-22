@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: dots
+  name: so-rest
+  labels:
+    app: so-rest # pod name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: so-rest
+  template: # pod blueprint
+    metadata:
+      labels:
+        app: so-rest # pod name
+    spec:
+      imagePullSecrets:
+      - name: ci-tno-dots
+      containers:
+      - name: so-rest # container name
+        image: ci.tno.nl/dots/simulation-orchestrator:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+          hostPort: 8001
+        env:
+        - name: MQTT_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: mqtt-host
+        - name: MQTT_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: mqtt-port
+        - name: MQTT_QOS
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: mqtt-qos
+        - name: MQTT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: mqtt-username
+        - name: MQTT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: mqtt-password
+        - name: INFLUXDB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: influxdb-host
+        - name: INFLUXDB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: influxdb-port
+        - name: INFLUXDB_USER
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: influxdb-user
+        - name: INFLUXDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: influxdb-password
+        - name: INFLUXDB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: influxdb-name
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: log-level
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dots
+  name: so-rest
+spec:
+  selector:
+    app: so-rest
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8001 # service port
+      targetPort: 8001 # = container port (pod port)

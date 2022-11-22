@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: dots
+  name: grafana # deployment name
+  labels:
+    app: grafana # pod name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template: # pod blueprint
+    metadata:
+      labels:
+        app: grafana # pod name
+    spec:
+      containers:
+      - name: grafana # container name
+        image: grafana/grafana:7.4.5 # image name
+        ports:
+        - containerPort: 3000
+          hostPort: 3000
+        env:
+        - name: GF_PANELS_DISABLE_SANITIZE_HTML
+          value: "true"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: influxdb-user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: influxdb-password
+        volumeMounts:
+          - mountPath: /var/lib/grafana
+            name: grafana-claim
+      volumes:
+        - name: grafana-claim
+          persistentVolumeClaim:
+            claimName: grafana-claim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: dots
+  labels:
+    app: grafana
+  name: grafana-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dots
+  name: grafana
+spec:
+  selector:
+    app: grafana # to connect with pod with label mongo-db
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3000 # service port
+      targetPort: 3000 # needs to match containerPort

@@ -1,0 +1,10 @@
+.idea/
+.venv/
+ci/
+java/
+message_definitions/
+test/
+.gitignore
+.gitlab-ci.yaml
+*.in
+dev-requirements.txt

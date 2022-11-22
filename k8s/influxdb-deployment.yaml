@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: dots
+  name: influxdb # deployment name
+  labels:
+    app: influxdb # pod name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  template: # pod blueprint
+    metadata:
+      labels:
+        app: influxdb # pod name
+    spec:
+      containers:
+      - name: influxdb # container name
+        image: influxdb:1.7 # image name
+        ports:
+        - containerPort: 8086
+          hostPort: 8086
+        volumeMounts:
+          - mountPath: /var/lib/influxdb
+            name: influxdb-claim
+      volumes:
+        - name: influxdb-claim
+          persistentVolumeClaim:
+            claimName: influxdb-claim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: dots
+  labels:
+    app: influxdb
+  name: influxdb-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dots
+  name: influxdb
+spec:
+  selector:
+    app: influxdb # to connect with pod with label mongo-db
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8086 # service port
+      targetPort: 8086 # needs to match containerPort

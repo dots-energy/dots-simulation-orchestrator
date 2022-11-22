@@ -2,7 +2,9 @@
 import json
 import threading
 import typing
-import logging
+import sched
+import time
+from datetime import datetime
 
 from paho.mqtt.client import Client
 
@@ -60,8 +62,22 @@ class MqttBroker:
 
         self._subscribe_lifecycle_topics()
 
+        # Check if the step calculations don't exceed the limit
+        threading.Thread(target=self._check_step_calc_time, args=[]).start()
+
         LOGGER.debug('Simulation Orchestrator connected to MQTT broker.')
         self.mqtt_client.loop_forever()
+
+    def _check_step_calc_time(self):
+        s = sched.scheduler(time.time, time.sleep)
+
+        def check_calc_time(sc):
+            for simulation_id in self.simulation_inventory.get_simulation_ids_exceeding_step_calc_time():
+                self.send_simulation_done(simulation_id)
+            sc.enter(10, 1, check_calc_time, (sc,))
+
+        s.enter(10, 1, check_calc_time, (s,))
+        s.run()
 
     def _process_message(self, client: Client, message):
         topic_parts = message.topic.split('/')
@@ -105,7 +121,7 @@ class MqttBroker:
                             simulation_id=simulation_id,
                             new_state=ProgressState.TERMINATED_SUCCESSFULL
                         )
-                        self._send_simulation_done(simulation_id)
+                        self.send_simulation_done(simulation_id)
                         LOGGER.info(f"All time steps finished for simulation '{simulation_id}'")
                     else:
                         self._send_new_step(simulation_id)
@@ -129,7 +145,7 @@ class MqttBroker:
             if len(pod_name) > 62:
                 raise IOError(f"Pod name is too long for Kubernetes '{pod_name}' (max 63 characters)")
             env_vars = [
-                messages.EnvironmentVariable(name='MQTT_HOST', value='host.docker.internal'),
+                messages.EnvironmentVariable(name='MQTT_HOST', value=str(self.host)),
                 messages.EnvironmentVariable(name='MQTT_PORT', value=str(self.port)),
                 messages.EnvironmentVariable(name='MQTT_QOS', value=str(self.qos)),
                 messages.EnvironmentVariable(name='SIMULATOR_ID', value=simulator_id),
@@ -167,7 +183,7 @@ class MqttBroker:
             model_parameters_message = messages.ModelParameters(
                 parameters_dict=json.dumps({
                     'simulation_name': simulation.simulation_name,
-                    'start_timestamp': simulation.start_date.timestamp(),
+                    'start_timestamp': simulation.simulation_start_datetime.timestamp(),
                     'time_step_seconds': simulation.time_step_seconds,
                     'nr_of_time_steps': simulation.nr_of_time_steps,
                     'calculation_services': simulation.calculation_services,
@@ -175,10 +191,10 @@ class MqttBroker:
                 })
             )
             self.mqtt_client.publish(
-                topic=f"/lifecycle/dots-so/model/{model.model_id}/ModelParameters",
+                topic=f"/lifecycle/dots-so/model/{simulation_id}/{model.model_id}/ModelParameters",
                 payload=model_parameters_message.SerializeToString()
             )
-        LOGGER.info(f" [sent] lifecycle/dots-so/model/+/ModelParameters")
+        LOGGER.info(f" [sent] lifecycle/dots-so/model/{simulation_id}/+/ModelParameters")
 
     def _send_new_step(self, simulation_id: SimulationId):
         self.simulation_inventory.set_state_for_all_models(simulation_id, ProgressState.STEP_STARTED)
@@ -191,15 +207,18 @@ class MqttBroker:
         )
         for model in self.simulation_inventory.get_all_models(simulation_id):
             self.mqtt_client.publish(
-                topic=f"/lifecycle/dots-so/model/{model.model_id}/NewStep",
+                topic=f"/lifecycle/dots-so/model/{simulation_id}/{model.model_id}/NewStep",
                 payload=new_step_message.SerializeToString()
             )
-        LOGGER.debug(f" [sent] lifecycle/dots-so/model/+/NewStep")
+        LOGGER.debug(f" [sent] lifecycle/dots-so/model/{simulation_id}/+/NewStep")
+        self.simulation_inventory.start_step_calculation_time_counting(simulation_id)
 
-    def _send_simulation_done(self, simulation_id: SimulationId):
+    def send_simulation_done(self, simulation_id: SimulationId):
         for model in self.simulation_inventory.get_all_models(simulation_id):
             self.mqtt_client.publish(
-                topic=f"/lifecycle/dots-so/model/{model.model_id}/SimulationDone",
+                topic=f"/lifecycle/dots-so/model/{simulation_id}/{model.model_id}/SimulationDone",
                 payload=messages.SimulationDone().SerializeToString()
             )
-        LOGGER.info(f" [sent] lifecycle/dots-so/model/+/SimulationDone")
+        LOGGER.info(f" [sent] lifecycle/dots-so/model/{simulation_id}/+/SimulationDone")
+        self.simulation_inventory.get_simulation(simulation_id).terminated = True
+        self.simulation_inventory.get_simulation(simulation_id).calculation_end_datetime = datetime.now()

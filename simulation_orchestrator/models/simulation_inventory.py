@@ -13,10 +13,11 @@ class Simulation:
     simulation_id: SimulationId
     simulation_name: str
 
-    start_date: datetime
+    simulation_start_datetime: datetime
     time_step_seconds: int
     nr_of_time_steps: int
 
+    max_step_calc_time_minutes: float
     keep_logs_hours: float
     log_level: str
 
@@ -24,8 +25,13 @@ class Simulation:
     esdl_base64string: str
 
     current_time_step_nr: int
+    calculation_start_datetime: datetime
+    calculation_end_datetime: typing.Optional[datetime]
+    current_step_calculation_start_datetime: typing.Optional[datetime]
     model_inventory: ModelInventory
     error_message: str
+
+    terminated: bool
 
     lock: Lock
 
@@ -33,9 +39,10 @@ class Simulation:
             self,
             simulator_id: SimulatorId,
             simulation_name: str,
-            start_date: datetime,
+            simulation_start_date: datetime,
             time_step_seconds: int,
             sim_nr_of_steps: int,
+            max_step_calc_time_minutes: float,
             keep_logs_hours: float,
             log_level: str,
             calculation_services: typing.List[dict],
@@ -43,10 +50,11 @@ class Simulation:
     ):
         self.simulator_id = simulator_id
         self.simulation_name = simulation_name
-        self.start_date = start_date
+        self.simulation_start_datetime = simulation_start_date
         self.time_step_seconds = time_step_seconds
         self.nr_of_time_steps = sim_nr_of_steps
 
+        self.max_step_calc_time_minutes = max_step_calc_time_minutes
         self.keep_logs_hours = keep_logs_hours
         self.log_level = log_level
 
@@ -54,8 +62,13 @@ class Simulation:
         self.esdl_base64string = esdl_base64string
 
         self.current_time_step_nr = 0
+        self.calculation_start_datetime = datetime.now()
+        self.calculation_end_datetime = None
+        self.current_step_calculation_start_datetime = None
         self.model_inventory = ModelInventory()
         self.error_message = ""
+        self.terminated = False
+
         self.lock = Lock()
 
 
@@ -96,7 +109,10 @@ class SimulationInventory:
         return self.activeSimulations.get(simulation_id).model_inventory.get_model(model_id)
 
     def get_all_models(self, simulation_id: SimulationId) -> typing.List[Model]:
-        return self.activeSimulations.get(simulation_id).model_inventory.get_models()
+        if self.activeSimulations.get(simulation_id):
+            return self.activeSimulations.get(simulation_id).model_inventory.get_models()
+        else:
+            return []
 
     def get_model(self, simulation_id: SimulationId, model_id: ModelId) -> Model:
         return self.activeSimulations.get(simulation_id).model_inventory.get_model(model_id)
@@ -120,11 +136,14 @@ class SimulationInventory:
             # TODO remove simulation and clean-up MSO by message? Or do after SIM status request, so proper message can be given?
         return simulation_state
 
-    def _are_all_models_in_state(self, simulation_id, state: ProgressState) -> bool:
+    def _are_all_models_in_state(self, simulation_id: SimulationId, state: ProgressState) -> bool:
         return all(model.current_state == state for model in self.get_all_models(simulation_id))
 
-    def get_simulation_state(self, simulation_id: SimulationId) -> ProgressState:
+    def get_simulation_state(self, simulation_id: SimulationId) -> typing.Optional[ProgressState]:
         model_states = [model.current_state for model in self.get_all_models(simulation_id)]
+
+        if not model_states:
+            return None
 
         min_model_state = min(model_states)
         max_model_state = max(model_states)
@@ -143,10 +162,11 @@ class SimulationInventory:
         simulation = self.activeSimulations.get(simulation_id)
         simulation.current_time_step_nr += 1
         LOGGER.info(
-            f'Starting calculation step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})')
+            f"Starting calculation step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
+            f", for simulation ID: '{simulation_id}'")
         return {
             "time_step_nr": str(simulation.current_time_step_nr),
-            "start_time_stamp": (simulation.start_date + timedelta(0, (
+            "start_time_stamp": (simulation.simulation_start_datetime + timedelta(0, (
                     simulation.current_time_step_nr + 1) * simulation.time_step_seconds)).timestamp()
         }
 
@@ -156,11 +176,27 @@ class SimulationInventory:
 
     def get_status_description(self, simulation_id: SimulationId) -> str:
         state = self.get_simulation_state(simulation_id)
+        if not state:
+            return f"Simulation id '{simulation_id}' could not be found."
         if state == ProgressState.STEP_STARTED:
             simulation = self.activeSimulations.get(simulation_id)
             return f"Calculating time step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
         else:
             return str(state)
+
+    def start_step_calculation_time_counting(self, simulation_id: SimulationId):
+        self.activeSimulations.get(simulation_id).current_step_calculation_start_datetime = datetime.now()
+
+    def get_simulation_ids_exceeding_step_calc_time(self) -> typing.List[SimulationId]:
+        simulation_ids = []
+        for simulation_id, simulation in self.activeSimulations.items():
+            if not simulation.terminated and simulation.current_step_calculation_start_datetime:
+                if datetime.now() > simulation.current_step_calculation_start_datetime + timedelta(
+                        minutes=simulation.max_step_calc_time_minutes):
+                    LOGGER.info(
+                        f"Exceeded step calculation time for simulation: '{simulation.simulation_name}' - '{simulation_id}'")
+                    simulation_ids.append(simulation_id)
+        return simulation_ids
 
     def lock_simulation(self, simulation_id: SimulationId):
         self.activeSimulations.get(simulation_id).lock.acquire()

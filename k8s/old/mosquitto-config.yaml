@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: dots
+  name: mosquitto-config
+data: # make sure you change the backend-url!
+  mosquitto.conf: |
+    max_queued_messages 0
+    listener 1883 0.0.0.0
+    allow_anonymous false
+    password_file /mosquitto/config/mqtt_passwd
+  mqtt_passwd: |
+    dots:$7$101$pv4onIPwoTuoX/we$G6z9hs9ohtiSuKtCAjf2HuXOzUey7GbzzpFGZCcbfIJtRvEyv9ctfMuPfCLQu7JMMr3rJ4mAJ1iQDPXb1/E58Q==

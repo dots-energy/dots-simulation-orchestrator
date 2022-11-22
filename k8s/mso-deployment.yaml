@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: dots
+  name: mso
+  labels:
+    app: mso # pod name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mso
+  template: # pod blueprint
+    metadata:
+      labels:
+        app: mso # pod name
+    spec:
+      imagePullSecrets:
+      - name: ci-tno-dots
+      containers:
+      - name: mso # container name
+        image: ci.tno.nl/dots/model-services-orchestrator:0.0.1
+        imagePullPolicy: Always
+        env:
+        - name: KUBERNETES_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: kubernetes-api-token
+        - name: KUBERNETES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: kubernetes-host
+        - name: KUBERNETES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: kubernetes-port
+        - name: KUBERNETES_PULL_IMAGE_SECRET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: kubernetes-pull-image-secret-name
+        - name: MQTT_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: mqtt-host
+        - name: MQTT_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: mqtt-port
+        - name: MQTT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: mqtt-username
+        - name: MQTT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: mqtt-password
+        - name: SIMULATOR_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: simulator-name
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: kubernetes
+  namespace: dots
+spec:
+  type: ExternalName
+  externalName: kubernetes.default.svc.cluster.local
+  ports:
+  - port: 443

@@ -1,0 +1,79 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: dots
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: dots
+  name: simulation
+secrets:
+- name: dots-token-4zfwp
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: dots
+  name: dots-token-4zfwp
+  annotations:
+    kubernetes.io/service-account.name: simulation
+type: kubernetes.io/service-account-token
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dots
+  name: simulation-role
+rules:
+  - apiGroups:
+        - ""
+        - apps
+        - autoscaling
+        - batch
+        - extensions
+        - policy
+        - rbac.authorization.k8s.io
+    resources:
+      - pods
+      - pods/log
+      - componentstatuses
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - endpoints
+      - horizontalpodautoscalers
+      - ingress
+      - jobs
+      - limitranges
+      - namespaces
+      - nodes
+      - pods
+      - persistentvolumes
+      - persistentvolumeclaims
+      - resourcequotas
+      - replicasets
+      - replicationcontrollers
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: dots
+  name: simulation-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: simulation
+    namespace: dots
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: simulation-role

@@ -4,6 +4,7 @@ import typing
 from rest.schemas.simulation_schemas import SimulationPost, SimulationStatus, SimulationList
 from simulation_orchestrator import parse_esdl, actions
 from simulation_orchestrator.models.simulation_inventory import Simulation
+from simulation_orchestrator.types import ProgressState
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ def get_simulation_status(*, simulation_id: str) -> SimulationStatus:
         # the exception is raised, not returned - you will get a validation
         # error otherwise.
         raise HTTPException(
-            status_code=404, detail=f"Simulation with ID {simulation_id} not found"
+            status_code=404, detail=f"Simulation with ID '{simulation_id}' not found"
         )
     return SimulationStatus.from_simulation_and_status(simulation, status)
 
@@ -52,8 +53,9 @@ def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus
     simulation_id = actions.start_new_simulation(Simulation(
         simulator_id=simulator_id,
         simulation_name=simulation_post.name,
-        start_date=simulation_post.start_date,
+        simulation_start_date=simulation_post.start_date,
         time_step_seconds=simulation_post.time_step_seconds,
+        max_step_calc_time_minutes=simulation_post.max_step_calc_time_minutes,
         sim_nr_of_steps=simulation_post.nr_of_time_steps,
         keep_logs_hours=simulation_post.keep_logs_hours,
         log_level=simulation_post.log_level,
@@ -64,3 +66,18 @@ def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus
     simulation_status = SimulationStatus.from_simulation_and_status(*actions.get_simulation_and_status(simulation_id))
 
     return simulation_status
+
+
+@router.delete("/{simulation_id}", status_code=200, response_model=SimulationStatus)
+def terminate_simulation(*, simulation_id: str) -> SimulationStatus:
+    """
+    Terminate a single simulation by ID
+    """
+    simulation, status = actions.terminate_simulation(simulation_id)
+    if not simulation:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Simulation with ID {simulation_id} not found"
+        )
+    return SimulationStatus.from_simulation_and_status(simulation, str(ProgressState.TERMINATED_FAILED))
