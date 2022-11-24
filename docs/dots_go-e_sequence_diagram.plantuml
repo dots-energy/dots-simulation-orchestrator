@@ -87,12 +87,12 @@ model_2 -> model_2 : configure
 model_1 -> influxdb : connect to influxdb
 model_2 -> influxdb
 
-model_1 -> so : 'parameterized' ('n' times) (mqtt)
-model_2 -> so : 'parameterized' ('n' times) (mqtt)
+model_1 -> so : 'Parameterized' ('n' times) (mqtt)
+model_2 -> so : 'Parameterized' ('n' times) (mqtt)
 
 end
 
-so -> so : if all models are parameterized: start simulation
+so -> so : if all models are configured: start simulation
 
 group simulation loop
 so -> model_1 : 'NewStep', step start/end time, number ('n' times) (mqtt)
@@ -127,7 +127,7 @@ destroy model_1
 deactivate model_2
 destroy model_2
 
-sim_req -> deploy_plane : view calculation services logs (Lens)
+sim_req -> deploy_plane : (optional) view calculation services logs (Lens)
 mso -> deploy_plane : delete pods when 'keep_log_hours' have passed after completion of the simulation
 
 sim_req -> influxdb : download and view simulation results (Grafana)
