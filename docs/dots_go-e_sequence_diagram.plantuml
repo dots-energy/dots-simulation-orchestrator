@@ -35,18 +35,19 @@ note over so
     and stops the simulation when max exceeded
 end note
 / note over mso
-    continuously checks the status of the calculation model pods
-    and deletes pods on completion (after 'keep_log_hours')
+    continuously checks the status of the
+    calculation model pods and deletes pods
+    on completion (after 'keep_log_hours')
 end note
 
-sim_req -> so : create simulation (http POST request) \n\
-- simulation name, start, end, nr of steps \n\
-- 'keep_log_hours', max step calc time, log-level \n\
-- calculation services: name, ESDL type, image url
+sim_req -> so : create simulation (http POST request): \n\
+- simulation setup\n\
+- ESDL \n\
+- calculation services
 
 so -> so : generate simulation id
 so --> sim_req : http POST response with simulation id
-so -> so : parse esdl & calculation services for esdl objects
+so -> so : parse ESDL & calc services for esdl objects
 
 group deploy
 so -> mso : 'deploymodels' for calc services (mqtt)
@@ -64,7 +65,7 @@ create model_2
 deploy_plane -> model_2 : deploys container with env var deploy params for esdl object
 activate model_2 #lightblue
 
-model_2 -> model_2 : subscribe to messages from simulation orchestrator
+model_2 -> model_2 : subscribe to messages from the SO
 model_1 -> mso : readyforprocessing ('n' times) (mqtt)
 model_2 -> mso
 
@@ -99,7 +100,7 @@ so -> model_1 : 'NewStep', step start/end time, number ('n' times) (mqtt)
 so -> model_2 :
 
 group#tomato time step calculation sequence
-model_1 -> model_1 : start calculation(s) when required data received
+model_1 -> model_1 : start calculation(s) when\n required data received
 model_1 <-> model_2 : send data messages (mqtt)
 model_2 -> model_2 : start calculation(s) when required data received
 end
@@ -109,12 +110,12 @@ sim_req -> so: http GET/DELETE '/simulation_id' requests
        on termination exit simulation loop:
        partial results are written to influxdb
     end note
-so --> sim_req: http GET/DELETE response with status/progress
+so --> sim_req: http GET/DELETE response: status/progress
 
 model_2 -> so : 'CalculationsDone' ('n' times) (mqtt)
 model_1 -> so : 
 
-so -> so : if all calculations are done: new step if not on last step
+so -> so : start new step if all calculations are done
 end
 
 so -> model_1 : 'SimulationDone' ('n' times) (mqtt)
