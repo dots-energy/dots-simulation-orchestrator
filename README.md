@@ -27,7 +27,8 @@ The database results can be viewed using [InfluxDB Studio](#InfluxDB Studio) or 
 
 ## Deploy on Kubernetes
 With Kubernetes up and running, in bash window from `k8s` folder, run:  
-`./deploy_dots.sh`
+`./deploy_dots.sh`  
+When the deployment has completed, the simulation API should be available on: http://localhost:8011/docs
 
 ## Test on local cluster
 
