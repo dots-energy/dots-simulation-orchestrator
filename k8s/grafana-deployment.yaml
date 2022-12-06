@@ -15,6 +15,10 @@ spec:
       labels:
         app: grafana # pod name
     spec:
+      securityContext:
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
       containers:
       - name: grafana # container name
         image: grafana/grafana:7.4.5 # image name
