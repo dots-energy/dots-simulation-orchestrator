@@ -11,7 +11,7 @@
 # Setup cluster
 kubectl apply -f ./cluster-config.yaml
 # Set master node also to be a worker node
-kubectl label nodes --overwrite dots-kind-control-plane type=worker
+kubectl label nodes --overwrite aks-agentpool-12841752-vmss000000 type=worker
 
 #echo ""
 #echo "Admin kube config should be available at ~/.kube/config."
