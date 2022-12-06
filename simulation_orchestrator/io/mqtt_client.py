@@ -18,7 +18,7 @@ NEW_STEP = 'new_step'
 STOP_SERVICE = 'stop_service'
 
 
-class MqttBroker:
+class MqttClient:
     def __init__(self, host: str, port: int, qos: int, username: str, password: str, influxdb_host: str,
                  influxdb_port: str, influxdb_user: str, influxdb_password: str, influxdb_name: str,
                  simulation_inventory: SimulationInventory):
@@ -58,7 +58,7 @@ class MqttBroker:
         self.mqtt_client.on_message = on_message
 
         self.mqtt_client.username_pw_set(self.username, self.password)
-        self.mqtt_client.connect(self.host, port=self.port)
+        self.connect()
 
         self._subscribe_lifecycle_topics()
 
@@ -67,6 +67,14 @@ class MqttBroker:
 
         LOGGER.debug('Simulation Orchestrator connected to MQTT broker.')
         self.mqtt_client.loop_forever()
+
+    def connect(self):
+        try:
+            self.mqtt_client.connect(self.host, port=self.port)
+        except Exception as e:
+            LOGGER.debug("Could not connect to MQTT broker, retry in 2 seconds: {}".format(e))
+            time.sleep(2)
+            self.connect()
 
     def _check_step_calc_time(self):
         s = sched.scheduler(time.time, time.sleep)

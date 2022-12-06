@@ -10,7 +10,7 @@ load_dotenv()  # take environment variables from .env
 import threading
 import typing
 
-from simulation_orchestrator.io.mqtt_broker import MqttBroker
+from simulation_orchestrator.io.mqtt_client import MqttClient
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory
 import simulation_orchestrator.actions as actions
 from simulation_orchestrator.io.log import LOGGER
@@ -83,7 +83,7 @@ def start():
 
     simulation_inventory = SimulationInventory()
 
-    mqtt_broker = MqttBroker(
+    mqtt_client = MqttClient(
         host=config['MQTT_HOST'],
         port=config['MQTT_PORT'],
         qos=config['MQTT_QOS'],
@@ -98,9 +98,9 @@ def start():
     )
 
     actions.simulation_inventory = simulation_inventory
-    actions.mqtt_broker = mqtt_broker
+    actions.mqtt_client = mqtt_client
 
-    t = threading.Thread(target=mqtt_broker.start, name='mqtt broker')
+    t = threading.Thread(target=mqtt_client.start, name='mqtt client')
     t.daemon = True
     t.start()
 

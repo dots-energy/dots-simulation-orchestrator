@@ -15,7 +15,8 @@
     {
       "esdl_type": "PVPanel",
       "calc_service_name": "pv_panel_service_mark",
-      "service_image_url": "ci.tno.nl/dots/go-e/pv_panel_service_mark:0.0.1"
+      "service_image_url": "ci.tno.nl/dots/go-e/pv_panel_service_mark:0.0.1",
+      "single_container_service":
     },
     {
       "esdl_type": "Battery",

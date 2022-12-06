@@ -45,7 +45,7 @@ class InfluxDBConnector:
             LOGGER.debug("InfluxDBClient ping: {}".format(client.ping()))
             self.client = client
         except Exception as e:
-            LOGGER.debug("Could not connect, retry in 2 seconds: {}".format(e))
+            LOGGER.debug("Could not connect to InfluxDB, retry in 2 seconds: {}".format(e))
             time.sleep(2)
             self.connect()
             # if client:

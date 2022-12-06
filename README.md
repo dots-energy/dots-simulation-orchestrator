@@ -25,6 +25,10 @@ below).
 The logs can be viewed in [Lens](#lens-model-service-calculation-logs) after connecting to the Kubernetes backplane.
 The database results can be viewed using [InfluxDB Studio](#InfluxDB Studio) or [Grafana](#Grafana) after connecting to the InfluxDB instance.
 
+## Deploy on Kubernetes
+With Kubernetes up and running, in bash window from `k8s` folder, run:  
+`./deploy_dots.sh`
+
 ## Test on local cluster
 
 Several components need to be up and running for local test deployment:
