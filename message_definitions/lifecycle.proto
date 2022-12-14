@@ -27,7 +27,7 @@ message ModelParameters {
   string parameters_dict = 1;
 }
 
-message Parametrized {
+message Parameterized {
 }
 
 message NewStep {

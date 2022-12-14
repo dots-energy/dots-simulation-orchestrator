@@ -145,6 +145,7 @@ The data from the influxdb can also viewed using grafana, go to http://localhost
 Create a python virtual environment (3.10) and install the dependencies:
 
 ```console
+pip install pip-tools==6.10
 pip-compile ./requirements.in --output-file ./requirements.txt
 python -m pip install -r requirements.txt
 ```

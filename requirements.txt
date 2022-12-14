@@ -42,7 +42,7 @@ pydantic==1.9.0
     #   fastapi
 pyecore==0.12.1
     # via pyesdl
-pyesdl==22.7.0
+pyesdl==22.11.2
     # via -r ./requirements.in
 python-dateutil==2.8.2
     # via influxdb

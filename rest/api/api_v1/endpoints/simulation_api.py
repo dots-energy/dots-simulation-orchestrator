@@ -45,7 +45,8 @@ def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus
         {
             "esdl_type": calculation_service.esdl_type,
             "calc_service_name": calculation_service.calc_service_name,
-            "service_image_url": calculation_service.service_image_url
+            "service_image_url": calculation_service.service_image_url,
+            "nr_of_models": calculation_service.nr_of_models,
         }
         for calculation_service in simulation_post.calculation_services
     ]

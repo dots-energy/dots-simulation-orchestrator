@@ -113,9 +113,9 @@ class MqttClient:
                 error_occurred = messages.ErrorOccurred()
                 error_occurred.ParseFromString(message.payload)
                 self.simulation_inventory.error_message = error_occurred.error_message
-            elif topic_parts[6] == 'Parametrized' or topic_parts[6] == 'CalculationsDone':
-                if topic_parts[6] == 'Parametrized':
-                    new_model_state = ProgressState.PARAMETRIZED
+            elif topic_parts[6] == 'Parameterized' or topic_parts[6] == 'CalculationsDone':
+                if topic_parts[6] == 'Parameterized':
+                    new_model_state = ProgressState.PARAMETERIZED
                 else:
                     new_model_state = ProgressState.STEP_FINISHED
                 simulation_state = self.simulation_inventory.update_model_state_and_get_simulation_state(
@@ -158,9 +158,7 @@ class MqttClient:
                 messages.EnvironmentVariable(name='MQTT_QOS', value=str(self.qos)),
                 messages.EnvironmentVariable(name='SIMULATOR_ID', value=simulator_id),
                 messages.EnvironmentVariable(name='SIMULATION_ID', value=simulation_id),
-                messages.EnvironmentVariable(name='ESDL_UUID', value=str(model.esdl_uuid)),
                 messages.EnvironmentVariable(name='MODEL_ID', value=model.model_id),
-                messages.EnvironmentVariable(name='MODEL_NAME', value=model.model_name),
                 messages.EnvironmentVariable(name='MQTT_USERNAME', value=self.username),
                 messages.EnvironmentVariable(name='MQTT_PASSWORD', value=self.password),
                 messages.EnvironmentVariable(name='INFLUXDB_HOST', value=self.influxdb_host),
@@ -196,6 +194,7 @@ class MqttClient:
                     'nr_of_time_steps': simulation.nr_of_time_steps,
                     'calculation_services': simulation.calculation_services,
                     'esdl_base64string': simulation.esdl_base64string,
+                    'esdl_ids': model.esdl_ids,
                 })
             )
             self.mqtt_client.publish(

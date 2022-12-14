@@ -1,6 +1,6 @@
 import typing
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 from typing import Sequence
 
@@ -8,9 +8,13 @@ from simulation_orchestrator.models.simulation_inventory import Simulation
 
 
 class CalculationService(BaseModel):
-    esdl_type: str = 'PVPanel'
-    calc_service_name: str = 'pvpanel_calc_service'
-    service_image_url: str = '<calc_service_docker_image_url>'
+    esdl_type: str = Field(default='PVInstallation', description="The exactname of the ESDL type")
+    calc_service_name: str = Field(default='pvinstallation_service',
+                                   description="Name of the calculation service,"
+                                               " as described in the code generator yaml config file")
+    service_image_url: str = Field(default='<pvinstallation_service_docker_image_url>',
+                                   description="The URL of the (ci.tno.nl) docker image file")
+    nr_of_models: int = Field(default=1, description="'0' will create a model (container) per ESDL object")
 
 
 class SimulationPost(BaseModel):
@@ -18,9 +22,11 @@ class SimulationPost(BaseModel):
     start_date: datetime = '2023-01-25 00:00:00'
     time_step_seconds: int = '3600'
     nr_of_time_steps: int = '24'
-    max_step_calc_time_minutes: float = '10'
+    max_step_calc_time_minutes: float = Field(default=10,
+                                              description="If a time step takes longer than this amount of minutes,"
+                                                          " the simulation will be aborted")
     keep_logs_hours: float = '24.0'
-    log_level: str = 'info'
+    log_level: str = Field(default='info', description="Options: 'debug', 'info', 'warning', 'error'")
     calculation_services: list[CalculationService]
     esdl_base64string: str = '<esdl_file_base64encoded_string>'
 

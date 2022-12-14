@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0flifecycle.proto\"2\n\x13\x45nvironmentVariable\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"k\n\x12ModelConfiguration\x12\x0f\n\x07modelID\x18\x01 \x01(\t\x12\x10\n\x08imageUrl\x18\x02 \x01(\t\x12\x32\n\x14\x65nvironmentVariables\x18\x03 \x03(\x0b\x32\x14.EnvironmentVariable\"l\n\x0c\x44\x65ployModels\x12\x13\n\x0bsimulatorId\x18\x01 \x01(\t\x12\x30\n\x13modelConfigurations\x18\x02 \x03(\x0b\x32\x13.ModelConfiguration\x12\x15\n\rkeepLogsHours\x18\x03 \x01(\x01\"\x14\n\x12ReadyForProcessing\"\r\n\x0bModelsReady\"*\n\x0fModelParameters\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x0e\n\x0cParametrized\"\"\n\x07NewStep\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x12\n\x10\x43\x61lculationsDone\"&\n\rErrorOccurred\x12\x15\n\rerror_message\x18\x01 \x01(\t\"\x10\n\x0eSimulationDone\"7\n\x0eUnhealthyModel\x12%\n\x06status\x18\x01 \x01(\x0e\x32\x15.UnhealthyModelStatus\"J\n\x12ModelHasTerminated\x12\"\n\x06status\x18\x01 \x01(\x0e\x32\x12.TerminationStatus\x12\x10\n\x08\x65xitCode\x18\x02 \x01(\x05\"\x19\n\x17\x41llModelsHaveTerminated*&\n\x14UnhealthyModelStatus\x12\x0e\n\nNOPROGRESS\x10\x00*0\n\x11TerminationStatus\x12\x0f\n\x0bSUCCESSFULL\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0flifecycle.proto\"2\n\x13\x45nvironmentVariable\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"k\n\x12ModelConfiguration\x12\x0f\n\x07modelID\x18\x01 \x01(\t\x12\x10\n\x08imageUrl\x18\x02 \x01(\t\x12\x32\n\x14\x65nvironmentVariables\x18\x03 \x03(\x0b\x32\x14.EnvironmentVariable\"l\n\x0c\x44\x65ployModels\x12\x13\n\x0bsimulatorId\x18\x01 \x01(\t\x12\x30\n\x13modelConfigurations\x18\x02 \x03(\x0b\x32\x13.ModelConfiguration\x12\x15\n\rkeepLogsHours\x18\x03 \x01(\x01\"\x14\n\x12ReadyForProcessing\"\r\n\x0bModelsReady\"*\n\x0fModelParameters\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x0f\n\rParameterized\"\"\n\x07NewStep\x12\x17\n\x0fparameters_dict\x18\x01 \x01(\t\"\x12\n\x10\x43\x61lculationsDone\"&\n\rErrorOccurred\x12\x15\n\rerror_message\x18\x01 \x01(\t\"\x10\n\x0eSimulationDone\"7\n\x0eUnhealthyModel\x12%\n\x06status\x18\x01 \x01(\x0e\x32\x15.UnhealthyModelStatus\"J\n\x12ModelHasTerminated\x12\"\n\x06status\x18\x01 \x01(\x0e\x32\x12.TerminationStatus\x12\x10\n\x08\x65xitCode\x18\x02 \x01(\x05\"\x19\n\x17\x41llModelsHaveTerminated*&\n\x14UnhealthyModelStatus\x12\x0e\n\nNOPROGRESS\x10\x00*0\n\x11TerminationStatus\x12\x0f\n\x0bSUCCESSFULL\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x62\x06proto3')
 
 _UNHEALTHYMODELSTATUS = DESCRIPTOR.enum_types_by_name['UnhealthyModelStatus']
 UnhealthyModelStatus = enum_type_wrapper.EnumTypeWrapper(_UNHEALTHYMODELSTATUS)
@@ -32,7 +32,7 @@ _DEPLOYMODELS = DESCRIPTOR.message_types_by_name['DeployModels']
 _READYFORPROCESSING = DESCRIPTOR.message_types_by_name['ReadyForProcessing']
 _MODELSREADY = DESCRIPTOR.message_types_by_name['ModelsReady']
 _MODELPARAMETERS = DESCRIPTOR.message_types_by_name['ModelParameters']
-_PARAMETRIZED = DESCRIPTOR.message_types_by_name['Parametrized']
+_PARAMETERIZED = DESCRIPTOR.message_types_by_name['Parameterized']
 _NEWSTEP = DESCRIPTOR.message_types_by_name['NewStep']
 _CALCULATIONSDONE = DESCRIPTOR.message_types_by_name['CalculationsDone']
 _ERROROCCURRED = DESCRIPTOR.message_types_by_name['ErrorOccurred']
@@ -82,12 +82,12 @@ ModelParameters = _reflection.GeneratedProtocolMessageType('ModelParameters', (_
   })
 _sym_db.RegisterMessage(ModelParameters)
 
-Parametrized = _reflection.GeneratedProtocolMessageType('Parametrized', (_message.Message,), {
-  'DESCRIPTOR' : _PARAMETRIZED,
+Parameterized = _reflection.GeneratedProtocolMessageType('Parameterized', (_message.Message,), {
+  'DESCRIPTOR' : _PARAMETERIZED,
   '__module__' : 'lifecycle_pb2'
-  # @@protoc_insertion_point(class_scope:Parametrized)
+  # @@protoc_insertion_point(class_scope:Parameterized)
   })
-_sym_db.RegisterMessage(Parametrized)
+_sym_db.RegisterMessage(Parameterized)
 
 NewStep = _reflection.GeneratedProtocolMessageType('NewStep', (_message.Message,), {
   'DESCRIPTOR' : _NEWSTEP,
@@ -141,10 +141,10 @@ _sym_db.RegisterMessage(AllModelsHaveTerminated)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _UNHEALTHYMODELSTATUS._serialized_start=661
-  _UNHEALTHYMODELSTATUS._serialized_end=699
-  _TERMINATIONSTATUS._serialized_start=701
-  _TERMINATIONSTATUS._serialized_end=749
+  _UNHEALTHYMODELSTATUS._serialized_start=662
+  _UNHEALTHYMODELSTATUS._serialized_end=700
+  _TERMINATIONSTATUS._serialized_start=702
+  _TERMINATIONSTATUS._serialized_end=750
   _ENVIRONMENTVARIABLE._serialized_start=19
   _ENVIRONMENTVARIABLE._serialized_end=69
   _MODELCONFIGURATION._serialized_start=71
@@ -157,20 +157,20 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _MODELSREADY._serialized_end=325
   _MODELPARAMETERS._serialized_start=327
   _MODELPARAMETERS._serialized_end=369
-  _PARAMETRIZED._serialized_start=371
-  _PARAMETRIZED._serialized_end=385
-  _NEWSTEP._serialized_start=387
-  _NEWSTEP._serialized_end=421
-  _CALCULATIONSDONE._serialized_start=423
-  _CALCULATIONSDONE._serialized_end=441
-  _ERROROCCURRED._serialized_start=443
-  _ERROROCCURRED._serialized_end=481
-  _SIMULATIONDONE._serialized_start=483
-  _SIMULATIONDONE._serialized_end=499
-  _UNHEALTHYMODEL._serialized_start=501
-  _UNHEALTHYMODEL._serialized_end=556
-  _MODELHASTERMINATED._serialized_start=558
-  _MODELHASTERMINATED._serialized_end=632
-  _ALLMODELSHAVETERMINATED._serialized_start=634
-  _ALLMODELSHAVETERMINATED._serialized_end=659
+  _PARAMETERIZED._serialized_start=371
+  _PARAMETERIZED._serialized_end=386
+  _NEWSTEP._serialized_start=388
+  _NEWSTEP._serialized_end=422
+  _CALCULATIONSDONE._serialized_start=424
+  _CALCULATIONSDONE._serialized_end=442
+  _ERROROCCURRED._serialized_start=444
+  _ERROROCCURRED._serialized_end=482
+  _SIMULATIONDONE._serialized_start=484
+  _SIMULATIONDONE._serialized_end=500
+  _UNHEALTHYMODEL._serialized_start=502
+  _UNHEALTHYMODEL._serialized_end=557
+  _MODELHASTERMINATED._serialized_start=559
+  _MODELHASTERMINATED._serialized_end=633
+  _ALLMODELSHAVETERMINATED._serialized_start=635
+  _ALLMODELSHAVETERMINATED._serialized_end=660
 # @@protoc_insertion_point(module_scope)

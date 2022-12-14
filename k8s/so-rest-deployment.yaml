@@ -19,7 +19,7 @@ spec:
       - name: ci-tno-dots
       containers:
       - name: so-rest # container name
-        image: ci.tno.nl/dots/simulation-orchestrator:0.0.1
+        image: ci.tno.nl/dots/simulation-orchestrator:0.0.2
         imagePullPolicy: Always
         ports:
         - containerPort: 8001

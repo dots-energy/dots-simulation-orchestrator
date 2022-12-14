@@ -6,7 +6,9 @@ from base64 import b64decode, b64encode
 from typing import Dict, Type
 import json
 import uuid
+from simulation_orchestrator import parse_esdl
 
+model_list = parse_esdl.get_model_list(new_simulation.calculation_services, new_simulation.esdl_base64string)
 
 # with open("test_file.esdl", "rb") as esdl_file:
 #     esdl_base64string = b64encode(esdl_file.read()).decode("utf-8")
@@ -18,6 +20,7 @@ esh = EnergySystemHandler()
 esh.load_file("minimal_es_GOe.esdl")
 # esh.load_from_string(esdl_string)
 energy_system = esh.get_energy_system()
+
 
 calc_service_image_urls: Dict[Type[esdl.EnergyAsset], str] = {
     esdl.PVPanel: "pvpanel_service_url",

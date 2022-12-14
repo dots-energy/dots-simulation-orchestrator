@@ -1,8 +1,0 @@
-apiVersion: v1
-data:
-  .dockerconfigjson: eyJhdXRocyI6eyJjaS50bm8ubmwiOnsidXNlcm5hbWUiOiJkb3RzLWRlcGxveS10b2tlbiIsInBhc3N3b3JkIjoiZXpZS3VIWXdLLVlaTmZmVXhnX3MiLCJhdXRoIjoiWkc5MGN5MWtaWEJzYjNrdGRHOXJaVzQ2WlhwWlMzVklXWGRMTFZsYVRtWm1WWGhuWDNNPSJ9fX0=
-kind: Secret
-metadata:
-  name: ci-tno-dots
-  namespace: dots
-type: kubernetes.io/dockerconfigjson

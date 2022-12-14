@@ -14,8 +14,7 @@ def start_new_simulation(new_simulation: Simulation) -> SimulationId:
     try:
         model_list = parse_esdl.get_model_list(new_simulation.calculation_services, new_simulation.esdl_base64string)
     except Exception as ex:
-        raise IOError(f"The ESDL Base64 Encoded string could not be read: {ex},"
-                      f"input Base64 string: {new_simulation.esdl_base64string}")
+        raise IOError(f"Error getting Model list from ESDL: {ex},")
 
     simulation_id = simulation_inventory.add_simulation(new_simulation)
     simulation_inventory.add_models_to_simulation(new_simulation.simulation_id, model_list)
