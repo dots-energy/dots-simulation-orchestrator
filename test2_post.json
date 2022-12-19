@@ -10,13 +10,13 @@
     {
       "esdl_type": "EnergySystem",
       "calc_service_name": "test2_energy_system_service",
-      "service_image_url": "ci.tno.nl/dots/go-e/test2_energy_system_service:0.0.2",
+      "service_image_url": "ci.tno.nl/dots/go-e/test2_energy_system_service:0.0.1",
       "nr_of_models": 1
     },
     {
       "esdl_type": "PVInstallation",
       "calc_service_name": "test2_pv_installation_service",
-      "service_image_url": "ci.tno.nl/dots/go-e/test2_pv_installation_service:0.0.2",
+      "service_image_url": "ci.tno.nl/dots/go-e/test2_pv_installation_service:0.0.1",
       "nr_of_models": 1
     },
     {

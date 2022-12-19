@@ -53,7 +53,6 @@ def add_esdl_object(service_info_dict: dict, calculation_services: List[dict], e
             service_info_dict[calc_service['calc_service_name']]['esdl_ids'].append(esdl_obj.id)
         else:
             service_info_dict[calc_service['calc_service_name']] = {
-                'esdl_obj_name': esdl_obj.name,
                 'esdl_ids': [esdl_obj.id],
                 'calc_service_name': calc_service['calc_service_name'],
                 'service_image_url': calc_service['service_image_url'],
@@ -71,7 +70,7 @@ def add_service_models(service_info, model_list):
     i_model = 0
     while i_model * nr_of_objects_in_model < nr_of_esdl_objects:
         i_model += 1
-        model_id = f"{service_info['calc_service_name']}-{i_model}"
+        model_id = f"{service_info['calc_service_name'].replace('_', '-')}-{i_model}"
 
         esdl_ids = []
         for i_esdl_id in range((i_model - 1) * nr_of_objects_in_model, i_model * nr_of_objects_in_model):
