@@ -1,7 +1,7 @@
 @startuml
 skinparam sequencemessagealign reversedirection
-
 skinparam backgroundColor #EEEBDC
+
 'skinparam handwritten true
 
 actor "simulation requester" as sim_req
@@ -15,8 +15,8 @@ participant mso [
     ----
     Python Asyncio
 ]
-participant "calculation service 1" as model_1
-participant "calculation service 2" as model_2
+participant "calculation service A" as service_A
+participant "calculation service B" as service_B
 
 database "influxdb database" as influxdb
 participant deploy_plane [
@@ -42,31 +42,33 @@ end note
 
 sim_req -> so : create simulation (http POST request): \n\
 - simulation setup\n\
-- ESDL file \n\
+- energy system ESDL file \n\
 - calculation services definition
 
 so -> so : generate simulation id
 so --> sim_req : http POST response with simulation id
-so -> so : parse ESDL & calc services for esdl objects
+so -> so : parse ESDL & calculation services\n\
+distribute ESDL objects over calc models
 
     group deploy
     so -> mso : 'deploymodels' for calc services (mqtt)
     mso -> deploy_plane : instruct to deploy calculation service model containers with env var deployment parameters (python api)
 
-    create model_1
-    deploy_plane -> model_1 : deploys container with env var deploy params for esdl object 1
-    create model_1
-    deploy_plane -> model_1 : deploys container with env var deploy params for esdl object 2
-    create model_1
-    deploy_plane -> model_1 : deploys container with env var deplot params for esdl object 'n'
-    activate model_1 #lightblue
-    create model_2
-    deploy_plane -> model_2 : deploys container with env var deploy params for esdl object
-    activate model_2 #lightblue
+    create service_A
+    deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 1
+    create service_A
+    deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 2
+    create service_A
+    deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 'n'
+    activate service_A #lightblue
+    create service_B
+    deploy_plane -> service_B : deploys container with env var deploy params
+    activate service_B #lightblue
 
-    model_2 -> model_2 : subscribe to messages from the SO
-    model_1 -> mso : readyforprocessing ('n' times) (mqtt)
-    model_2 -> mso
+    service_A -> service_A : subscribe to messages from the SO
+    service_B -> service_B :
+    service_A -> mso : readyforprocessing ('n' times) (mqtt)
+    service_B -> mso
 
     mso -> so : modelsready (mqtt)
     end
@@ -74,35 +76,35 @@ so -> so : parse ESDL & calc services for esdl objects
 so -> so : if all models are deployed: start simulation
 
     group configure
-    so -> model_1 : 'ModelParameters', i.a. ESDL ('n' times) (mqtt)
-    so -> model_2 :
+    so -> service_A : 'ModelParameters' ('n' times) (mqtt):\n\
+    - list of ESDL object id's in calculation model\n\
+    - ESDL file\n\
+    - calculation services definition
+    so -> service_B :
 
-    model_1 -> model_1 : configure
-    model_2 -> model_2 : configure
-        note right
-            - parse ESDL, get object parameter values
-            - subscribe to message topics from
-              connected calculation service models
-            - service specific pre-simulation configuration
-        end note
+    service_A -> service_A : configure
+    service_B -> service_B : configure:\n\
+    - subscribe to message topics from\n\
+      all connected ESDL objects\n\
+    - setup influxdb output
 
-    model_1 -> influxdb : connect to influxdb
-    model_2 -> influxdb
+    service_A -> influxdb : connect to influxdb
+    service_B -> influxdb
 
-    model_1 -> so : 'Parameterized' ('n' times) (mqtt)
-    model_2 -> so : 'Parameterized' ('n' times) (mqtt)
+    service_A -> so : 'Parameterized' ('n' times) (mqtt)
+    service_B -> so : 'Parameterized' ('n' times) (mqtt)
     end
 
 so -> so : if all models are configured: start simulation
 
     group simulation loop
-    so -> model_1 : 'NewStep', step start/end time, number ('n' times) (mqtt)
-    so -> model_2 :
+    so -> service_A : 'NewStep', step start/end time, number ('n' times) (mqtt)
+    so -> service_B :
 
         group#tomato time step calculation sequence
-        model_1 -> model_1 : start calculation(s) when\n required data received
-        model_1 <-> model_2 : send data messages (mqtt)
-        model_2 -> model_2 : start calculation(s) when\nrequired data received
+        service_A -> service_A : start calculation(s) when all\nexpected data received
+        service_A <-> service_B : send data messages (mqtt)
+        service_B -> service_B : start calculation(s) when\nrequired data received
         end
 
     sim_req -> so: http GET/DELETE '/simulation_id' requests
@@ -112,21 +114,21 @@ so -> so : if all models are configured: start simulation
         end note
     so --> sim_req: http GET/DELETE response: status/progress
 
-    model_2 -> so : 'CalculationsDone' ('n' times) (mqtt)
-    model_1 -> so :
+    service_B -> so : 'CalculationsDone' ('n' times) (mqtt)
+    service_A -> so :
 
     so -> so : start new step if all calculations are done
     end
 
-so -> model_1 : if all time steps are finished: 'SimulationDone' ('n' times) (mqtt)
-so -> model_2 :
-model_1 -> influxdb : write to influxdb
-model_2 -> influxdb :
-model_1 -> deploy_plane : status of pods to 'Succeeded'
-deactivate model_1
-destroy model_1
-deactivate model_2
-destroy model_2
+so -> service_A : if all time steps are finished: 'SimulationDone' ('n' times) (mqtt)
+so -> service_B :
+service_A -> influxdb : write to influxdb
+service_B -> influxdb :
+service_A -> deploy_plane : status of pods to 'Succeeded'
+deactivate service_A
+destroy service_A
+deactivate service_B
+destroy service_B
 
 sim_req -> deploy_plane : (optional) view calculation services logs (Lens)
 mso -> deploy_plane : delete pods when 'keep_log_hours' have passed after completion of the simulation
