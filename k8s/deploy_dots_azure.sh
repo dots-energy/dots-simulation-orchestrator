@@ -1,21 +1,9 @@
 #!/bin/bash
 
-# Start cluster
-#kind create cluster --name kind
-#kind create cluster --config=./kind-cluster.yaml
-
-#echo ""
-#echo "Error is okay if kind cluster was already active."
-#echo ""
-
 # Setup cluster
 kubectl apply -f ./cluster-config.yaml
 # Set master node also to be a worker node
 kubectl label nodes --overwrite aks-agentpool-12841752-vmss000000 type=worker
-
-#echo ""
-#echo "Admin kube config should be available at ~/.kube/config."
-#echo ""
 
 kube_api_token=$(kubectl describe secrets/dots-token-4zfwp --namespace dots  | grep 'token:' | awk -F' ' '{print $2}')
 kube_url=$(kubectl config view | grep 'server:' | awk -F'server: ' '{print $2}')

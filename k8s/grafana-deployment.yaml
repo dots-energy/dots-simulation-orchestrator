@@ -67,7 +67,7 @@ metadata:
   name: grafana
 spec:
   selector:
-    app: grafana # to connect with pod with label mongo-db
+    app: grafana
   type: LoadBalancer
   ports:
     - protocol: TCP

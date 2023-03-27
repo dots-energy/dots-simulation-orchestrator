@@ -1,6 +1,7 @@
 @startuml
 skinparam defaultTextAlignment center
-skinparam backgroundColor #EEEBDC
+'skinparam backgroundColor #EEEBDC
+skinparam backgroundColor transparent
 'skinparam arrowFontName Courier
 'skinparam legendFontName Courier
 'skinparam actorFontName Courier
@@ -9,29 +10,27 @@ skinparam backgroundColor #EEEBDC
 'skinparam handwritten true
 skinparam actorBackgroundColor Gold
 
-cloud "Azure Kubernetes Service\n<img:./images/aks.png{scale=0.1}>" {
-    [<img:./images/k8s.png{scale=0.1}>\nModel Service\nOrchestrator] as mso
+cloud "Azure Kubernetes Service\n<img:./images/aks.png{scale=0.05}>" as aks {
+    [<img:./images/k8s.png{scale=0.1}>\nModel Services\nOrchestrator] as mso
     [<img:./images/fastapi_logo.png{scale=0.32}>\nSimulation\nOrchestrator] as so
     node "<img:./images/python.png{scale=0.02}>\nCalculation models:\n<img:./images/arrow_double.png{scale=0.25}> model IO data" as models
     [<img:./images/grafana.png{scale=0.05}>\nDashboard] as grafana
 
-    mso <-- so: deploy models\ninformation
+    mso <- so: deploy models\ninformation
     models <--> so: lifecycle\ncommands
     models <- mso: deploy
 
-'    models <-up-> models: IO data
     database "<img:./images/influxdb_crop.png{scale=0.21}>" {
-        [Simulation results] as results
+        [Simulation results] as influxdb
     }
-    models --> results: write to\ndatabase
-    results --> grafana
-
+    models ..> influxdb: write to\ndatabase
+    influxdb ..> grafana: database\nquery
 }
 
-actor "model developer" as developer
-actor "simulation\nuser" as simulator
+actor "service\ndeveloper" as developer
+actor "simulator\nuser" as simulator
 
-[<img:./images/gitlab.png{scale=0.14}>     <img:./images/github.png{scale=0.1}>\nCalculation\nService Repos] as repos
+node "<img:./images/gitlab.png{scale=0.11}>     <img:./images/github.png{scale=0.08}>\nCalculation\nService Repos" as repos
 [<img:./images/cookiecutter.png{scale=0.32}>\nCalculation\nService Generator] as generator
 
 repos .> mso: pull image
@@ -39,14 +38,18 @@ repos .> mso: pull image
 generator ..> repos: create boiler\nplate project
 
 developer .> generator: <img:./images/docker.png{scale=0.4}>'docker run'
-developer .> repos: implement\nlogic
+developer <.> repos: implement\nlogic
+'simulator <. simulator: <img:./images/lens-logo-icon.png{scale=0.1}>\n view logs
+[<img:./images/lens-logo-icon.png{scale=0.08}>\nLens] as lens
+simulator <. lens: container\nlogs
+'lens . aks
 
 simulator .> so: HTTP: Start simulation <img:./images/esdl_logo_large.png{scale=0.1}>
-simulator <. grafana: HTTP: visualize data
+simulator <. grafana: HTTP: \nvisualize data
 
-legend bottom right
-    All cluster internal communication via:
+legend right
     <img:./images/arrow.png{scale=0.2}>
+    Cluster internal communication via:
     <img:./images/mosquitto.png{scale=0.32}> <img:./images/protobuf.png{scale=0.25}>
 endlegend
 

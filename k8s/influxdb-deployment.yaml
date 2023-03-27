@@ -50,7 +50,7 @@ metadata:
   name: influxdb
 spec:
   selector:
-    app: influxdb # to connect with pod with label mongo-db
+    app: influxdb
   type: LoadBalancer
   ports:
     - protocol: TCP

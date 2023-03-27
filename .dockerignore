@@ -1,8 +1,8 @@
 ci/
+docs/
 message_definitions/
 test/
 *.in
-dev-requirements.txt
 
 **/.git
 **/.gitignore

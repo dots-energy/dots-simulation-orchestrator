@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Start cluster
-#kind create cluster --name kind
 kind create cluster --config=./kind-cluster.yaml
 
 echo ""

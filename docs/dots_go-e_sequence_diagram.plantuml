@@ -1,6 +1,9 @@
 @startuml
 skinparam sequencemessagealign reversedirection
-skinparam backgroundColor #EEEBDC
+skinparam backgroundColor transparent
+'skinparam backgroundColor #EEEBDC
+
+skinparam actorBackgroundColor Gold
 
 'skinparam handwritten true
 
@@ -52,7 +55,7 @@ distribute ESDL objects over calc models
 
     group deploy
     so -> mso : 'deploymodels' for calc services (mqtt)
-    mso -> deploy_plane : instruct to deploy calculation service model containers with env var deployment parameters (python api)
+    mso -> deploy_plane : instruct to deploy calculation service model containers with env var deployment parameters (Kubernetes Python Client)
 
     create service_A
     deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 1
@@ -130,10 +133,10 @@ destroy service_A
 deactivate service_B
 destroy service_B
 
-sim_req -> deploy_plane : (optional) view calculation services logs (Lens)
-mso -> deploy_plane : delete pods when 'keep_log_hours' have passed after completion of the simulation
+sim_req <- deploy_plane : (optional) view calculation services logs (Lens)
+mso -> deploy_plane : delete pods when 'keep_log_hours' have passed after completion of the simulation (Kubernetes Python Client)
 
-sim_req -> influxdb : download and view simulation results (Grafana)
+sim_req <- influxdb : download and view simulation results (Grafana)
 
 'hide footbox
 @enduml
