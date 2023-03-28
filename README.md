@@ -54,7 +54,8 @@ After deployment the simulator should be ready for use, see
 There are some dummy calculation services which can be used to test the framework.
 On `<SO AKS IP>:8001/docs` (<SO AKS IP> is the Simulation Orchestrator Azure IP address), or for local kind cluster
 `localhost:8011/docs`, do a POST request with `test_json.json` as body.  
-This should run a simulation without errors, this can be checked in Lens, see below:  
+This should run a simulation without errors, this can be checked in [Lens](https://github.com/MuhammedKalkan/OpenLens),
+see below:  
 ![docs/test_simulation_lens.png](docs/test_simulation_lens.png)
 
 ## Description
