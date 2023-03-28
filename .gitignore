@@ -123,3 +123,6 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# k8s secrets file
+k8s/env-secret-config.yaml
