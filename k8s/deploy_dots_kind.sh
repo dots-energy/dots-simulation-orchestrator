@@ -31,7 +31,7 @@ echo "KUBERNETES_PORT=${kube_port}"
 echo ""
 echo "Copy kube api token to secret"
 rm -f env-secret-config.yaml
-cp env-secret-config_template.yaml env-secret-config.yaml
+cp env-secret-config_template_old.yaml env-secret-config.yaml
 kube_api_token_base64=$(echo -n ${kube_api_token} | base64 -w0)
 sed -i -e "s/<<KUBE_API_TOKEN>/${kube_api_token_base64}/g" env-secret-config.yaml
 

@@ -34,11 +34,11 @@ How to deploy and test locally is described below.
 
 Two items need to be installed first: [kind](https://kind.sigs.k8s.io/) and
 [kubectl](https://kubernetes.io/docs/tasks/tools/).
-Installing kind and kubectl on windows on WSL works well, other local cluster options have not been tried.
+Installing kind and kubectl on Windows on WSL works well, other local cluster options have not been tried.
 
 In the `k8s` folder you can find the `deploy_dot_kind.sh` scripts which will:
 
-- setup a cluster (on Azure or Kind) with `dots` namespace
+- set up a cluster (on Azure or Kind) with `dots` namespace
 - grep the kubernetes api token and put it in a k8s secret for the MSO
 - deploy k8s env vars and secrets containing mosquitto, influxdb and grafana passwords, and ci.tno.nl token  
   (the default password values in `env-secret-config_template.yaml` should be updated for Azure)
@@ -55,8 +55,11 @@ There are some dummy calculation services which can be used to test the framewor
 On `<SO AKS IP>:8001/docs` (<SO AKS IP> is the Simulation Orchestrator Azure IP address), or for local kind cluster
 `localhost:8011/docs`, do a POST request with `test_json.json` as body.  
 This should run a simulation without errors, this can be checked in [Lens](https://github.com/MuhammedKalkan/OpenLens),
-see below:  
+make sure to also install this [extension](https://github.com/alebcay/openlens-node-pod-menu#installing-this-extension).
+An example cluster with a running simulation is displayed below:  
 ![docs/test_simulation_lens.png](docs/test_simulation_lens.png)
+The first 5 pods contain the base components which should always be running. The other pods contain calculation service
+models which will be cleaned up after the simulation.
 
 ## Description
 
