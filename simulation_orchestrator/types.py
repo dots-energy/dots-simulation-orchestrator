@@ -18,11 +18,11 @@ class ProgressState(enum.IntEnum):
 ModelState_TERMINATED = (ProgressState.TERMINATED_FAILED, ProgressState.TERMINATED_SUCCESSFULL)
 
 progress_state_description = dict({
-    '0': '(a) model(s) terminated with an error, the simulation has been terminated',
-    '1': 'all models registered',
-    '2': 'all models deployed',
-    '3': 'all models parameterized',
-    '4': 'started with calculation step',
-    '5': 'finished calculation step',
-    '6': 'the simulation terminated successfully'
+    0: '(a) model(s) terminated with an error, the simulation has been terminated',
+    1: 'all models registered',
+    2: 'all models deployed',
+    3: 'all models parameterized',
+    4: 'started with calculation step',
+    5: 'finished calculation step',
+    6: 'the simulation terminated successfully'
 })

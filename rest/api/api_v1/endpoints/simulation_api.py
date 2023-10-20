@@ -8,7 +8,6 @@ from simulation_orchestrator.types import ProgressState
 
 router = APIRouter()
 
-
 @router.get("/{simulation_id}", status_code=200, response_model=SimulationStatus)
 def get_simulation_status(*, simulation_id: str) -> SimulationStatus:
     """
@@ -34,35 +33,19 @@ def list_simulations() -> SimulationList:
     return SimulationList(simulations=simulation_status_list)
 
 
-@router.post("/", status_code=201, response_model=SimulationStatus)
+@router.post("/start", status_code=201, response_model=SimulationStatus)
 def start_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus:
-    # check if esdl is readable
-    parse_esdl.get_energy_system(simulation_post.esdl_base64string)
 
-    simulator_id = 'SO'
+    simulation_id = actions.start_new_simulation(simulation_post)
 
-    calculation_services = [
-        {
-            "esdl_type": calculation_service.esdl_type,
-            "calc_service_name": calculation_service.calc_service_name,
-            "service_image_url": calculation_service.service_image_url,
-            "nr_of_models": calculation_service.nr_of_models,
-        }
-        for calculation_service in simulation_post.calculation_services
-    ]
+    simulation_status = SimulationStatus.from_simulation_and_status(*actions.get_simulation_and_status(simulation_id))
 
-    simulation_id = actions.start_new_simulation(Simulation(
-        simulator_id=simulator_id,
-        simulation_name=simulation_post.name,
-        simulation_start_date=simulation_post.start_date,
-        time_step_seconds=simulation_post.time_step_seconds,
-        max_step_calc_time_minutes=simulation_post.max_step_calc_time_minutes,
-        sim_nr_of_steps=simulation_post.nr_of_time_steps,
-        keep_logs_hours=simulation_post.keep_logs_hours,
-        log_level=simulation_post.log_level,
-        calculation_services=calculation_services,
-        esdl_base64string=simulation_post.esdl_base64string
-    ))
+    return simulation_status
+
+@router.post("/queue", status_code=201, response_model=SimulationStatus)
+def queue_new_simulation(*, simulation_post: SimulationPost) -> SimulationStatus:
+
+    simulation_id = actions.queue_new_simulation(simulation_post)
 
     simulation_status = SimulationStatus.from_simulation_and_status(*actions.get_simulation_and_status(simulation_id))
 
