@@ -74,19 +74,42 @@ class Simulation:
 
 class SimulationInventory:
     activeSimulations: typing.Dict[SimulationId, Simulation]
+    simulationQueue: list[SimulationId]
 
     def __init__(self):
         self.activeSimulations = {}
+        self.simulationQueue = []
+    
+    def _generate_new_simulationId(self, simulation_name):
+        return f"{simulation_name.lower().replace(' ', '-')[:20]}" \
+                                       f"-{str(uuid.uuid4())[:8]}"
 
     def add_simulation(self, new_simulation: Simulation) -> SimulationId:
-        new_simulation.simulation_id = f"{new_simulation.simulation_name.lower().replace(' ', '-')[:20]}" \
-                                       f"-{str(uuid.uuid4())[:8]}"
+        new_simulation.simulation_id = self._generate_new_simulationId(new_simulation.simulation_name)
 
         self.activeSimulations.update({new_simulation.simulation_id: new_simulation})
         return new_simulation.simulation_id
 
+    def queue_simulation(self, new_simulation: Simulation) -> SimulationId:
+        new_simulation.simulation_id = self.add_simulation(new_simulation)
+        self.simulationQueue.append(new_simulation.simulation_id)        
+        LOGGER.info(f'Queing simulation with id: {new_simulation.simulation_id}')
+        return new_simulation.simulation_id 
+
+    def nr_of_queued_simulations(self):
+        return len(self.simulationQueue)
+    
+    def pop_simulation_in_queue(self) -> Simulation:
+        return self.simulationQueue.pop(0)
+    
+    def is_active_simulation_from_queue(self, simulation_id) -> Simulation:
+        return self.nr_of_queued_simulations() > 0 and self.simulationQueue[0] == simulation_id
+
     def remove_simulation(self, simulation_id: SimulationId):
         LOGGER.info(f'Removing simulation {simulation_id} from inventory')
+        if simulation_id in self.simulationQueue:            
+            self.simulationQueue.remove(simulation_id)
+
         popped = self.activeSimulations.pop(simulation_id)
 
         if not popped:
@@ -99,27 +122,28 @@ class SimulationInventory:
         return self.activeSimulations.get(simulation_id)
 
     def add_models_to_simulation(self, simulation_id: SimulationId, new_models: typing.List[Model]):
-        self.activeSimulations.get(simulation_id).model_inventory.add_models_to_simulation(simulation_id,
+        self.get_simulation(simulation_id).model_inventory.add_models_to_simulation(simulation_id,
                                                                                            new_models)
 
     def get_models_from_simulation(self, simulation_id: SimulationId) -> typing.List[Model]:
-        return list(self.activeSimulations.get(simulation_id).model_inventory.get_models())
+        return list(self.get_simulation(simulation_id).model_inventory.get_models())
 
     def get_model_from_simulation(self, simulation_id: SimulationId, model_id: ModelId) -> typing.Optional[Model]:
-        return self.activeSimulations.get(simulation_id).model_inventory.get_model(model_id)
+        return self.get_simulation(simulation_id).model_inventory.get_model(model_id)
 
     def get_all_models(self, simulation_id: SimulationId) -> typing.List[Model]:
-        if self.activeSimulations.get(simulation_id):
-            return self.activeSimulations.get(simulation_id).model_inventory.get_models()
+        simulation = self.get_simulation(simulation_id)
+        if simulation:
+            return simulation.model_inventory.get_models()
         else:
             return []
 
     def get_model(self, simulation_id: SimulationId, model_id: ModelId) -> Model:
-        return self.activeSimulations.get(simulation_id).model_inventory.get_model(model_id)
+        return self.get_simulation(simulation_id).model_inventory.get_model(model_id)
 
     def update_model_state_and_get_simulation_state(self, simulation_id: SimulationId, model_id: ModelId,
                                                     new_state: ProgressState) -> ProgressState:
-        model = self.activeSimulations.get(simulation_id).model_inventory.get_model(model_id)
+        model = self.get_simulation(simulation_id).model_inventory.get_model(model_id)
         if model:
             old_state = model.current_state
             model.current_state = new_state
@@ -159,7 +183,7 @@ class SimulationInventory:
             model.current_state = new_state
 
     def increment_time_step_and_get_time_start_end_date_dict(self, simulation_id: SimulationId) -> dict:
-        simulation = self.activeSimulations.get(simulation_id)
+        simulation = self.get_simulation(simulation_id)
         simulation.current_time_step_nr += 1
         LOGGER.info(
             f"Starting calculation step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
@@ -171,7 +195,7 @@ class SimulationInventory:
         }
 
     def on_last_time_step(self, simulation_id: SimulationId) -> bool:
-        simulation = self.activeSimulations.get(simulation_id)
+        simulation = self.get_simulation(simulation_id)
         return simulation.current_time_step_nr == simulation.nr_of_time_steps
 
     def get_status_description(self, simulation_id: SimulationId) -> str:
@@ -179,13 +203,13 @@ class SimulationInventory:
         if not state:
             return f"Simulation id '{simulation_id}' could not be found."
         if state == ProgressState.STEP_STARTED:
-            simulation = self.activeSimulations.get(simulation_id)
+            simulation = self.get_simulation(simulation_id)
             return f"Calculating time step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
         else:
             return str(state)
 
     def start_step_calculation_time_counting(self, simulation_id: SimulationId):
-        self.activeSimulations.get(simulation_id).current_step_calculation_start_datetime = datetime.now()
+        self.get_simulation(simulation_id).current_step_calculation_start_datetime = datetime.now()
 
     def get_simulation_ids_exceeding_step_calc_time(self) -> typing.List[SimulationId]:
         simulation_ids = []
@@ -199,7 +223,7 @@ class SimulationInventory:
         return simulation_ids
 
     def lock_simulation(self, simulation_id: SimulationId):
-        self.activeSimulations.get(simulation_id).lock.acquire()
+        self.get_simulation(simulation_id).lock.acquire()
 
     def release_simulation(self, simulation_id: SimulationId):
-        self.activeSimulations.get(simulation_id).lock.release()
+        self.get_simulation(simulation_id).lock.release()

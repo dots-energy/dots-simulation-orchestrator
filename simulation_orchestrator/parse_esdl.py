@@ -18,22 +18,25 @@ def get_energy_system(esdl_base64string: str) -> EnergySystem:
 
 
 def get_model_list(calculation_services: List[dict], esdl_base64string: str) -> List[Model]:
-    energy_system = get_energy_system(esdl_base64string)
+    try:
+        energy_system = get_energy_system(esdl_base64string)
 
-    # gather all esdl objects per calculation service
-    service_info_dict: dict = {}
-    # Iterate over all contents of an EnergySystem
-    for esdl_obj in energy_system.eAllContents():
-        add_esdl_object(service_info_dict, calculation_services, esdl_obj)
+        # gather all esdl objects per calculation service
+        service_info_dict: dict = {}
+        # Iterate over all contents of an EnergySystem
+        for esdl_obj in energy_system.eAllContents():
+            add_esdl_object(service_info_dict, calculation_services, esdl_obj)
 
-    if next((True for calc_service in calculation_services if
-             calc_service["esdl_type"] == esdl.EnergySystem.__name__), False):
-        add_esdl_object(service_info_dict, calculation_services, energy_system)
+        if next((True for calc_service in calculation_services if
+                 calc_service["esdl_type"] == esdl.EnergySystem.__name__), False):
+            add_esdl_object(service_info_dict, calculation_services, energy_system)
 
-    # create model(s) per calculation service
-    model_list: List[Model] = []
-    for service_info in service_info_dict.values():
-        add_service_models(service_info, model_list)
+        # create model(s) per calculation service
+        model_list: List[Model] = []
+        for service_info in service_info_dict.values():
+            add_service_models(service_info, model_list)
+    except Exception as ex:
+        raise IOError(f"Error getting Model list from ESDL: {ex},")
 
     return model_list
 
