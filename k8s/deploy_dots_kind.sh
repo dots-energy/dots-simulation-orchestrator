@@ -16,6 +16,8 @@ echo ""
 echo "Admin kube config should be available at ~/.kube/config."
 echo ""
 
+so_secret=$(openssl rand -hex 32)
+so_user_pass=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo)
 kube_api_token=$(kubectl describe secrets/dots-token-4zfwp --namespace dots  | grep 'token:' | awk -F' ' '{print $2}')
 kube_url=$(kubectl config view | grep 'server:' | awk -F'server: ' '{print $2}')
 kube_host_and_port=$(echo $kube_url | awk -F'://' '{print $2}')
@@ -34,10 +36,15 @@ rm -f env-secret-config.yaml
 cp env-secret-config_template_old.yaml env-secret-config.yaml
 kube_api_token_base64=$(echo -n ${kube_api_token} | base64 -w0)
 sed -i -e "s/<<KUBE_API_TOKEN>/${kube_api_token_base64}/g" env-secret-config.yaml
+so_secret_base64=$(echo -n ${so_secret} | base64 -w0)
+sed -i -e "s/<<SECRET_KEY>>/${so_secret_base64}/g" env-secret-config.yaml
+so_user_pass_base64=$(echo -n ${so_user_pass} | base64 -w0)
+sed -i -e "s/<<OAUTH_PASSWORD>>/${so_user_pass_base64}/g" env-secret-config.yaml
 
 echo ""
 echo "Deploy env vars, secrets and config ..."
 sleep 2
+
 kubectl apply -f env-secret-config.yaml
 
 echo ""

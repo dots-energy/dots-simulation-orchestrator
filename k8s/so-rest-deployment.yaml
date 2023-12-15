@@ -19,7 +19,7 @@ spec:
       - name: ci-tno-dots
       containers:
       - name: so-rest # container name
-        image: ci.tno.nl/dots/simulation-orchestrator:0.0.4
+        image: ci.tno.nl/dots/simulation-orchestrator:0.0.5
         imagePullPolicy: Always
         ports:
         - containerPort: 8001
@@ -80,6 +80,16 @@ spec:
             configMapKeyRef:
               name: env-configmap
               key: log-level
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: secret-key
+        - name: OAUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: oauth-password
 ---
 apiVersion: v1
 kind: Service
