@@ -135,9 +135,10 @@ class MqttClient:
                         if self.simulation_inventory.is_active_simulation_from_queue(simulation_id):
                             self.simulation_inventory.pop_simulation_in_queue()
                             if self.simulation_inventory.nr_of_queued_simulations() > 0:
-                                next_simulation_in_queue = self.simulation_inventory.get_simulation(simulation_id)
-                                LOGGER.info(f"Starting next simulation in queue with simulation_id: '{next_simulation_in_queue.simulation_id}'")
-                                self.send_deploy_models(next_simulation_in_queue.simulator_id, next_simulation_in_queue.simulation_id,
+                                next_simulation_in_queue_id = self.simulation_inventory.get_active_simulation_in_queue()
+                                LOGGER.info(f"Starting next simulation in queue with simulation_id: '{next_simulation_in_queue_id}'")
+                                next_simulation_in_queue = self.simulation_inventory.get_simulation(next_simulation_in_queue_id)
+                                self.send_deploy_models(next_simulation_in_queue.simulator_id, next_simulation_in_queue_id,
                                             next_simulation_in_queue.keep_logs_hours, next_simulation_in_queue.log_level)
                     else:
                         self._send_new_step(simulation_id)
