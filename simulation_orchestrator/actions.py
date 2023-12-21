@@ -81,7 +81,17 @@ def get_simulation_and_status_list() -> typing.List[typing.Tuple[typing.Union[Si
 def terminate_simulation(simulation_id: SimulationId) -> typing.Tuple[typing.Union[Simulation, None], str]:
     mqtt_client.send_simulation_done(simulation_id)
     simulation_inventory.set_state_for_all_models(simulation_id, ProgressState.TERMINATED_FAILED)
+    if simulation_inventory.is_active_simulation_from_queue(simulation_id):
+        if simulation_inventory.nr_of_queued_simulations() > 0:
+            simulation_inventory.pop_simulation_in_queue()
+            next_simulation_in_queue_id = simulation_inventory.get_active_simulation_in_queue()
+            next_simulation_in_queue = simulation_inventory.get_simulation(next_simulation_in_queue_id)
+            mqtt_client.send_deploy_models(next_simulation_in_queue.simulator_id, next_simulation_in_queue_id,
+                                            next_simulation_in_queue.keep_logs_hours, next_simulation_in_queue.log_level)
+    simulation = simulation_inventory.get_simulation(simulation_id)
+    status_description = simulation_inventory.get_status_description(simulation_id)
+    simulation_inventory.remove_simulation(simulation_id)
     return (
-        simulation_inventory.get_simulation(simulation_id),
-        simulation_inventory.get_status_description(simulation_id)
+        simulation,
+        status_description
     )

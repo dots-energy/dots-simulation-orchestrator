@@ -102,12 +102,15 @@ class SimulationInventory:
     def pop_simulation_in_queue(self) -> Simulation:
         return self.simulationQueue.pop(0)
     
+    def get_active_simulation_in_queue(self) -> str:
+        return self.simulationQueue[0]
+    
     def is_active_simulation_from_queue(self, simulation_id) -> Simulation:
         return self.nr_of_queued_simulations() > 0 and self.simulationQueue[0] == simulation_id
 
     def remove_simulation(self, simulation_id: SimulationId):
         LOGGER.info(f'Removing simulation {simulation_id} from inventory')
-        if simulation_id in self.simulationQueue:            
+        if simulation_id in self.simulationQueue:
             self.simulationQueue.remove(simulation_id)
 
         popped = self.activeSimulations.pop(simulation_id)
