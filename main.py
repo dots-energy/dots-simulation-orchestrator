@@ -21,6 +21,7 @@ from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
 from rest.api.api_v1.api import api_router
+import rest.oauth.OAuthUtilities
 from rest.core.config import settings
 
 BASE_PATH = Path(__file__).resolve().parent
@@ -28,7 +29,6 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "rest/templates"))
 
 root_router = APIRouter()
 app = FastAPI(title="DOTS Simulation Orchestrator API")
-
 
 @root_router.get("/", status_code=200)
 def root(request: Request) -> _TemplateResponse:
@@ -44,7 +44,6 @@ def root(request: Request) -> _TemplateResponse:
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(root_router)
 
-
 class EnvConfig:
     CONFIG_KEYS = [('MQTT_HOST', 'localhost', str, False),
                    ('MQTT_PORT', '1883', int, False),
@@ -55,7 +54,9 @@ class EnvConfig:
                    ('INFLUXDB_PORT', '', str, False),
                    ('INFLUXDB_USER', '', str, False),
                    ('INFLUXDB_PASSWORD', '', str, True),
-                   ('INFLUXDB_NAME', '', str, False)]
+                   ('INFLUXDB_NAME', '', str, False),
+                   ('SECRET_KEY', None, str, True),
+                   ('OAUTH_PASSWORD', None, str, True)]
 
     @staticmethod
     def load(keys: typing.List[typing.Tuple[str,
@@ -97,13 +98,15 @@ def start():
         simulation_inventory=simulation_inventory
     )
 
+    rest.oauth.OAuthUtilities.SECRET_KEY = config['SECRET_KEY']
+    rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
+
     actions.simulation_inventory = simulation_inventory
     actions.mqtt_client = mqtt_client
 
     t = threading.Thread(target=mqtt_client.start, name='mqtt client')
     t.daemon = True
     t.start()
-
     influxdb_client: InfluxDBConnector = InfluxDBConnector(config['INFLUXDB_HOST'], config['INFLUXDB_PORT'],
                                                            config['INFLUXDB_USER'], config['INFLUXDB_PASSWORD'],
                                                            config['INFLUXDB_NAME'])
