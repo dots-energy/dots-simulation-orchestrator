@@ -76,12 +76,23 @@ class MqttClient:
             time.sleep(2)
             self.connect()
 
+    def queue_next_simulation(self, simulation_id):
+        if self.simulation_inventory.is_active_simulation_from_queue(simulation_id):
+            self.simulation_inventory.pop_simulation_in_queue()
+            if self.simulation_inventory.nr_of_queued_simulations() > 0:
+                next_simulation_in_queue_id = self.simulation_inventory.get_active_simulation_in_queue()
+                LOGGER.info(f"Starting next simulation in queue with simulation_id: '{next_simulation_in_queue_id}'")
+                next_simulation_in_queue = self.simulation_inventory.get_simulation(next_simulation_in_queue_id)
+                self.send_deploy_models(next_simulation_in_queue.simulator_id, next_simulation_in_queue_id,
+                                            next_simulation_in_queue.keep_logs_hours, next_simulation_in_queue.log_level)
+
     def _check_step_calc_time(self):
         s = sched.scheduler(time.time, time.sleep)
 
         def check_calc_time(sc):
             for simulation_id in self.simulation_inventory.get_simulation_ids_exceeding_step_calc_time():
                 self.send_simulation_done(simulation_id)
+                self.queue_next_simulation(simulation_id)
             sc.enter(10, 1, check_calc_time, (sc,))
 
         s.enter(10, 1, check_calc_time, (s,))
@@ -132,14 +143,7 @@ class MqttClient:
                         )
                         self.send_simulation_done(simulation_id)
                         LOGGER.info(f"All time steps finished for simulation '{simulation_id}'")
-                        if self.simulation_inventory.is_active_simulation_from_queue(simulation_id):
-                            self.simulation_inventory.pop_simulation_in_queue()
-                            if self.simulation_inventory.nr_of_queued_simulations() > 0:
-                                next_simulation_in_queue_id = self.simulation_inventory.get_active_simulation_in_queue()
-                                LOGGER.info(f"Starting next simulation in queue with simulation_id: '{next_simulation_in_queue_id}'")
-                                next_simulation_in_queue = self.simulation_inventory.get_simulation(next_simulation_in_queue_id)
-                                self.send_deploy_models(next_simulation_in_queue.simulator_id, next_simulation_in_queue_id,
-                                            next_simulation_in_queue.keep_logs_hours, next_simulation_in_queue.log_level)
+                        self.queue_next_simulation(simulation_id)
                     else:
                         self._send_new_step(simulation_id)
 
