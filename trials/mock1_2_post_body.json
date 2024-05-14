@@ -1,7 +1,6 @@
 {
   "name": "simulation name",
   "start_date": "2023-01-25 00:00:00",
-  "time_step_seconds": 3600,
   "nr_of_time_steps": 24,
   "keep_logs_hours": 0.01,
   "log_level": "info",

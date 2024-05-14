@@ -50,7 +50,7 @@ kubectl apply -f env-secret-config.yaml
 echo ""
 echo "Deploy grafana, influxdb, mosquitto, dots MSO and dots SO ..."
 sleep 2
-kubectl apply -f grafana-deployment.yaml -f influxdb-deployment.yaml -f mosquitto-deployment.yaml -f mso-deployment.yaml -f so-rest-deployment.yaml
+kubectl apply -f grafana-deployment.yaml -f influxdb-deployment.yaml -f so-rest-deployment.yaml
 
 echo ""
 echo "Set k8s namespace to 'dots'"

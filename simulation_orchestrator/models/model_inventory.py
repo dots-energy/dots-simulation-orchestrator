@@ -1,8 +1,10 @@
 import typing
 
 from simulation_orchestrator.io.log import LOGGER
-from simulation_orchestrator.types import SimulationId, ModelId, ProgressState
 
+from simulation_orchestrator.types import EsdlId, SimulationId, ModelId, ProgressState
+
+from typing import List
 
 class Model:
     model_id: ModelId
@@ -10,6 +12,7 @@ class Model:
     esdl_ids: typing.List[str]
     calc_service_name: str
     service_image_url: str
+    esdl_type : str
     current_state: ProgressState
 
     def __init__(self,
@@ -17,11 +20,13 @@ class Model:
                  esdl_ids: typing.List[str],
                  calc_service_name: str,
                  service_image_url: str,
+                 esdl_type : str,
                  current_state: ProgressState):
         self.model_id = model_id
         self.esdl_ids = esdl_ids
         self.calc_service_name = calc_service_name
         self.service_image_url = service_image_url
+        self.esdl_type = esdl_type
         self.current_state = current_state
 
 

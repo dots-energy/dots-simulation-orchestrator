@@ -1,76 +1,25 @@
+#  This work is based on original code developed and copyrighted by TNO 2023.
+#  Subsequent contributions are licensed to you by the developers of such code and are
+#  made available to the Project under one or several contributor license agreements.
+#
+#  This work is licensed to you under the Apache License, Version 2.0.
+#  You may obtain a copy of the license at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Contributors:
+#      TNO         - Initial implementation
+#  Manager:
+#      TNO
+
 import typing
 import uuid
-from threading import Lock
 from datetime import datetime, timedelta
 
+from rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.io.log import LOGGER
-from simulation_orchestrator.models.model_inventory import ModelInventory, Model
-from simulation_orchestrator.types import SimulationId, SimulatorId, ModelId, ProgressState, progress_state_description
-
-
-class Simulation:
-    simulator_id: SimulatorId
-    simulation_id: SimulationId
-    simulation_name: str
-
-    simulation_start_datetime: datetime
-    time_step_seconds: int
-    nr_of_time_steps: int
-
-    max_step_calc_time_minutes: float
-    keep_logs_hours: float
-    log_level: str
-
-    calculation_services: typing.List[dict]
-    esdl_base64string: str
-
-    current_time_step_nr: int
-    calculation_start_datetime: datetime
-    calculation_end_datetime: typing.Optional[datetime]
-    current_step_calculation_start_datetime: typing.Optional[datetime]
-    model_inventory: ModelInventory
-    error_message: str
-
-    terminated: bool
-
-    lock: Lock
-
-    def __init__(
-            self,
-            simulator_id: SimulatorId,
-            simulation_name: str,
-            simulation_start_date: datetime,
-            time_step_seconds: int,
-            sim_nr_of_steps: int,
-            max_step_calc_time_minutes: float,
-            keep_logs_hours: float,
-            log_level: str,
-            calculation_services: typing.List[dict],
-            esdl_base64string: str,
-    ):
-        self.simulator_id = simulator_id
-        self.simulation_name = simulation_name
-        self.simulation_start_datetime = simulation_start_date
-        self.time_step_seconds = time_step_seconds
-        self.nr_of_time_steps = sim_nr_of_steps
-
-        self.max_step_calc_time_minutes = max_step_calc_time_minutes
-        self.keep_logs_hours = keep_logs_hours
-        self.log_level = log_level
-
-        self.calculation_services = calculation_services
-        self.esdl_base64string = esdl_base64string
-
-        self.current_time_step_nr = 0
-        self.calculation_start_datetime = datetime.now()
-        self.calculation_end_datetime = None
-        self.current_step_calculation_start_datetime = None
-        self.model_inventory = ModelInventory()
-        self.error_message = ""
-        self.terminated = False
-
-        self.lock = Lock()
-
+from simulation_orchestrator.models.model_inventory import Model
+from simulation_orchestrator.types import SimulationId, ModelId, ProgressState, progress_state_description
 
 class SimulationInventory:
     activeSimulations: typing.Dict[SimulationId, Simulation]
@@ -79,7 +28,7 @@ class SimulationInventory:
     def __init__(self):
         self.activeSimulations = {}
         self.simulationQueue = []
-    
+
     def _generate_new_simulationId(self, simulation_name):
         return f"{simulation_name.lower().replace(' ', '-')[:20]}" \
                                        f"-{str(uuid.uuid4())[:8]}"
@@ -92,7 +41,7 @@ class SimulationInventory:
 
     def queue_simulation(self, new_simulation: Simulation) -> SimulationId:
         new_simulation.simulation_id = self.add_simulation(new_simulation)
-        self.simulationQueue.append(new_simulation.simulation_id)        
+        self.simulationQueue.append(new_simulation.simulation_id)
         LOGGER.info(f'Queing simulation with id: {new_simulation.simulation_id}')
         return new_simulation.simulation_id 
 
@@ -160,7 +109,6 @@ class SimulationInventory:
         if new_state == ProgressState.TERMINATED_FAILED:
             LOGGER.error(f'Model {model_id} in simulation {simulation_id} does not exist so it could not be marked '
                          f'as {new_state}')
-            # TODO remove simulation and clean-up MSO by message? Or do after SIM status request, so proper message can be given?
         return simulation_state
 
     def _are_all_models_in_state(self, simulation_id: SimulationId, state: ProgressState) -> bool:
@@ -189,41 +137,33 @@ class SimulationInventory:
         simulation = self.get_simulation(simulation_id)
         simulation.current_time_step_nr += 1
         LOGGER.info(
-            f"Starting calculation step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
+            f"Starting calculation step {simulation.current_time_step_nr} (of {simulation.simulation_duration_in_seconds})"
             f", for simulation ID: '{simulation_id}'")
         return {
             "time_step_nr": str(simulation.current_time_step_nr),
             "start_time_stamp": (simulation.simulation_start_datetime + timedelta(0, (
-                    simulation.current_time_step_nr + 1) * simulation.time_step_seconds)).timestamp()
+                    simulation.current_time_step_nr + 1))).timestamp()
         }
 
     def on_last_time_step(self, simulation_id: SimulationId) -> bool:
         simulation = self.get_simulation(simulation_id)
-        return simulation.current_time_step_nr == simulation.nr_of_time_steps
+        return simulation.current_time_step_nr == simulation.simulation_duration_in_seconds
 
     def get_status_description(self, simulation_id: SimulationId) -> str:
         state = self.get_simulation_state(simulation_id)
-        if not state:
+        if state == None:
             return f"Simulation id '{simulation_id}' could not be found."
-        if state == ProgressState.STEP_STARTED:
+        elif state == ProgressState.STEP_STARTED:
             simulation = self.get_simulation(simulation_id)
-            return f"Calculating time step {simulation.current_time_step_nr} (of {simulation.nr_of_time_steps})"
+            return f"Calculating time step {simulation.current_time_step_nr} (of {simulation.simulation_duration_in_seconds})"
         else:
-            return str(state)
+            return progress_state_description[state]
 
     def start_step_calculation_time_counting(self, simulation_id: SimulationId):
         self.get_simulation(simulation_id).current_step_calculation_start_datetime = datetime.now()
 
-    def get_simulation_ids_exceeding_step_calc_time(self) -> typing.List[SimulationId]:
-        simulation_ids = []
-        for simulation_id, simulation in self.activeSimulations.items():
-            if not simulation.terminated and simulation.current_step_calculation_start_datetime:
-                if datetime.now() > simulation.current_step_calculation_start_datetime + timedelta(
-                        minutes=simulation.max_step_calc_time_minutes):
-                    LOGGER.info(
-                        f"Exceeded step calculation time for simulation: '{simulation.simulation_name}' - '{simulation_id}'")
-                    simulation_ids.append(simulation_id)
-        return simulation_ids
+    def start_model_parameters_time_counting(self, simulation_id: SimulationId):
+        self.get_simulation(simulation_id).modelparameters_start_datetime = datetime.now()
 
     def lock_simulation(self, simulation_id: SimulationId):
         self.get_simulation(simulation_id).lock.acquire()

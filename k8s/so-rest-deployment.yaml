@@ -19,12 +19,32 @@ spec:
       - name: ci-tno-dots
       containers:
       - name: so-rest # container name
-        image: ci.tno.nl/dots/simulation-orchestrator:0.0.6
+        image: dotsenergyframework/simulation-orchestrator:0.1.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8001
           hostPort: 8001
         env:
+        - name: KUBERNETES_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: env-secret
+              key: kubernetes-api-token
+        - name: KUBERNETES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: kubernetes-host
+        - name: KUBERNETES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: kubernetes-port
+        - name: KUBERNETES_PULL_IMAGE_SECRET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: env-configmap
+              key: kubernetes-pull-image-secret-name
         - name: MQTT_HOST
           valueFrom:
             configMapKeyRef:

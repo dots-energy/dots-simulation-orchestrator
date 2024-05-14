@@ -2,13 +2,13 @@ import typing
 
 from rest.schemas.simulation_schemas import SimulationPost
 from simulation_orchestrator import parse_esdl
-from simulation_orchestrator.io.mqtt_client import MqttClient
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory, Simulation
+from simulation_orchestrator.models.simulation_executor import SimulationExecutor
 
 from simulation_orchestrator.types import SimulationId, ProgressState
 
 simulation_inventory: SimulationInventory
-mqtt_client: MqttClient
+simulation_executor: SimulationExecutor
 
 def create_new_simulation(simulation_post : SimulationPost) -> Simulation:
     
@@ -17,26 +17,14 @@ def create_new_simulation(simulation_post : SimulationPost) -> Simulation:
 
     simulator_id = 'SO'
 
-    calculation_services = [
-        {
-            "esdl_type": calculation_service.esdl_type,
-            "calc_service_name": calculation_service.calc_service_name,
-            "service_image_url": calculation_service.service_image_url,
-            "nr_of_models": calculation_service.nr_of_models,
-        }
-        for calculation_service in simulation_post.calculation_services
-    ]
-
     new_simulation = Simulation(
         simulator_id=simulator_id,
         simulation_name=simulation_post.name,
         simulation_start_date=simulation_post.start_date,
-        time_step_seconds=simulation_post.time_step_seconds,
-        max_step_calc_time_minutes=simulation_post.max_step_calc_time_minutes,
-        sim_nr_of_steps=simulation_post.nr_of_time_steps,
+        simulation_duration_in_seconds=simulation_post.simulation_duration_in_seconds,
         keep_logs_hours=simulation_post.keep_logs_hours,
         log_level=simulation_post.log_level,
-        calculation_services=calculation_services,
+        calculation_services=simulation_post.calculation_services,
         esdl_base64string=simulation_post.esdl_base64string
     )
 
@@ -50,8 +38,7 @@ def start_new_simulation(simulation_post: SimulationPost) -> SimulationId:
 
     simulation_id = simulation_inventory.add_simulation(new_simulation)
     simulation_inventory.add_models_to_simulation(new_simulation.simulation_id, model_list)
-    mqtt_client.send_deploy_models(new_simulation.simulator_id, new_simulation.simulation_id,
-                                   new_simulation.keep_logs_hours, new_simulation.log_level)
+    simulation_executor.deploy_simulation(simulation_inventory.get_simulation(simulation_id))
 
     return simulation_id
 
@@ -61,8 +48,7 @@ def queue_new_simulation(simulation_post: SimulationPost) -> SimulationId:
     simulation_id = simulation_inventory.queue_simulation(new_simulation)
     simulation_inventory.add_models_to_simulation(new_simulation.simulation_id, model_list)
     if simulation_inventory.nr_of_queued_simulations() == 1:
-        mqtt_client.send_deploy_models(new_simulation.simulator_id, new_simulation.simulation_id,
-                                   new_simulation.keep_logs_hours, new_simulation.log_level)
+        simulation_executor.deploy_simulation(simulation_inventory.get_simulation(simulation_id))
     return simulation_id
 
 def get_simulation_and_status(simulation_id: SimulationId) -> typing.Tuple[typing.Union[Simulation, None], str]:
@@ -79,19 +65,9 @@ def get_simulation_and_status_list() -> typing.List[typing.Tuple[typing.Union[Si
     ]
 
 def terminate_simulation(simulation_id: SimulationId) -> typing.Tuple[typing.Union[Simulation, None], str]:
-    mqtt_client.send_simulation_done(simulation_id)
-    simulation_inventory.set_state_for_all_models(simulation_id, ProgressState.TERMINATED_FAILED)
-    if simulation_inventory.is_active_simulation_from_queue(simulation_id):
-        if simulation_inventory.nr_of_queued_simulations() > 0:
-            simulation_inventory.pop_simulation_in_queue()
-            next_simulation_in_queue_id = simulation_inventory.get_active_simulation_in_queue()
-            next_simulation_in_queue = simulation_inventory.get_simulation(next_simulation_in_queue_id)
-            mqtt_client.send_deploy_models(next_simulation_in_queue.simulator_id, next_simulation_in_queue_id,
-                                            next_simulation_in_queue.keep_logs_hours, next_simulation_in_queue.log_level)
     simulation = simulation_inventory.get_simulation(simulation_id)
     status_description = simulation_inventory.get_status_description(simulation_id)
+        
+    simulation_executor.terminate_simulation(simulation_id)
     simulation_inventory.remove_simulation(simulation_id)
-    return (
-        simulation,
-        status_description
-    )
+    return return_val
