@@ -26,7 +26,6 @@ class InfluxDBConnector:
         self.esdl_type: typing.Optional[str] = None
         self.model_id: typing.Optional[str] = None
         self.start_date: typing.Optional[datetime] = None
-        self.time_step_seconds: typing.Optional[int] = None
         self.nr_of_time_steps: typing.Optional[int] = None
         self.profile_output_data: dict = dict()
         self.summary_output_data: dict = dict()

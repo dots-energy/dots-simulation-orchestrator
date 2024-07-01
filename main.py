@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 from dotenv import load_dotenv
+from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi
+from simulation_orchestrator.models.simulation_executor import SimulationExecutor
 from starlette.templating import _TemplateResponse
 
 from simulation_orchestrator.influxdb_connector import InfluxDBConnector
@@ -9,8 +11,8 @@ load_dotenv()  # take environment variables from .env
 
 import threading
 import typing
+import kubernetes
 
-from simulation_orchestrator.io.mqtt_client import MqttClient
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory
 import simulation_orchestrator.actions as actions
 from simulation_orchestrator.io.log import LOGGER
@@ -45,11 +47,10 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(root_router)
 
 class EnvConfig:
-    CONFIG_KEYS = [('MQTT_HOST', 'localhost', str, False),
-                   ('MQTT_PORT', '1883', int, False),
-                   ('MQTT_QOS', '0', int, False),
-                   ('MQTT_USERNAME', '', str, False),
-                   ('MQTT_PASSWORD', '', str, True),
+    CONFIG_KEYS = [('KUBERNETES_HOST', 'localhost', str, False),
+                   ('KUBERNETES_PORT', '6443', int, False),
+                   ('KUBERNETES_API_TOKEN', None, str, True),
+                   ('KUBERNETES_PULL_IMAGE_SECRET_NAME', None, str, False),
                    ('INFLUXDB_HOST', '', str, False),
                    ('INFLUXDB_PORT', '', str, False),
                    ('INFLUXDB_USER', '', str, False),
@@ -84,29 +85,24 @@ def start():
 
     simulation_inventory = SimulationInventory()
 
-    mqtt_client = MqttClient(
-        host=config['MQTT_HOST'],
-        port=config['MQTT_PORT'],
-        qos=config['MQTT_QOS'],
-        username=config['MQTT_USERNAME'],
-        password=config['MQTT_PASSWORD'],
-        influxdb_host=config['INFLUXDB_HOST'],
-        influxdb_port=config['INFLUXDB_PORT'],
-        influxdb_user=config['INFLUXDB_USER'],
-        influxdb_password=config['INFLUXDB_PASSWORD'],
-        influxdb_name=config['INFLUXDB_NAME'],
-        simulation_inventory=simulation_inventory
-    )
+    configuration = kubernetes.client.Configuration()
+    configuration.api_key_prefix['authorization'] = 'Bearer'
+    configuration.api_key['authorization'] = config['KUBERNETES_API_TOKEN']
+    configuration.host = f"https://{config['KUBERNETES_HOST']}:{config['KUBERNETES_PORT']}"
+    configuration.verify_ssl = False
+    configuration.retries = 3
+    kubernetes_client_api = kubernetes.client.ApiClient(configuration)
+    generic_model_env_var: dict = {}
+    for key, value in config.items():
+        if key.startswith("INFLUXDB"):
+            generic_model_env_var[key] = value
+
 
     rest.oauth.OAuthUtilities.SECRET_KEY = config['SECRET_KEY']
     rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
 
     actions.simulation_inventory = simulation_inventory
-    actions.mqtt_client = mqtt_client
-
-    t = threading.Thread(target=mqtt_client.start, name='mqtt client')
-    t.daemon = True
-    t.start()
+    actions.simulation_executor = SimulationExecutor(K8sApi(kubernetes_client_api, config['KUBERNETES_PULL_IMAGE_SECRET_NAME'].strip(), generic_model_env_var), simulation_inventory)
     influxdb_client: InfluxDBConnector = InfluxDBConnector(config['INFLUXDB_HOST'], config['INFLUXDB_PORT'],
                                                            config['INFLUXDB_USER'], config['INFLUXDB_PASSWORD'],
                                                            config['INFLUXDB_NAME'])

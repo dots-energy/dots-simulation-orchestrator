@@ -3,7 +3,7 @@ import enum
 SimulatorId = str
 SimulationId = str
 ModelId = str
-
+EsdlId = str
 
 class ProgressState(enum.IntEnum):
     TERMINATED_FAILED = 0
