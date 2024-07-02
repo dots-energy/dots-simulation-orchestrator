@@ -2,7 +2,7 @@ from typing import Annotated, Union
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from passlib.context import CryptContext
-from rest.schemas.user_schemas import UserInDB, TokenData
+from simulation_orchestrator.rest.schemas.user_schemas import UserInDB, TokenData
 from datetime import datetime, timedelta
 
 from simulation_orchestrator.io.log import LOGGER

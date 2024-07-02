@@ -17,6 +17,7 @@ import typing
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 from typing import Sequence
+from threading import Lock
 
 from simulation_orchestrator.models.model_inventory import ModelInventory
 from simulation_orchestrator.types import SimulationId, SimulatorId
@@ -63,8 +64,6 @@ class Simulation:
     error_message: str
 
     terminated: bool
-
-    lock: Lock
 
     def __init__(
             self,

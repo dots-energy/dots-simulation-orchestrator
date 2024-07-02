@@ -4,10 +4,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 import typing
 from datetime import datetime, timedelta
-from rest.oauth.OAuthUtilities import authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
+from simulation_orchestrator.rest.oauth.OAuthUtilities import authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
 
-from rest.schemas.simulation_schemas import SimulationPost, SimulationStatus, SimulationList
-from rest.schemas.user_schemas import User
+from simulation_orchestrator.rest.schemas.simulation_schemas import SimulationPost, SimulationStatus, SimulationList
+from simulation_orchestrator.rest.schemas.user_schemas import User
 from simulation_orchestrator import parse_esdl, actions
 from simulation_orchestrator.models.simulation_inventory import Simulation
 from simulation_orchestrator.types import ProgressState

@@ -3,7 +3,7 @@ from threading import Thread
 import time
 from typing import List
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, HELICS_BROKER_PORT
-from rest.schemas.simulation_schemas import Simulation
+from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.io.log import LOGGER
 from dots_infrastructure.Common import terminate_requested_at_commands_endpoint, terminate_simulation, destroy_federate
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from rest.api.api_v1.endpoints import simulation_api
+from simulation_orchestrator.rest.api.api_v1.endpoints import simulation_api
 
 
 api_router = APIRouter()

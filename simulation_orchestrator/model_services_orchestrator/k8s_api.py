@@ -18,7 +18,7 @@ import time
 
 import kubernetes.client
 
-from rest.schemas.simulation_schemas import Simulation
+from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.model_services_orchestrator.constants import SIMULATION_NAMESPACE
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
