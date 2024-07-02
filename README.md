@@ -3,7 +3,7 @@
 Based on [DOTs](https://github.com/dots-energy/). Previous working name DOTS.  
 This simulation orchestrator is controlled by api calls (FastAPI) and uses helics to orchestrate a distributed simulation.
 
-On the [MCS wiki](https://ci.tno.nl/gitlab/groups/dots/-/wikis/home) you can find a description of the framework along
+On the [MCS wiki](https://github.com/EES-TUe/dots-simulation-orchestrator/wiki) you can find a description of the framework along
 with installation and usage details.
 
 ## Development
@@ -26,7 +26,8 @@ In the `ci` folder there is one script to push the image to dockerhub.
 
 Deployment can be done on a cloud cluster or locally for testing.
 For the TUE the framework in deployed on AKS, see
-[wiki](https://ci.tno.nl/gitlab/groups/dots/-/wikis/home#installation).
+
+[wiki](https://github.com/EES-TUe/dots-simulation-orchestrator/wiki#installation).
 How to deploy and test locally is described below.
 
 ### Local deploy
@@ -46,7 +47,7 @@ In the `k8s` folder you can find the `deploy_dots.sh` scripts which will:
 For the SO the 'imagePullPolicy' is set to 'Always'.
 
 After deployment the simulator should be ready for use, see
-[wiki](https://ci.tno.nl/gitlab/groups/dots/-/wikis/home#usage-run-a-simulation).
+[wiki](https://github.com/EES-TUe/dots-simulation-orchestrator/wiki#usage-run-a-simulation).
 
 ### Local testing
 
