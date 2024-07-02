@@ -1,0 +1,133 @@
+@startuml
+skinparam sequencemessagealign reversedirection
+skinparam backgroundColor white
+'skinparam backgroundColor #EEEBDC
+
+skinparam actorBackgroundColor Gold
+
+'skinparam handwritten true
+
+actor "simulation requester" as sim_req
+participant so [
+    = simulation-orchestrator
+    ----
+    Python FastAPI
+]
+participant "calculation service A" as service_A
+participant "calculation service B" as service_B
+participant "helics broker" as broker
+
+database "influxdb database" as influxdb
+participant deploy_plane [
+    = kubernetes
+    ----
+    deployment backplane
+]
+
+activate so #seagreen
+activate influxdb #gold
+activate deploy_plane #3970e4
+
+note over so
+    continuously checks calc step runtime
+    and stops the simulation when max exceeded
+end note
+
+sim_req -> so : create simulation (http POST request): \n\
+- simulation setup\n\
+- energy system ESDL file \n\
+- calculation services definition
+
+so -> so : generate simulation id
+so --> sim_req : http POST response with simulation id
+
+so -> so : parse ESDL & calculation services\n\
+distribute ESDL objects over calc models
+so -> deploy_plane : instruct to deploy calculation service model containers with env var deployment parameters (Kubernetes Python Client)
+
+    group deploy
+
+    create broker
+    deploy_plane -> broker : deploys helics broker with env var amount of federates in the helics federation
+    create service_A
+    deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 1
+    create service_A
+    deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 2
+    create service_A
+    deploy_plane -> service_A : deploys container with env var deploy params for calc_service_A model 'n'
+    activate service_A #lightblue
+    create service_B
+    deploy_plane -> service_B : deploys container with env var deploy params
+    activate service_B #lightblue
+
+    end
+
+so -> so : if all models are deployed: start simulation
+    activate broker #darkred
+    service_A -> broker : connect ('n' times) (helics)
+    service_B -> broker : connect (helics)
+    so -> broker : connect (helics)
+    broker -> broker : start federation
+    group configure
+    so -> service_A : ESDL Endpoint ('n' times) (helics_message):\n\
+    - ESDL file
+    broker -> service_B : finalize federation
+    broker -> service_A :
+    broker -> so
+
+    service_A -> service_A : configure
+    service_B -> service_B : configure:\n\
+    - setup subscription to value topics from\n\
+      all connected ESDL objects\n\
+    - setup influxdb output
+
+    service_A -> broker : connect ('n' times) (helics)
+    service_B -> broker : connect (helics)
+    so -> broker : connect (helics)
+
+    service_A -> influxdb : connect to influxdb
+    service_B -> influxdb
+
+
+    end
+
+    group simulation loop
+    so -> broker 
+
+        group#tomato time step calculation sequence
+        service_A -> broker : request time based on calculations period and offset
+        service_A -> service_A : start calculation(s) when time is granted by helics broker
+        service_B -> broker : request time based on calculations period and offset
+        service_B -> service_B : start calculation(s) when time is granted by helics broker
+        service_A <-> service_B : send data messages (helics)
+        end
+
+    sim_req -> so: http GET/DELETE '/simulation_id' requests
+        note right
+           on termination exit simulation loop:
+           partial results are written to influxdb
+        end note
+    so --> sim_req: http GET/DELETE response: status/progress
+
+service_A -> service_A : if \n - granted helics time > simulation time or \n - termination requested or \n - exception in calculation
+service_B -> service_B : if \n - granted helics time > simulation time or \n - termination requested or \n - exception in calculation
+service_A -> influxdb : write to influxdb
+service_B -> influxdb :
+service_A -> broker : disconnect
+service_B -> broker :
+so -> broker : disconnect
+broker -> deploy_plane : status of pods to 'Succeeded'
+deactivate broker
+destroy broker
+service_A -> deploy_plane : status of pods to 'Succeeded'
+deactivate service_A
+destroy service_A
+deactivate service_B
+destroy service_B
+
+sim_req <- deploy_plane : (optional) view calculation services logs (Lens)
+
+sim_req <- influxdb : download and view simulation results (Grafana)
+
+'hide footbox
+@enduml
