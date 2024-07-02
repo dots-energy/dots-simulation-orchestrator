@@ -99,7 +99,7 @@ def start():
 
 
     simulation_orchestrator.rest.oauth.OAuthUtilities.SECRET_KEY = config['SECRET_KEY']
-    rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = simulation_orchestrator.simulation_orchestrator.rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
+    simulation_orchestrator.rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = simulation_orchestrator.rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
 
     actions.simulation_inventory = simulation_inventory
     actions.simulation_executor = SimulationExecutor(K8sApi(kubernetes_client_api, config['KUBERNETES_PULL_IMAGE_SECRET_NAME'].strip(), generic_model_env_var), simulation_inventory)
