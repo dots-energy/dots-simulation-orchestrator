@@ -1,6 +1,6 @@
 import typing
 
-from rest.schemas.simulation_schemas import SimulationPost
+from simulation_orchestrator.rest.schemas.simulation_schemas import SimulationPost
 from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory, Simulation
 from simulation_orchestrator.models.simulation_executor import SimulationExecutor

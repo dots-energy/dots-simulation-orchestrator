@@ -3,9 +3,9 @@ from threading import Thread
 import time
 from typing import List
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, HELICS_BROKER_PORT
-from rest.schemas.simulation_schemas import Simulation
+from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.io.log import LOGGER
-from dots_infrastructure.Common import terminate_requested_at_commands_endpoint, terminate_simulation, destroy_federate
+from dots_infrastructure import Common
 
 import helics as h
 
@@ -58,7 +58,7 @@ class SimulationExecutor:
             h.helicsEndpointSendMessage(message_enpoint, esdl_message)
 
         h.helicsFederateRequestTime(message_federate, h.HELICS_TIME_MAXTIME)
-        destroy_federate(message_federate)
+        Common.destroy_federate(message_federate)
 
     def _init_simulation(self, simulation : Simulation):
         amount_of_helics_federates_esdl_message = sum([calculation_service.nr_of_models for calculation_service in simulation.calculation_services]) + 1 # SO is also a federate that is part of the esdl federation
@@ -91,14 +91,19 @@ class SimulationExecutor:
         while not so_federate_info.terminate_simulation and grantedtime < total_interval and not terminate_requested:
             requested_time = grantedtime + update_interval
             grantedtime = h.helicsFederateRequestTime(federate, requested_time)
-            terminate_requested = terminate_requested_at_commands_endpoint(message_endpoint)
+            terminate_requested = Common.terminate_requested_at_commands_endpoint(message_endpoint)
 
         if so_federate_info.terminate_simulation:
-            terminate_simulation(federate, message_endpoint)
+            Common.terminate_simulation(federate, message_endpoint)
 
-        destroy_federate(federate)
+        Common.destroy_federate(federate)
         self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
-
+        if self.simulation_inventory.is_active_simulation_from_queue(so_federate_info.simulation.simulation_id):
+            self.simulation_inventory.pop_simulation_in_queue()
+            if self.simulation_inventory.nr_of_queued_simulations() > 0:
+                next_simulation_id = self.simulation_inventory.get_active_simulation_in_queue()
+                next_simulation = self.simulation_inventory.get_simulation(next_simulation_id)
+                self._deploy_simulation(next_simulation)
 
     def _deploy_simulation(self, simulation : Simulation):
         broker_ip = self._init_simulation(simulation)

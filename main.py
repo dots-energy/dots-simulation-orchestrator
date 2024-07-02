@@ -22,9 +22,9 @@ from pathlib import Path
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
-from rest.api.api_v1.api import api_router
-import rest.oauth.OAuthUtilities
-from rest.core.config import settings
+from simulation_orchestrator.rest.api.api_v1.api import api_router
+import simulation_orchestrator.rest.oauth.OAuthUtilities
+from simulation_orchestrator.rest.core.config import settings
 
 BASE_PATH = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "rest/templates"))
@@ -98,8 +98,8 @@ def start():
             generic_model_env_var[key] = value
 
 
-    rest.oauth.OAuthUtilities.SECRET_KEY = config['SECRET_KEY']
-    rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
+    simulation_orchestrator.rest.oauth.OAuthUtilities.SECRET_KEY = config['SECRET_KEY']
+    simulation_orchestrator.rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = simulation_orchestrator.rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
 
     actions.simulation_inventory = simulation_inventory
     actions.simulation_executor = SimulationExecutor(K8sApi(kubernetes_client_api, config['KUBERNETES_PULL_IMAGE_SECRET_NAME'].strip(), generic_model_env_var), simulation_inventory)

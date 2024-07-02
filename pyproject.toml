@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "simulation_orchestrator"
+version = "0.1.0"
+authors = [
+  { name="Leo van Schooten", email="l.g.t.v.schooten@tue.nl" },
+]
+description = "Simulation orchestrator"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/EES-TUe/dots-simulation-orchestrator"
+Issues = "https://github.com/EES-TUe/dots-simulation-orchestrator/issues"

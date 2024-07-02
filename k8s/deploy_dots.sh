@@ -97,7 +97,7 @@ sleep 2
 
 echo ""
 echo "Deploy grafana, influxdb, mosquitto, dots MSO and dots SO ..."
-kubectl apply -f grafana-deployment.yaml -f influxdb-deployment.yaml -f mosquitto-deployment.yaml -f mso-deployment.yaml -f so-rest-deployment.yaml
+kubectl apply -f grafana-deployment.yaml -f influxdb-deployment.yaml -f so-rest-deployment.yaml
 sleep 2
 
 echo ""

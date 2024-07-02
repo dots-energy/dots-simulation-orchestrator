@@ -1,14 +1,14 @@
 import unittest
 import base64
 from simulation_orchestrator.parse_esdl import get_model_list
-from rest.schemas.simulation_schemas import CalculationService
+from simulation_orchestrator.rest.schemas.simulation_schemas import CalculationService
 
 class TestParse(unittest.TestCase):
 
     def test_get_model_list(self):
 
         # Arrange
-        with open("test/test.esdl", mode="r") as esdl_file:
+        with open("test.esdl", mode="r") as esdl_file:
             encoded_base64_esdl = base64.b64encode(esdl_file.read().encode('utf-8')).decode("utf-8")
         
         calculation_service_energy_system = CalculationService()
@@ -66,7 +66,7 @@ class TestParse(unittest.TestCase):
         ]
 
         # Execute
-        model_list = get_model_list(calculation_services, encoded_base64_esdl.decode('utf-8'))
+        model_list = get_model_list(calculation_services, encoded_base64_esdl)
 
         # Assert
         self.assertEqual(sum([calculation_service_e_connection.nr_of_models, calculation_service_pv_installation.nr_of_models, calculation_service_energy_system.nr_of_models]), len(model_list))
