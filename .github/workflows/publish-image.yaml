@@ -28,7 +28,7 @@ jobs:
       - name: Define version for pushing to main branch
         if: ${{ github.event_name == 'push'}}
         run: |
-            TAGS=$(git tag --sort=committerdate | grep -E '^[0-9].[0-9].[0-9]$')
+            TAGS=$(git describe --tags --abbrev=0)
             if [[ ${TAGS} == "" ]]
             then
                 VERSION=1.0.0
