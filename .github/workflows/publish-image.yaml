@@ -1,0 +1,53 @@
+name: Push image to image registery
+
+permissions: write-all
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+env:
+  IMAGE_NAME: simulation-orchestrator
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Define version for pull request
+        if: ${{ github.event_name == 'pull_request'}}
+        run: echo "VERSION=test" >> $GITHUB_ENV
+      - name: Define version for pushing to main branch
+        if: ${{ github.event_name == 'push'}}
+        run: |
+            TAGS=$(git tag -l)
+            if [[ ${TAGS} == "" ]]
+            then
+                VERSION=1.0.0
+            else
+                VERSION=$(git describe --tags --abbrev=0 | awk -F '[-.]' '{print $1+1"."$2"."$3}')
+            fi
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Tag commits for pushing to main branch
+        if: ${{ github.event_name == 'push'}}
+        run: |
+            git tag $VERSION
+            git push origin tag $VERSION
+      - name: Build image
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+      - name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/EES-TUe/$IMAGE_NAME
+          # This changes all uppercase characters to lowercase.
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
