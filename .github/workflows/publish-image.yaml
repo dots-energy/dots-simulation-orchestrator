@@ -1,7 +1,5 @@
 name: Push image to image registery
 
-permissions: write-all
-
 on:
   push:
     branches:
@@ -9,6 +7,7 @@ on:
     tags:
       - v*
   pull_request:
+
 env:
   IMAGE_NAME: simulation-orchestrator
 jobs:
@@ -16,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
