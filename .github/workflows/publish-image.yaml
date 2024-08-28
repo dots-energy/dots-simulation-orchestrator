@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'k8s/**'
+      - 'docs/**'
     tags:
       - v*
   pull_request:
@@ -27,7 +30,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request'}}
         run: echo "VERSION=test" >> $GITHUB_ENV
       - name: Define version for pushing to main branch
-        if: ${{ github.event_name == 'push'}}
+        if: ${{ github.event_name == 'push' }}
         run: |
             TAGS=$(git describe --tags --abbrev=0)
             if [[ ${TAGS} == "" ]]

@@ -47,8 +47,7 @@ password_base64=$(echo -n $password | base64)
 if [[ $create_kind_cluster == true ]]; then
   # Start kind cluster
   if [[ $(kind get clusters) =~ "dots-kind" ]]; then
-    echo "ERROR: 'dots-kind' cluster already exits."
-    exit 1
+    echo "INFO: 'dots-kind' cluster already exits."
   else
     kind create cluster --config=./kind-cluster.yaml
   fi
