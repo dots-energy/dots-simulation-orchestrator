@@ -22,6 +22,10 @@ from threading import Lock
 from simulation_orchestrator.models.model_inventory import ModelInventory
 from simulation_orchestrator.types import SimulationId, SimulatorId
 
+class EnvironmentVariable(BaseModel):
+    name : str = Field(default='<<VariableName>>', description="Variable name")
+    value : str = Field(default='<<VariableValue>>', description="Variable value")
+
 class CalculationService(BaseModel):
     esdl_type: str = Field(default='PVInstallation', description="The exactname of the ESDL type")
     calc_service_name: str = Field(default='pvinstallation_service',
@@ -31,6 +35,7 @@ class CalculationService(BaseModel):
                                    description="The URL of the (ci.tno.nl) docker image file")
     nr_of_models: int = Field(default=1, description="'0' will create a model (container) per ESDL object")
     amount_of_calculations: int = Field(default=1, description="Amount of calculations executed by the calculation service")
+    additional_env_variable : list[EnvironmentVariable]
 
 class SimulationPost(BaseModel):
     name: str = 'simulation name'
