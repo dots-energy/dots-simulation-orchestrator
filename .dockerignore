@@ -2,7 +2,6 @@ ci/
 docs/
 message_definitions/
 test/
-*.in
 
 **/.git
 **/.gitignore
