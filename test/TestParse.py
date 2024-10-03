@@ -1,7 +1,7 @@
 import unittest
 import base64
 from simulation_orchestrator.parse_esdl import get_model_list
-from simulation_orchestrator.rest.schemas.simulation_schemas import CalculationService
+from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 
 class TestParse(unittest.TestCase):
 
@@ -16,18 +16,21 @@ class TestParse(unittest.TestCase):
         calculation_service_energy_system.calc_service_name = "test2_energy_system_service"
         calculation_service_energy_system.service_image_url = "dotsenergyframework/test2_energy_system_service:0.0.1"
         calculation_service_energy_system.nr_of_models = 1
+        calculation_service_energy_system.additional_env_variable = []
 
         calculation_service_pv_installation = CalculationService()
         calculation_service_pv_installation.esdl_type = "PVInstallation"
         calculation_service_pv_installation.calc_service_name = "test2_pv_installation_service"
         calculation_service_pv_installation.service_image_url = "dotsenergyframework/test2_pv_installation_service:0.0.1"
         calculation_service_pv_installation.nr_of_models = 2
+        calculation_service_pv_installation.additional_env_variable = []
 
         calculation_service_e_connection = CalculationService()
         calculation_service_e_connection.esdl_type = "EConnection"
         calculation_service_e_connection.calc_service_name = "test2_econnection_service"
         calculation_service_e_connection.service_image_url = "dotsenergyframework/test2_econnection_service:0.0.1"
         calculation_service_e_connection.nr_of_models = 1
+        calculation_service_e_connection.additional_env_variable = []
 
         expected_pv_installation_ids = [
             '1830a516-fae5-4cc7-99bd-6e9a5d175a80',

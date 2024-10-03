@@ -18,13 +18,12 @@ import time
 
 import kubernetes.client
 
-from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.model_services_orchestrator.constants import SIMULATION_NAMESPACE
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
 from simulation_orchestrator.models.model_inventory import Model
+from simulation_orchestrator.models.simulation_inventory import Simulation
 from simulation_orchestrator.types import ModelId, SimulationId, SimulatorId
-import json
 
 HELICS_BROKER_POD_NAME = 'helics-broker'
 HELICS_BROKER_IMAGE_URL = 'dotsenergyframework/helics-broker:0.0.1'

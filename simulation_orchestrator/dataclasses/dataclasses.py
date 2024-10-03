@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from simulation_orchestrator.rest.schemas.simulation_schemas import EnvironmentVariable
+from simulation_orchestrator.rest.schemas.EnvironmentVariable import EnvironmentVariable
 from simulation_orchestrator.types import EsdlId
 
 @dataclass

@@ -2,7 +2,7 @@ import typing
 
 from simulation_orchestrator.io.log import LOGGER
 
-from simulation_orchestrator.rest.schemas.simulation_schemas import EnvironmentVariable
+from simulation_orchestrator.rest.schemas.EnvironmentVariable import EnvironmentVariable
 from simulation_orchestrator.types import EsdlId, SimulationId, ModelId, ProgressState
 
 from typing import List

@@ -1,11 +1,11 @@
 import typing
 
-from simulation_orchestrator.rest.schemas.simulation_schemas import SimulationPost
+from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.models.simulation_inventory import SimulationInventory, Simulation
 from simulation_orchestrator.models.simulation_executor import SimulationExecutor
 
-from simulation_orchestrator.types import SimulationId, ProgressState
+from simulation_orchestrator.types import SimulationId
 
 simulation_inventory: SimulationInventory
 simulation_executor: SimulationExecutor
@@ -67,7 +67,6 @@ def get_simulation_and_status_list() -> typing.List[typing.Tuple[typing.Union[Si
 def terminate_simulation(simulation_id: SimulationId) -> typing.Tuple[typing.Union[Simulation, None], str]:
     simulation = simulation_inventory.get_simulation(simulation_id)
     status_description = simulation_inventory.get_status_description(simulation_id)
-        
+
     simulation_executor.terminate_simulation(simulation_id)
-    simulation_inventory.remove_simulation(simulation_id)
-    return return_val
+    return simulation, status_description

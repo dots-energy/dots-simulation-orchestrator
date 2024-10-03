@@ -3,14 +3,13 @@ from threading import Thread
 import time
 from typing import List
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, HELICS_BROKER_PORT
-from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.io.log import LOGGER
 from dots_infrastructure import Common
 
 import helics as h
 
 from simulation_orchestrator.models.model_inventory import Model
-from simulation_orchestrator.models.simulation_inventory import SimulationInventory
+from simulation_orchestrator.models.simulation_inventory import Simulation, SimulationInventory
 from simulation_orchestrator.types import ProgressState
 from dataclasses import dataclass
 
