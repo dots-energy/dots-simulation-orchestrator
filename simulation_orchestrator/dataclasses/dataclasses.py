@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
+from simulation_orchestrator.rest.schemas.EnvironmentVariable import EnvironmentVariable
 from simulation_orchestrator.types import EsdlId
 
 @dataclass
@@ -10,3 +11,4 @@ class CalculationServiceInfo:
     nr_of_models : int
     esdl_type : str
     esdl_ids : List[EsdlId]
+    additional_environment_variables : List[EnvironmentVariable]

@@ -16,10 +16,67 @@ import typing
 import uuid
 from datetime import datetime, timedelta
 
-from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
+from threading import Lock
+from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.io.log import LOGGER
-from simulation_orchestrator.models.model_inventory import Model
-from simulation_orchestrator.types import SimulationId, ModelId, ProgressState, progress_state_description
+from simulation_orchestrator.models.model_inventory import Model, ModelInventory
+from simulation_orchestrator.types import SimulationId, ModelId, ProgressState, SimulatorId, progress_state_description
+
+class Simulation:
+    simulator_id: SimulatorId
+    simulation_id: SimulationId
+    simulation_name: str
+
+    simulation_start_datetime: datetime
+    simulation_duration_in_seconds: int
+
+    keep_logs_hours: float
+    log_level: str
+
+    calculation_services: typing.List[CalculationService]
+    esdl_base64string: str
+
+    current_time_step_nr: int
+    calculation_start_datetime: datetime
+    calculation_end_datetime: typing.Optional[datetime]
+    current_step_calculation_start_datetime: typing.Optional[datetime]
+    modelparameters_start_datetime: typing.Optional[datetime]
+    model_inventory: ModelInventory
+    error_message: str
+
+    terminated: bool
+
+    def __init__(
+            self,
+            simulator_id: SimulatorId,
+            simulation_name: str,
+            simulation_start_date: datetime,
+            simulation_duration_in_seconds: int,
+            keep_logs_hours: float,
+            log_level: str,
+            calculation_services: typing.List[CalculationService],
+            esdl_base64string: str,
+    ):
+        self.simulator_id = simulator_id
+        self.simulation_name = simulation_name
+        self.simulation_start_datetime = simulation_start_date
+        self.simulation_duration_in_seconds = simulation_duration_in_seconds
+        self.keep_logs_hours = keep_logs_hours
+        self.log_level = log_level
+
+        self.calculation_services = calculation_services
+        self.esdl_base64string = esdl_base64string
+
+        self.current_time_step_nr = 0
+        self.calculation_start_datetime = datetime.now()
+        self.calculation_end_datetime = None
+        self.current_step_calculation_start_datetime = None
+        self.modelparameters_start_datetime = None
+        self.model_inventory = ModelInventory()
+        self.error_message = ""
+        self.terminated = False
+
+        self.lock = Lock()
 
 class SimulationInventory:
     activeSimulations: typing.Dict[SimulationId, Simulation]
@@ -56,16 +113,6 @@ class SimulationInventory:
     
     def is_active_simulation_from_queue(self, simulation_id) -> Simulation:
         return self.nr_of_queued_simulations() > 0 and self.simulationQueue[0] == simulation_id
-
-    def remove_simulation(self, simulation_id: SimulationId):
-        LOGGER.info(f'Removing simulation {simulation_id} from inventory')
-        if simulation_id in self.simulationQueue:
-            self.simulationQueue.remove(simulation_id)
-
-        popped = self.activeSimulations.pop(simulation_id)
-
-        if not popped:
-            LOGGER.warning(f'Simulation {simulation_id} was unknown. This should not happen.')
 
     def get_simulation_ids(self) -> typing.List[SimulationId]:
         return list(self.activeSimulations.keys())

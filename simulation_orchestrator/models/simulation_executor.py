@@ -3,14 +3,13 @@ from threading import Thread
 import time
 from typing import List
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, HELICS_BROKER_PORT
-from simulation_orchestrator.rest.schemas.simulation_schemas import Simulation
 from simulation_orchestrator.io.log import LOGGER
 from dots_infrastructure import Common
 
 import helics as h
 
 from simulation_orchestrator.models.model_inventory import Model
-from simulation_orchestrator.models.simulation_inventory import SimulationInventory
+from simulation_orchestrator.models.simulation_inventory import Simulation, SimulationInventory
 from simulation_orchestrator.types import ProgressState
 from dataclasses import dataclass
 
@@ -65,8 +64,8 @@ class SimulationExecutor:
         amount_of_helics_federates = sum([calculation_service.nr_of_models * calculation_service.amount_of_calculations for calculation_service in simulation.calculation_services]) + 1 # SO is also a federate that is part of the federation
         models = simulation.model_inventory.get_models()
         broker_ip = self.k8s_api.deploy_helics_broker(amount_of_helics_federates, amount_of_helics_federates_esdl_message, simulation.simulation_id, simulation.simulator_id)
+        calculation_service_names = [calculation_service.esdl_type for calculation_service in simulation.calculation_services]
         for model in models:
-            calculation_service_names = [calculation_service.esdl_type for calculation_service in simulation.calculation_services]
             self.k8s_api.deploy_model(simulation, model, broker_ip, calculation_service_names)
             self.k8s_api.await_pod_to_running_state(self.k8s_api.model_to_pod_name(simulation.simulator_id, simulation.simulation_id, model.model_id))
 
