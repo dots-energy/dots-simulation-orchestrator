@@ -60,7 +60,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Assert
         Common.destroy_federate.assert_called_once()
         Common.terminate_simulation.assert_not_called()
-        self.assertEqual(self.simulation_inventory.get_simulation_state(active_simulation_id), ProgressState.TERMINATED_SUCCESSFULL)
+        self.assertEqual(self.simulation_inventory.get_simulation_state(active_simulation_id), ProgressState.TERMINATED_FAILED)
 
     def test_simulation_is_termintad_when_terminate_is_requested_from_api(self):
         # Arrange
@@ -68,7 +68,7 @@ class TestSimulationExecutor(unittest.TestCase):
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [Model("test", ["test"], "test", "test", "test", ProgressState.DEPLOYED, [])])
         simulation_executor = SimulationExecutor(None, self.simulation_inventory)
         so_federate_info = SoFederateInfo(None, None, self.simulation_inventory.get_simulation(active_simulation_id))
-        so_federate_info.terminate_simulation = True
+        so_federate_info.terminate_requeted_by_user = True
         Common.terminate_requested_at_commands_endpoint = MagicMock(return_value=False)
         h.helicsFederateRequestTime = MagicMock(return_value=500)
 
