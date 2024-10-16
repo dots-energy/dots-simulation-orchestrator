@@ -164,6 +164,14 @@ class K8sApi:
                 success = True
             return success
         return False
+    
+    def delete_pod(self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id : ModelId):
+        pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
+        LOGGER.info(f'Deleting pod {pod_name}')
+        try:
+            self.k8s_core_api.delete_namespaced_pod(name=pod_name, namespace=SIMULATION_NAMESPACE)
+        except kubernetes.client.ApiException as exc:
+            LOGGER.warning(f'Could not remove pod {pod_name}: {exc}')
 
     def list_pods_status_per_simulation_id(self) -> typing.Dict[SimulationId, typing.List[PodStatus]]:
         api_response: kubernetes.client.V1PodList
