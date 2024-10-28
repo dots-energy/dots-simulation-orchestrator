@@ -91,6 +91,7 @@ class SimulationExecutor:
             for model in so_federate_info.simulation.model_inventory.get_models():
                 self.k8s_api.delete_pod_with_model_id(so_federate_info.simulation.simulator_id, so_federate_info.simulation.simulation_id, model.model_id)
             self.k8s_api.delete_broker_pod_of_simulation_id(so_federate_info.simulation.simulation_id)
+            self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
 
         self._start_next_simulation_in_queue(so_federate_info)
 

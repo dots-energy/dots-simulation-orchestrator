@@ -175,13 +175,12 @@ class K8sApi:
             self.k8s_core_api.delete_namespaced_pod(name=pod_name, namespace=SIMULATION_NAMESPACE)
         except kubernetes.client.ApiException as exc:
             LOGGER.warning(f'Could not remove pod {pod_name}: {exc}')
-
     
     def delete_pod_with_model_id(self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id : ModelId):
         pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
         self._delete_pod_with_name(pod_name)
 
-    def delete_broker_pod_of_simulation_id(self, simulation_id : str):        
+    def delete_broker_pod_of_simulation_id(self, simulation_id : str):
         self._delete_pod_with_name(self._define_helics_broker_pod_name(simulation_id))
 
     def list_pods_status_per_simulation_id(self) -> typing.Dict[SimulationId, typing.List[PodStatus]]:
