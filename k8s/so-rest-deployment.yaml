@@ -45,31 +45,6 @@ spec:
             configMapKeyRef:
               name: env-configmap
               key: kubernetes-pull-image-secret-name
-        - name: MQTT_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: env-configmap
-              key: mqtt-host
-        - name: MQTT_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: env-configmap
-              key: mqtt-port
-        - name: MQTT_QOS
-          valueFrom:
-            configMapKeyRef:
-              name: env-configmap
-              key: mqtt-qos
-        - name: MQTT_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: env-secret
-              key: mqtt-username
-        - name: MQTT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: env-secret
-              key: mqtt-password
         - name: INFLUXDB_HOST
           valueFrom:
             configMapKeyRef:

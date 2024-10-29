@@ -4,8 +4,6 @@ import time
 from typing import List
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, HELICS_BROKER_PORT
 from simulation_orchestrator.io.log import LOGGER
-from dots_infrastructure import Common
-
 import helics as h
 
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
