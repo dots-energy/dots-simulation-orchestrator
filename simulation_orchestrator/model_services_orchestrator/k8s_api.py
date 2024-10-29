@@ -26,7 +26,7 @@ from simulation_orchestrator.models.simulation_inventory import Simulation
 from simulation_orchestrator.types import ModelId, SimulationId, SimulatorId
 
 HELICS_BROKER_POD_NAME = 'helics-broker'
-HELICS_BROKER_IMAGE_URL = 'dotsenergyframework/helics-broker:0.0.1'
+HELICS_BROKER_IMAGE_URL = 'ghcr.io/ees-tue/dots-helics-broker:latest'
 HELICS_BROKER_PORT = 30000
 
 class PodStatus:
@@ -59,11 +59,9 @@ class K8sApi:
 
     def __init__(self,
                  kubernetes_client: kubernetes.client.ApiClient,
-                 pull_image_secret_name: str,
                  generic_model_env_var:dict):
         self.k8s_core_api = kubernetes.client.CoreV1Api(kubernetes_client)
         self.k8s_apps_api = kubernetes.client.AppsV1Api(kubernetes_client)
-        self.pull_image_secret_name = pull_image_secret_name
         self.generic_model_env_var = generic_model_env_var
 
     def deploy_new_pod(self, pod_name, container_url, env_vars, labels):
@@ -72,18 +70,12 @@ class K8sApi:
                                                       env=env_vars,
                                                       name=pod_name,
                                                       image_pull_policy='Always')
-        if self.pull_image_secret_name:
-            LOGGER.debug(f'Using pull image secret name {self.pull_image_secret_name}')
-            image_pull_secrets = [kubernetes.client.V1LocalObjectReference(name=self.pull_image_secret_name)]
-        else:
-            LOGGER.debug('Not using pull image secret name.')
-            image_pull_secrets = []
         k8s_pod_spec = kubernetes.client.V1PodSpec(restart_policy='Never',
                                                    containers=[k8s_container],
                                                    node_selector={
                                                        'type': 'worker'
                                                    },
-                                                   image_pull_secrets=image_pull_secrets)
+                                                   image_pull_secrets=[])
 
         k8s_pod_metadata = kubernetes.client.V1ObjectMeta(name=pod_name,
                                                           labels=labels)
@@ -121,8 +113,12 @@ class K8sApi:
             raise ConnectionError("Took to long to put pod into running state")
         return pod_ip
 
-    def deploy_helics_broker(self, amount_of_federates, amount_of_federates_esdl_message, simulation_id, simulator_id):
+    def _define_helics_broker_pod_name(self, simulation_id):
         broker_pod_name = f'{HELICS_BROKER_POD_NAME}-{simulation_id}'
+        return broker_pod_name
+
+    def deploy_helics_broker(self, amount_of_federates, amount_of_federates_esdl_message, simulation_id, simulator_id):
+        broker_pod_name = self._define_helics_broker_pod_name(simulation_id)
         self.deploy_new_pod(broker_pod_name, HELICS_BROKER_IMAGE_URL,[kubernetes.client.V1EnvVar("AMOUNT_OF_FEDERATES", str(amount_of_federates)), kubernetes.client.V1EnvVar("HELICS_BROKER_PORT", str(HELICS_BROKER_PORT)), kubernetes.client.V1EnvVar("AMOUNT_OF_ESDL_MESSAGE_FEDERATES", str(amount_of_federates_esdl_message))], {'simulation_id': simulation_id, 'simulator_id': simulator_id, 'model_id': broker_pod_name})
         broker_ip = self.await_pod_to_running_state(broker_pod_name)
         return broker_ip
@@ -164,6 +160,20 @@ class K8sApi:
                 success = True
             return success
         return False
+    
+    def _delete_pod_with_name(self, pod_name : str):
+        LOGGER.info(f'Deleting pod {pod_name}')
+        try:
+            self.k8s_core_api.delete_namespaced_pod(name=pod_name, namespace=SIMULATION_NAMESPACE)
+        except kubernetes.client.ApiException as exc:
+            LOGGER.warning(f'Could not remove pod {pod_name}: {exc}')
+    
+    def delete_pod_with_model_id(self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id : ModelId):
+        pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
+        self._delete_pod_with_name(pod_name)
+
+    def delete_broker_pod_of_simulation_id(self, simulation_id : str):
+        self._delete_pod_with_name(self._define_helics_broker_pod_name(simulation_id))
 
     def list_pods_status_per_simulation_id(self) -> typing.Dict[SimulationId, typing.List[PodStatus]]:
         api_response: kubernetes.client.V1PodList

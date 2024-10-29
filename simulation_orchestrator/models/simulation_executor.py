@@ -4,10 +4,9 @@ import time
 from typing import List
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, HELICS_BROKER_PORT
 from simulation_orchestrator.io.log import LOGGER
-from dots_infrastructure import Common
-
 import helics as h
 
+from simulation_orchestrator.model_services_orchestrator.types import ModelState
 from simulation_orchestrator.models.model_inventory import Model
 from simulation_orchestrator.models.simulation_inventory import Simulation, SimulationInventory
 from simulation_orchestrator.types import ProgressState
@@ -15,8 +14,6 @@ from dataclasses import dataclass
 
 @dataclass
 class SoFederateInfo:
-    federate : h.HelicsFederate
-    endpoint : h.HelicsEndpoint
     simulation : Simulation
     terminate_requeted_by_user = False
 
@@ -25,7 +22,7 @@ class SimulationExecutor:
     def __init__(self, k8s_api : K8sApi, simulation_inventory : SimulationInventory) -> None:
         self.k8s_api = k8s_api
         self.simulation_inventory = simulation_inventory
-        self.simulation_federates : dict[str, SoFederateInfo] = {}
+        self.simulation_book : dict[str, SoFederateInfo] = {}
 
     def _create_new_so_federate_info(self, broker_ip):
         federate_info = h.helicsCreateFederateInfo()
@@ -54,11 +51,12 @@ class SimulationExecutor:
             h.helicsEndpointSendMessage(message_enpoint, esdl_message)
 
         h.helicsFederateRequestTime(message_federate, h.HELICS_TIME_MAXTIME)
-        Common.destroy_federate(message_federate)
+        h.helicsFederateDisconnect(message_federate)
+        h.helicsFederateDestroy(message_federate)
 
     def _init_simulation(self, simulation : Simulation):
         amount_of_helics_federates_esdl_message = sum([calculation_service.nr_of_models for calculation_service in simulation.calculation_services]) + 1 # SO is also a federate that is part of the esdl federation
-        amount_of_helics_federates = sum([calculation_service.nr_of_models * calculation_service.amount_of_calculations for calculation_service in simulation.calculation_services]) + 1 # SO is also a federate that is part of the federation
+        amount_of_helics_federates = sum([calculation_service.nr_of_models * calculation_service.amount_of_calculations for calculation_service in simulation.calculation_services]) # SO is also a federate that is part of the federation
         models = simulation.model_inventory.get_models()
         broker_ip = self.k8s_api.deploy_helics_broker(amount_of_helics_federates, amount_of_helics_federates_esdl_message, simulation.simulation_id, simulation.simulator_id)
         calculation_service_names = [calculation_service.esdl_type for calculation_service in simulation.calculation_services]
@@ -68,14 +66,39 @@ class SimulationExecutor:
 
         self._send_esdl_file(simulation, models, broker_ip)
         self.simulation_inventory.set_state_for_all_models(simulation.simulation_id, ProgressState.DEPLOYED)
-        return broker_ip
+        return SoFederateInfo(simulation)
+
+    def _terminate_simulation_loop(self, so_federate_info : SoFederateInfo):
+        terminate_requested_by_user = False
+        terminated_because_of_error = False
+        terminated_because_of_succesfull_finish = False
+        while not terminate_requested_by_user and not terminated_because_of_error and not terminated_because_of_succesfull_finish:
+            terminate_requested_by_user = so_federate_info.terminate_requeted_by_user
+            pod_statuses = self.k8s_api.list_pods_status_per_simulation_id()
+            pod_status_simulation =  pod_statuses[so_federate_info.simulation.simulation_id]
+            terminated_because_of_error = any([pod_status.model_state == ModelState.TERMINATED_FAILED for pod_status in pod_status_simulation])
+            terminated_because_of_succesfull_finish = all([pod_status.model_state == ModelState.TERMINATED_SUCCESSFULL for pod_status in pod_status_simulation])
+
+            time.sleep(1)
+
+        if terminated_because_of_error:
+            self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_FAILED)
+        elif terminated_because_of_succesfull_finish:
+            self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
+        elif terminate_requested_by_user:
+            for model in so_federate_info.simulation.model_inventory.get_models():
+                self.k8s_api.delete_pod_with_model_id(so_federate_info.simulation.simulator_id, so_federate_info.simulation.simulation_id, model.model_id)
+            self.k8s_api.delete_broker_pod_of_simulation_id(so_federate_info.simulation.simulation_id)
+            self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
+
+        self._start_next_simulation_in_queue(so_federate_info)
 
     def _create_so_federate(self, broker_ip : str, simulation : Simulation):
         federate_info = self._create_new_so_federate_info(broker_ip)
         message_federate = h.helicsCreateMessageFederate(f"so-{simulation.simulation_id}", federate_info)
         message_enpoint = h.helicsFederateRegisterEndpoint(message_federate, "commands")
         return SoFederateInfo(message_federate, message_enpoint, simulation)
-    
+
     def _start_next_simulation_in_queue(self, so_federate_info : SoFederateInfo):
         if self.simulation_inventory.is_active_simulation_from_queue(so_federate_info.simulation.simulation_id):
             self.simulation_inventory.pop_simulation_in_queue()
@@ -83,41 +106,14 @@ class SimulationExecutor:
                 next_simulation_id = self.simulation_inventory.get_active_simulation_in_queue()
                 next_simulation = self.simulation_inventory.get_simulation(next_simulation_id)
                 self._deploy_simulation(next_simulation)
-    
-    def _terminate_simulation_loop(self, so_federate_info : SoFederateInfo):
-        message_endpoint = so_federate_info.endpoint
-        federate = so_federate_info.federate
-        h.helicsFederateEnterExecutingMode(federate)
-        total_interval = so_federate_info.simulation.simulation_duration_in_seconds
-        update_interval = int(h.helicsFederateGetTimeProperty(federate, h.HELICS_PROPERTY_TIME_PERIOD))
-        terminate_requested_by_federation = False
-        terminate_requested_by_user = False
-        grantedtime = 0
-        while not terminate_requested_by_user and grantedtime < total_interval + update_interval and not terminate_requested_by_federation:
-            requested_time = grantedtime + update_interval
-            grantedtime = h.helicsFederateRequestTime(federate, requested_time)
-            terminate_requested_by_user = so_federate_info.terminate_requeted_by_user
-            terminate_requested_by_federation = Common.terminate_requested_at_commands_endpoint(message_endpoint)
-
-            if terminate_requested_by_user == True:
-                Common.terminate_simulation(federate, message_endpoint)
-
-        Common.destroy_federate(federate)
-        if terminate_requested_by_federation:
-            self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_FAILED)
-        else:
-            self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
-        self._start_next_simulation_in_queue(so_federate_info)    
 
     def _deploy_simulation(self, simulation : Simulation):
-        broker_ip = self._init_simulation(simulation)
-        time.sleep(2)
-        self.simulation_federates[simulation.simulation_id] = self._create_so_federate(broker_ip, simulation)
-        self._terminate_simulation_loop(self.simulation_federates[simulation.simulation_id])
+        self.simulation_book[simulation.simulation_id] = self._init_simulation(simulation)
+        self._terminate_simulation_loop(self.simulation_book[simulation.simulation_id])
 
     def deploy_simulation(self, simulation : Simulation):
         thread = Thread(target = self._deploy_simulation, args = [simulation])
         thread.start()
 
     def terminate_simulation(self, simulation_id : str):
-        self.simulation_federates[simulation_id].terminate_requeted_by_user = True
+        self.simulation_book[simulation_id].terminate_requeted_by_user = True

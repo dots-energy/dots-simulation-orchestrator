@@ -20,7 +20,7 @@ python -m pip install -r requirements.txt
 
 ### Push image
 
-In the `ci` folder there is one script to push the image to dockerhub.
+The github actions automatically deploy new versions of the SO to the github image registry.
 
 ## Local Deploy and testing
 
