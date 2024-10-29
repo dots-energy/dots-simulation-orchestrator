@@ -59,11 +59,9 @@ class K8sApi:
 
     def __init__(self,
                  kubernetes_client: kubernetes.client.ApiClient,
-                 pull_image_secret_name: str,
                  generic_model_env_var:dict):
         self.k8s_core_api = kubernetes.client.CoreV1Api(kubernetes_client)
         self.k8s_apps_api = kubernetes.client.AppsV1Api(kubernetes_client)
-        self.pull_image_secret_name = pull_image_secret_name
         self.generic_model_env_var = generic_model_env_var
 
     def deploy_new_pod(self, pod_name, container_url, env_vars, labels):
@@ -72,18 +70,12 @@ class K8sApi:
                                                       env=env_vars,
                                                       name=pod_name,
                                                       image_pull_policy='Always')
-        if self.pull_image_secret_name:
-            LOGGER.debug(f'Using pull image secret name {self.pull_image_secret_name}')
-            image_pull_secrets = [kubernetes.client.V1LocalObjectReference(name=self.pull_image_secret_name)]
-        else:
-            LOGGER.debug('Not using pull image secret name.')
-            image_pull_secrets = []
         k8s_pod_spec = kubernetes.client.V1PodSpec(restart_policy='Never',
                                                    containers=[k8s_container],
                                                    node_selector={
                                                        'type': 'worker'
                                                    },
-                                                   image_pull_secrets=image_pull_secrets)
+                                                   image_pull_secrets=[])
 
         k8s_pod_metadata = kubernetes.client.V1ObjectMeta(name=pod_name,
                                                           labels=labels)

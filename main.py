@@ -50,7 +50,6 @@ class EnvConfig:
     CONFIG_KEYS = [('KUBERNETES_HOST', 'localhost', str, False),
                    ('KUBERNETES_PORT', '6443', int, False),
                    ('KUBERNETES_API_TOKEN', None, str, True),
-                   ('KUBERNETES_PULL_IMAGE_SECRET_NAME', None, str, False),
                    ('INFLUXDB_HOST', '', str, False),
                    ('INFLUXDB_PORT', '', str, False),
                    ('INFLUXDB_USER', '', str, False),
@@ -102,7 +101,7 @@ def start():
     simulation_orchestrator.rest.oauth.OAuthUtilities.users["DotsUser"]["hashed_password"] = simulation_orchestrator.rest.oauth.OAuthUtilities.get_password_hash(config['OAUTH_PASSWORD'])
 
     actions.simulation_inventory = simulation_inventory
-    actions.simulation_executor = SimulationExecutor(K8sApi(kubernetes_client_api, config['KUBERNETES_PULL_IMAGE_SECRET_NAME'].strip(), generic_model_env_var), simulation_inventory)
+    actions.simulation_executor = SimulationExecutor(K8sApi(kubernetes_client_api, generic_model_env_var), simulation_inventory)
     influxdb_client: InfluxDBConnector = InfluxDBConnector(config['INFLUXDB_HOST'], config['INFLUXDB_PORT'],
                                                            config['INFLUXDB_USER'], config['INFLUXDB_PASSWORD'],
                                                            config['INFLUXDB_NAME'])

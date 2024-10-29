@@ -29,7 +29,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [Model("test", ["test"], "test", "test", "test", ProgressState.DEPLOYED, [])])
-        simulation_executor = SimulationExecutor(K8sApi(None, "", {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
         pod_status_dict = {
             active_simulation_id : [
                 PodStatus("SO", "test", ModelState.TERMINATED_SUCCESSFULL, 0, None, None )
@@ -48,7 +48,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [Model("test", ["test"], "test", "test", "test", ProgressState.DEPLOYED, [])])
-        simulation_executor = SimulationExecutor(K8sApi(None, "", {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
         pod_status_dict = {
             active_simulation_id : [
                 PodStatus("SO", "test", ModelState.TERMINATED_FAILED, 1, "Exception", None )
@@ -69,7 +69,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [Model("test", ["test"], "test", "test", "test", ProgressState.DEPLOYED, [])])
-        simulation_executor = SimulationExecutor(K8sApi(None, "", {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
         so_federate_info = SoFederateInfo(self.simulation_inventory.get_simulation(active_simulation_id))
         so_federate_info.terminate_requeted_by_user = True
         pod_status_dict = {
@@ -95,7 +95,7 @@ class TestSimulationExecutor(unittest.TestCase):
         next_queued_simulation = Simulation("test2","test-name2", datetime(2024,1,1), 900, 2.0, "DEBUG",[], "")
         next_queued_simulation_id = self.simulation_inventory.queue_simulation(next_queued_simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [Model("test", ["test"], "test", "test", "test", ProgressState.DEPLOYED, [])])
-        simulation_executor = SimulationExecutor(K8sApi(None, "", {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
         pod_status_dict = {
             active_simulation_id : [
                 PodStatus("SO", "test", ModelState.TERMINATED_SUCCESSFULL, 0, None, None )

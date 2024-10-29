@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 8001
 
-ENTRYPOINT python3 -u -m main
+ENTRYPOINT ["python3", "main.py"]
