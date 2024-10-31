@@ -136,6 +136,7 @@ class K8sApi:
         env_vars["esdl_ids"] = ';'.join(model.esdl_ids)
         env_vars["esdl_type"] = model.esdl_type
         env_vars["broker_ip"] = broker_ip
+        env_vars["broker_port"] = HELICS_BROKER_PORT
         env_vars["simulation_id"] = simulation.simulation_id
         env_vars["model_id"] = model.model_id
         env_vars["calculation_services"] = ';'.join(esdl_types_calculation_services)
