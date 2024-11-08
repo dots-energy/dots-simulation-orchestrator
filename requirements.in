@@ -13,3 +13,5 @@ passlib==1.7.4
 bcrypt==4.1.1
 python-jose==3.3.0
 helics==3.4.0
+dots-infrastructure==0.4.2
+pandas==2.2.3
