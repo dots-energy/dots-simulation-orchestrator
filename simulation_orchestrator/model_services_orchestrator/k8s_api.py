@@ -134,7 +134,7 @@ class K8sApi:
         }
         env_vars = self.generic_model_env_var
         env_vars["esdl_ids"] = ';'.join(model.esdl_ids)
-        env_vars["esdl_type"] = model.esdl_type
+        env_vars["esdl_type"] = model.calc_service.esdl_type
         env_vars["broker_ip"] = broker_ip
         env_vars["broker_port"] = str(HELICS_BROKER_PORT)
         env_vars["simulation_id"] = simulation.simulation_id
@@ -143,9 +143,9 @@ class K8sApi:
         env_vars["start_time"] = simulation.simulation_start_datetime.strftime(format="%Y-%m-%d %H:%M:%S")
         env_vars["simulation_duration_in_seconds"] = str(simulation.simulation_duration_in_seconds)
         env_vars["log_level"] = simulation.log_level
-        for env_var_value in model.additional_env_variables:
+        for env_var_value in model.calc_service.additional_environment_variables:
             env_vars[env_var_value.name] = env_var_value.value
-        return self.deploy_new_pod(pod_name, model.service_image_url,[kubernetes.client.V1EnvVar(name, value) for name, value in env_vars.items()], labels)
+        return self.deploy_new_pod(pod_name, model.calc_service.service_image_url,[kubernetes.client.V1EnvVar(name, value) for name, value in env_vars.items()], labels)
 
     def delete_model(self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id: ModelId,
                            delete_by: datetime) -> bool:

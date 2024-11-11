@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from simulation_orchestrator import actions, parse_esdl
+from simulation_orchestrator.dataclasses.CalculationServiceInfo import CalculationServiceInfo
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor
 from simulation_orchestrator.simulation_logic.simulation_inventory import SimulationInventory
@@ -27,7 +28,7 @@ class TestActions(unittest.TestCase):
         self.parse_esdl_get_energy_system = parse_esdl.get_energy_system
         self.actions_simulation_executor = actions.simulation_executor.deploy_simulation
         actions.simulation_executor.deploy_simulation = MagicMock()
-        self.mock_model = Model('test-model-id', ['test-esdl-id'], 'service-name', 'service-url', 'PVInstallation', ProgressState.REGISTERED, [])
+        self.mock_model = Model("test", ["test"], CalculationServiceInfo("test", "test", 1, 1, "test", ["test"], []), ProgressState.DEPLOYED)
         parse_esdl.get_model_list = MagicMock(return_value=[self.mock_model])
         parse_esdl.get_energy_system = MagicMock(return_value=None)
 

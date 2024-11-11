@@ -6,7 +6,7 @@ from esdl.esdl_handler import EnergySystemHandler
 from base64 import b64decode
 
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
-from simulation_orchestrator.dataclasses.dataclasses import CalculationServiceInfo
+from simulation_orchestrator.dataclasses.CalculationServiceInfo import CalculationServiceInfo
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import EsdlId, ProgressState
 
@@ -38,7 +38,7 @@ def add_esdl_object(service_info_dict: dict[str, CalculationServiceInfo], calcul
         if calc_service.calc_service_name in service_info_dict:
             service_info_dict[calc_service.calc_service_name].esdl_ids.append(esdl_obj.id)
         else:
-            service_info_dict[calc_service.calc_service_name] = CalculationServiceInfo(calc_service.calc_service_name, calc_service.service_image_url, calc_service.nr_of_models, type(esdl_obj).__name__, [esdl_obj.id], calc_service.additional_env_variable)
+            service_info_dict[calc_service.calc_service_name] = CalculationServiceInfo(calc_service.calc_service_name, calc_service.service_image_url, calc_service.nr_of_models, calc_service.amount_of_calculations, type(esdl_obj).__name__, [esdl_obj.id], calc_service.additional_env_variable)
 
 def get_model_list(calculation_services: List[CalculationService], esdl_base64string: str) -> List[Model]:
     try:
@@ -84,10 +84,7 @@ def add_service_models(service_info : CalculationServiceInfo, model_list):
             Model(
                 model_id=model_id,
                 esdl_ids=esdl_ids,
-                calc_service_name=service_info.calc_service_name,
-                service_image_url=service_info.service_image_url,
-                esdl_type=service_info.esdl_type,
-                current_state=ProgressState.REGISTERED,
-                additional_env_variables=service_info.additional_environment_variables
+                calc_service=service_info,
+                current_state=ProgressState.REGISTERED
             )
         )
