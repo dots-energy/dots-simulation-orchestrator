@@ -73,9 +73,9 @@ class TestParse(unittest.TestCase):
 
         # Assert
         self.assertEqual(sum([calculation_service_e_connection.nr_of_models, calculation_service_pv_installation.nr_of_models, calculation_service_energy_system.nr_of_models]), len(model_list))
-        energy_system_models = [model for model in model_list if model.calc_service_name == calculation_service_energy_system.calc_service_name]
-        pv_installation_models = [model for model in model_list if model.calc_service_name == calculation_service_pv_installation.calc_service_name]
-        e_connection_models = [model for model in model_list if model.calc_service_name == calculation_service_e_connection.calc_service_name]
+        energy_system_models = [model for model in model_list if model.calc_service.calc_service_name == calculation_service_energy_system.calc_service_name]
+        pv_installation_models = [model for model in model_list if model.calc_service.calc_service_name == calculation_service_pv_installation.calc_service_name]
+        e_connection_models = [model for model in model_list if model.calc_service.calc_service_name == calculation_service_e_connection.calc_service_name]
 
         first_pv_installation_model = pv_installation_models[0]
         second_pv_installation_model = pv_installation_models[1]

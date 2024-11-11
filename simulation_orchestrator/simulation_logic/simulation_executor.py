@@ -55,9 +55,9 @@ class SimulationExecutor:
         h.helicsFederateDestroy(message_federate)
 
     def _init_simulation(self, simulation : Simulation):
-        amount_of_helics_federates_esdl_message = sum([calculation_service.nr_of_models for calculation_service in simulation.calculation_services]) + 1 # SO is also a federate that is part of the esdl federation
-        amount_of_helics_federates = sum([calculation_service.nr_of_models * calculation_service.amount_of_calculations for calculation_service in simulation.calculation_services]) # SO is also a federate that is part of the federation
         models = simulation.model_inventory.get_models()
+        amount_of_helics_federates_esdl_message = len(models) + 1 # SO is also a federate that is part of the esdl federation
+        amount_of_helics_federates = sum([model.calc_service.amount_of_calculations for model in models])
         broker_ip = self.k8s_api.deploy_helics_broker(amount_of_helics_federates, amount_of_helics_federates_esdl_message, simulation.simulation_id, simulation.simulator_id)
         calculation_service_names = [calculation_service.esdl_type for calculation_service in simulation.calculation_services]
         for model in models:
