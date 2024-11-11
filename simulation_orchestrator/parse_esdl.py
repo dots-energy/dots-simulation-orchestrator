@@ -7,7 +7,7 @@ from base64 import b64decode
 
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.dataclasses.dataclasses import CalculationServiceInfo
-from simulation_orchestrator.models.model_inventory import Model
+from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import EsdlId, ProgressState
 
 

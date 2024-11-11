@@ -21,8 +21,8 @@ import kubernetes.client
 from simulation_orchestrator.model_services_orchestrator.constants import SIMULATION_NAMESPACE
 from simulation_orchestrator.io.log import LOGGER
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
-from simulation_orchestrator.models.model_inventory import Model
-from simulation_orchestrator.models.simulation_inventory import Simulation
+from simulation_orchestrator.simulation_logic.model_inventory import Model
+from simulation_orchestrator.simulation_logic.simulation_inventory import Simulation
 from simulation_orchestrator.types import ModelId, SimulationId, SimulatorId
 
 HELICS_BROKER_POD_NAME = 'helics-broker'
@@ -136,6 +136,7 @@ class K8sApi:
         env_vars["esdl_ids"] = ';'.join(model.esdl_ids)
         env_vars["esdl_type"] = model.esdl_type
         env_vars["broker_ip"] = broker_ip
+        env_vars["broker_port"] = str(HELICS_BROKER_PORT)
         env_vars["simulation_id"] = simulation.simulation_id
         env_vars["model_id"] = model.model_id
         env_vars["calculation_services"] = ';'.join(esdl_types_calculation_services)

@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 import typing
@@ -71,6 +72,17 @@ def queue_new_simulation(current_user: Annotated[User, Depends(get_current_user)
 
     return simulation_status
 
+@router.get("/data/{simulation_id}", response_class=StreamingResponse)
+def download_simulation_data(current_user: Annotated[User, Depends(get_current_user)], *, simulation_id: str):
+    zip_buffer =  actions.get_all_data_for_simulation_id(simulation_id)
+    if zip_buffer != None:
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename=data_{simulation_id}.zip"},
+        )
+    else:
+        raise HTTPException(status_code=404, detail=f"No data found for simulation with id: {simulation_id}")
 
 @router.delete("/{simulation_id}", status_code=200, response_model=SimulationStatus)
 def terminate_simulation(current_user: Annotated[User, Depends(get_current_user)], *, simulation_id: str ) -> SimulationStatus:

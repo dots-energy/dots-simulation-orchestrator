@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from threading import Lock
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.io.log import LOGGER
-from simulation_orchestrator.models.model_inventory import Model, ModelInventory
+from simulation_orchestrator.simulation_logic.model_inventory import Model, ModelInventory
 from simulation_orchestrator.types import SimulationId, ModelId, ProgressState, SimulatorId, progress_state_description
 
 class Simulation:

@@ -3,9 +3,9 @@ import unittest
 from unittest.mock import MagicMock
 
 from simulation_orchestrator import actions, parse_esdl
-from simulation_orchestrator.models.model_inventory import Model
-from simulation_orchestrator.models.simulation_executor import SimulationExecutor
-from simulation_orchestrator.models.simulation_inventory import SimulationInventory
+from simulation_orchestrator.simulation_logic.model_inventory import Model
+from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor
+from simulation_orchestrator.simulation_logic.simulation_inventory import SimulationInventory
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator.types import ProgressState
 

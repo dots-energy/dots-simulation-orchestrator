@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import os
 from dotenv import load_dotenv
+from simulation_orchestrator.data_handler.data_handler import DataHandler
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi
-from simulation_orchestrator.models.simulation_executor import SimulationExecutor
+from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor
 from starlette.templating import _TemplateResponse
 
-from simulation_orchestrator.influxdb_connector import InfluxDBConnector
+from dots_infrastructure.influxdb_connector import InfluxDBConnector
 
 load_dotenv()  # take environment variables from .env
 
@@ -13,7 +14,7 @@ import threading
 import typing
 import kubernetes
 
-from simulation_orchestrator.models.simulation_inventory import SimulationInventory
+from simulation_orchestrator.simulation_logic.simulation_inventory import SimulationInventory
 import simulation_orchestrator.actions as actions
 from simulation_orchestrator.io.log import LOGGER
 
@@ -102,9 +103,11 @@ def start():
 
     actions.simulation_inventory = simulation_inventory
     actions.simulation_executor = SimulationExecutor(K8sApi(kubernetes_client_api, generic_model_env_var), simulation_inventory)
+    
     influxdb_client: InfluxDBConnector = InfluxDBConnector(config['INFLUXDB_HOST'], config['INFLUXDB_PORT'],
                                                            config['INFLUXDB_USER'], config['INFLUXDB_PASSWORD'],
                                                            config['INFLUXDB_NAME'])
+    actions.data_handler = DataHandler(influxdb_client)
     influxdb_client.create_database()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

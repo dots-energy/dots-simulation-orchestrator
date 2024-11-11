@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import typing
-from simulation_orchestrator.models.simulation_inventory import Simulation
+from simulation_orchestrator.simulation_logic.simulation_inventory import Simulation
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 
 

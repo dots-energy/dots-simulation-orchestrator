@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 import helics as h
 from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, PodStatus
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
-from simulation_orchestrator.models.simulation_executor import SimulationExecutor, SoFederateInfo
-from simulation_orchestrator.models.simulation_inventory import Simulation, SimulationInventory
-from simulation_orchestrator.models.model_inventory import Model
+from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor, SoFederateInfo
+from simulation_orchestrator.simulation_logic.simulation_inventory import Simulation, SimulationInventory
+from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import ProgressState
 
 class TestSimulationExecutor(unittest.TestCase):

@@ -1,14 +1,17 @@
+from io import BytesIO
 import typing
 
+from simulation_orchestrator.data_handler.data_handler import DataHandler
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator import parse_esdl
-from simulation_orchestrator.models.simulation_inventory import SimulationInventory, Simulation
-from simulation_orchestrator.models.simulation_executor import SimulationExecutor
+from simulation_orchestrator.simulation_logic.simulation_inventory import SimulationInventory, Simulation
+from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor
 
 from simulation_orchestrator.types import SimulationId
 
 simulation_inventory: SimulationInventory
 simulation_executor: SimulationExecutor
+data_handler: DataHandler
 
 def create_new_simulation(simulation_post : SimulationPost) -> Simulation:
     
@@ -70,3 +73,6 @@ def terminate_simulation(simulation_id: SimulationId) -> typing.Tuple[typing.Uni
 
     simulation_executor.terminate_simulation(simulation_id)
     return simulation, status_description
+
+def get_all_data_for_simulation_id(simulation_id: SimulationId) -> BytesIO:
+    return data_handler.get_all_data_for_simulation_id(simulation_id)

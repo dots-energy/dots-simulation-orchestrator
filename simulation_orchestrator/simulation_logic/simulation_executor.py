@@ -7,8 +7,8 @@ from simulation_orchestrator.io.log import LOGGER
 import helics as h
 
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
-from simulation_orchestrator.models.model_inventory import Model
-from simulation_orchestrator.models.simulation_inventory import Simulation, SimulationInventory
+from simulation_orchestrator.simulation_logic.model_inventory import Model
+from simulation_orchestrator.simulation_logic.simulation_inventory import Simulation, SimulationInventory
 from simulation_orchestrator.types import ProgressState
 from dataclasses import dataclass
 
