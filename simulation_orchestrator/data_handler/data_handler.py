@@ -36,4 +36,7 @@ class DataHandler:
                 if not measurement_dataframe.empty:
                     has_data = True
                     zip_archive.writestr(zinfo_or_arcname=f'{simulation_id}_{measurement_name}.csv', data=measurement_dataframe.to_csv(None))
+        
+        zip_buffer.seek(0)
+
         return zip_buffer if has_data else None

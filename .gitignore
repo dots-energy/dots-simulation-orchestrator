@@ -126,3 +126,5 @@ dmypy.json
 
 # k8s secrets file
 k8s/env-secret-config.yaml
+
+requirements.txt
