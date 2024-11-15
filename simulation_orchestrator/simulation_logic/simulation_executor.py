@@ -40,7 +40,8 @@ class SimulationExecutor:
         message_enpoint = h.helicsFederateRegisterEndpoint(message_federate, "simulation-orchestrator")
         h.helicsFederateEnterExecutingMode(message_federate)
         esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
-        h.helicsMessageSetString(esdl_message, simulation.esdl_base64string)
+        LOGGER.info(f"Sending esdl file with: {len(simulation.esdl_base64string)} characters")
+        h.helicsMessageSetData(esdl_message, str.encode(simulation.esdl_base64string))
 
         request_time = int(h.helicsFederateGetTimeProperty(message_federate, h.HelicsProperty.TIME_PERIOD))
         h.helicsFederateRequestTime(message_federate, request_time)
