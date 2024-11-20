@@ -29,7 +29,6 @@ class SimulationExecutor:
         h.helicsFederateInfoSetBroker(federate_info, broker_ip)
         h.helicsFederateInfoSetBrokerPort(federate_info, HELICS_BROKER_PORT)
         h.helicsFederateInfoSetCoreType(federate_info, h.HelicsCoreType.ZMQ)
-        h.helicsFederateInfoSetTimeProperty(federate_info, h.HelicsProperty.TIME_PERIOD, 60)
         h.helicsFederateInfoSetIntegerProperty(federate_info, h.HelicsProperty.INT_LOG_LEVEL, h.HelicsLogLevel.DEBUG)
         return federate_info
 
@@ -38,17 +37,20 @@ class SimulationExecutor:
         LOGGER.info("Creating federate to send esdl file: ")
         message_federate = h.helicsCreateMessageFederate(f"{simulation.simulation_id}-esdl_broker", federate_info)
         message_enpoint = h.helicsFederateRegisterEndpoint(message_federate, "simulation-orchestrator")
-        h.helicsFederateEnterExecutingMode(message_federate)
-        esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
-        h.helicsMessageSetString(esdl_message, simulation.esdl_base64string)
+        step_size = 10000000
 
-        request_time = int(h.helicsFederateGetTimeProperty(message_federate, h.HelicsProperty.TIME_PERIOD))
-        h.helicsFederateRequestTime(message_federate, request_time)
-        for model in models:
-            endpoint = f'{model.model_id}/esdl'
-            h.helicsMessageSetDestination(esdl_message, endpoint)
-            LOGGER.info(f"Sending esdl file to: {endpoint}")
-            h.helicsEndpointSendMessage(message_enpoint, esdl_message)
+        h.helicsFederateEnterExecutingMode(message_federate)
+        for i in range(0, len(simulation.esdl_base64string), step_size ):
+            h.helicsFederateRequestTime(message_federate, i)
+            esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
+            esdl_file_part = simulation.esdl_base64string[i:i + step_size]
+            LOGGER.info(f"Sending part {i/step_size} of esdl file with: {len(esdl_file_part)} characters")
+            h.helicsMessageSetData(esdl_message, esdl_file_part.encode())
+            for model in models:
+                endpoint = f'{model.model_id}/esdl'
+                h.helicsMessageSetDestination(esdl_message, endpoint)
+                LOGGER.info(f"Sending esdl file to: {endpoint}")
+                h.helicsEndpointSendMessage(message_enpoint, esdl_message)
 
         h.helicsFederateRequestTime(message_federate, h.HELICS_TIME_MAXTIME)
         h.helicsFederateDisconnect(message_federate)
