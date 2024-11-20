@@ -44,8 +44,8 @@ class SimulationExecutor:
             h.helicsFederateRequestTime(message_federate, i)
             esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
             esdl_file_part = simulation.esdl_base64string[i:i + step_size]
-            LOGGER.info(f"Sending part {i} of esdl file with: {len(esdl_file_part)} characters")
-            h.helicsMessageSetString(esdl_message, esdl_file_part[i:i + step_size])
+            LOGGER.info(f"Sending part {i/step_size} of esdl file with: {len(esdl_file_part)} characters")
+            h.helicsMessageSetData(esdl_message, esdl_file_part.encode())
             for model in models:
                 endpoint = f'{model.model_id}/esdl'
                 h.helicsMessageSetDestination(esdl_message, endpoint)
