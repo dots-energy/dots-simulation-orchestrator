@@ -18,6 +18,9 @@ spec:
       containers:
       - name: influxdb # container name
         image: influxdb:1.7 # image name
+        env:
+        - name: INFLUXDB_HTTP_MAX_BODY_SIZE
+          value: "0"
         ports:
         - containerPort: 8086
           hostPort: 8086
@@ -41,7 +44,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 10Gi
 ---
 apiVersion: v1
 kind: Service
