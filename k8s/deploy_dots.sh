@@ -1,16 +1,17 @@
 #!/bin/bash
 
 function usage {
-    echo "usage: deploy_dots [-k] [-u username] [-p password]"
+    echo "usage: deploy_dots [-k] [-u username] [-p password] [-c context]"
     echo "  -k            create kind cluster (optional, do not use for Azure)"
-    echo "  -u username       specify username"
+    echo "  -u username   specify username"
     echo "  -p password   specify password"
+    echo "  -c context    kubectl context name to which to deploy to if -k is supplied context will be set to kind-dots-kind"
     exit 1
 }
 
 create_kind_cluster=false
 # Read parameters
-while getopts "hku:p:" opt; do
+while getopts "hku:p:c:" opt; do
   case $opt in
     h) usage
     ;;
@@ -19,6 +20,8 @@ while getopts "hku:p:" opt; do
     u) username="$OPTARG"
     ;;
     p) password="$OPTARG"
+    ;;
+    c) context="$OPTARG"
     ;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1
@@ -40,18 +43,26 @@ if [ -z "${password}" ]; then
   echo "ERROR: specify a password"
   usage
 fi
+if [ -z "${context}" ] && !$create_kind_cluster; then
+  echo "ERROR: specify a context"
+  usage
+fi
 
 username_base64=$(echo -n $username | base64)
 password_base64=$(echo -n $password | base64)
 
 if [[ $create_kind_cluster == true ]]; then
   # Start kind cluster
+  context="kind-dots-kind"
   if [[ $(kind get clusters) =~ "dots-kind" ]]; then
     echo "INFO: 'dots-kind' cluster already exits."
   else
     kind create cluster --config=./kind-cluster.yaml
   fi
 fi
+
+echo setting kubectl context: $context
+kubectl config use-context "$context"
 
 # Setup cluster
 kubectl apply -f ./cluster-config.yaml
@@ -96,7 +107,7 @@ sleep 2
 
 echo ""
 echo "Deploy grafana, influxdb, mosquitto, dots MSO and dots SO ..."
-kubectl apply -f grafana-deployment.yaml -f influxdb-deployment.yaml -f so-rest-deployment.yaml
+kubectl apply -f grafana-deployment.yaml -f so-rest-deployment.yaml -f influxdb-deployment.yaml
 sleep 2
 
 echo ""
