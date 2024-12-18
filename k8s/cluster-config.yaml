@@ -25,47 +25,18 @@ type: kubernetes.io/service-account-token
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   namespace: dots
   name: simulation-role
 rules:
-  - apiGroups:
-        - ""
-        - apps
-        - autoscaling
-        - batch
-        - extensions
-        - policy
-        - rbac.authorization.k8s.io
-    resources:
-      - pods
-      - pods/log
-      - componentstatuses
-      - configmaps
-      - daemonsets
-      - deployments
-      - events
-      - endpoints
-      - horizontalpodautoscalers
-      - ingress
-      - jobs
-      - limitranges
-      - namespaces
-      - nodes
-      - pods
-      - persistentvolumes
-      - persistentvolumeclaims
-      - resourcequotas
-      - replicasets
-      - replicationcontrollers
-      - serviceaccounts
-      - services
+  - apiGroups: [""]
+    resources: ["pods", "nodes"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   namespace: dots
   name: simulation-role-binding
@@ -75,5 +46,5 @@ subjects:
     namespace: dots
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: simulation-role

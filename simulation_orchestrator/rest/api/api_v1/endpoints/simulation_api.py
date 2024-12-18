@@ -84,16 +84,30 @@ def download_simulation_data(current_user: Annotated[User, Depends(get_current_u
     else:
         raise HTTPException(status_code=404, detail=f"No data found for simulation with id: {simulation_id}")
 
-@router.delete("/{simulation_id}", status_code=200, response_model=SimulationStatus)
+@router.delete("/terminate/{simulation_id}", status_code=200, response_model=SimulationStatus)
 def terminate_simulation(current_user: Annotated[User, Depends(get_current_user)], *, simulation_id: str ) -> SimulationStatus:
     """
     Terminate a single simulation by ID
     """
-    simulation, status = actions.terminate_simulation(simulation_id)
-    if not simulation:
+    simulation = actions.terminate_simulation(simulation_id)
+    if simulation == None:
         # the exception is raised, not returned - you will get a validation
         # error otherwise.
         raise HTTPException(
             status_code=404, detail=f"Simulation with ID {simulation_id} not found"
         )
     return SimulationStatus.from_simulation_and_status(simulation, str(ProgressState.TERMINATED_FAILED))
+
+@router.delete("/delete/{simulation_id}", status_code=200, response_model=SimulationStatus)
+def delete_pods_simulation(current_user: Annotated[User, Depends(get_current_user)], *, simulation_id: str ) -> SimulationStatus:
+    """
+    Delete pods assiciated with a single simulation by ID
+    """
+    simulation = actions.delete_pods(simulation_id)
+    if simulation == None:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Simulation with ID {simulation_id} not found"
+        )
+    return SimulationStatus.from_simulation_and_status(*actions.get_simulation_and_status(simulation_id))

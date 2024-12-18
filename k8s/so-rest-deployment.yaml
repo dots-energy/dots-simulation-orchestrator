@@ -17,29 +17,15 @@ spec:
     spec:
       imagePullSecrets:
       - name: ci-tno-dots
+      serviceAccountName: simulation
       containers:
       - name: so-rest # container name
-        image: ghcr.io/ees-tue/simulation-orchestrator:10.0.0
+        image: ghcr.io/ees-tue/simulation-orchestrator:11.0.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8001
           hostPort: 8001
         env:
-        - name: KUBERNETES_API_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: env-secret
-              key: kubernetes-api-token
-        - name: KUBERNETES_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: env-configmap
-              key: kubernetes-host
-        - name: KUBERNETES_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: env-configmap
-              key: kubernetes-port
         - name: INFLUXDB_HOST
           valueFrom:
             configMapKeyRef:
