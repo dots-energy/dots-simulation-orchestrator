@@ -68,7 +68,6 @@ Below is a description of the message structure and an overview of the repositor
 
 The repository contains several folders with different purposes:
 
-- **ci:** build and push the docker image
 - **k8s:** Contains kubernetes deployment scripts and yaml files.
 - **rest:** FastApi app.
 - **simulation_orchestrator:** Code for managing simulations and hosting the fastapi.
