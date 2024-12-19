@@ -39,9 +39,8 @@ Installing kind and kubectl on Windows on WSL works well, other local cluster op
 In the `k8s` folder you can find the `deploy_dots.sh` scripts which will:
 
 - set up a cluster (on Azure or Kind) with `dots` namespace
-- grep the kubernetes api token and put it in a k8s secret for the MSO
+- configure a kubernetes service account for the so to deploy pods
 - deploy k8s env vars and secrets containing influxdb and grafana passwords
-  (the default password values in `env-secret-config_template.yaml` should be updated for Azure)
 - deploy grafana, influxdb and SO
 
 For the SO the 'imagePullPolicy' is set to 'Always'.
