@@ -88,12 +88,15 @@ class SimulationExecutor:
         elif terminated_because_of_succesfull_finish:
             self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
         elif terminate_requested_by_user:
-            for model in so_federate_info.simulation.model_inventory.get_models():
-                self.k8s_api.delete_pod_with_model_id(so_federate_info.simulation.simulator_id, so_federate_info.simulation.simulation_id, model.model_id)
-            self.k8s_api.delete_broker_pod_of_simulation_id(so_federate_info.simulation.simulation_id)
+            self.delete_all_pods_from_simulation(so_federate_info.simulation)
             self.simulation_inventory.set_state_for_all_models(so_federate_info.simulation.simulation_id, ProgressState.TERMINATED_SUCCESSFULL)
 
         self._start_next_simulation_in_queue(so_federate_info)
+
+    def delete_all_pods_from_simulation(self, simulation : Simulation):
+        for model in simulation.model_inventory.get_models():
+            self.k8s_api.delete_pod_with_model_id(simulation.simulator_id, simulation.simulation_id, model.model_id)
+        self.k8s_api.delete_broker_pod_of_simulation_id(simulation.simulation_id)
 
     def _create_so_federate(self, broker_ip : str, simulation : Simulation):
         federate_info = self._create_new_so_federate_info(broker_ip)

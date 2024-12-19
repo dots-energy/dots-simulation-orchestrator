@@ -43,7 +43,7 @@ if [ -z "${password}" ]; then
   echo "ERROR: specify a password"
   usage
 fi
-if [ -z "${context}" ] && !$create_kind_cluster; then
+if [ -z "${context}" ] && [[ $create_kind_cluster == false ]]; then
   echo "ERROR: specify a context"
   usage
 fi
@@ -76,24 +76,12 @@ echo ""
 # Get kubernetes details
 so_secret=$(openssl rand -hex 32)
 so_user_pass=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo)
-kube_api_token=$(kubectl describe secrets/dots-token-4zfwp --namespace dots  | grep 'token:' | awk -F' ' '{print $2}')
-kube_url=$(kubectl config view | grep 'server:' | awk -F'server: ' '{print $2}')
-kube_host_and_port=$(echo $kube_url | awk -F'://' '{print $2}')
-kube_host=$(echo $kube_host_and_port | awk -F':' '{print $1}')
-kube_port=$(echo $kube_host_and_port | awk -F':' '{print $2}')
-echo ""
-echo "Kubernetes env vars for .env file: "
-echo ""
-echo "KUBERNETES_API_TOKEN=${kube_api_token}"
-echo "KUBERNETES_HOST=${kube_host}"
-echo "KUBERNETES_PORT=${kube_port}"
 
 echo ""
 echo "Copy kube api token to secret"
 rm -f env-secret-config.yaml
 cp env-secret-config_template.yaml env-secret-config.yaml
-kube_api_token_base64=$(echo -n ${kube_api_token} | base64 -w0)
-sed -i -e "s/<<KUBE_API_TOKEN>>/${kube_api_token_base64}/g; s/<<USER>>/${username_base64}/g; s/<<PASSWORD>>/${password_base64}/g" env-secret-config.yaml
+sed -i -e "s/<<USER>>/${username_base64}/g; s/<<PASSWORD>>/${password_base64}/g" env-secret-config.yaml
 so_secret_base64=$(echo -n ${so_secret} | base64 -w0)
 sed -i -e "s/<<SECRET_KEY>>/${so_secret_base64}/g" env-secret-config.yaml
 so_user_pass_base64=$(echo -n ${so_user_pass} | base64 -w0)

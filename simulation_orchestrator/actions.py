@@ -7,7 +7,7 @@ from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.simulation_logic.simulation_inventory import SimulationInventory, Simulation
 from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor
 
-from simulation_orchestrator.types import SimulationId
+from simulation_orchestrator.types import ProgressState, SimulationId
 
 simulation_inventory: SimulationInventory
 simulation_executor: SimulationExecutor
@@ -69,10 +69,17 @@ def get_simulation_and_status_list() -> typing.List[typing.Tuple[typing.Union[Si
 
 def terminate_simulation(simulation_id: SimulationId) -> typing.Tuple[typing.Union[Simulation, None], str]:
     simulation = simulation_inventory.get_simulation(simulation_id)
-    status_description = simulation_inventory.get_status_description(simulation_id)
+    if simulation != None:
+        simulation_executor.terminate_simulation(simulation_id)
+    return simulation
 
-    simulation_executor.terminate_simulation(simulation_id)
-    return simulation, status_description
+def delete_pods(simulation_id : SimulationId):
+    simulation = simulation_inventory.get_simulation(simulation_id)
+    if simulation != None:
+        state = simulation_inventory.get_simulation_state(simulation_id)
+        if state == ProgressState.TERMINATED_FAILED or ProgressState.TERMINATED_SUCCESSFULL:
+            simulation_executor.delete_all_pods_from_simulation(simulation)
+    return simulation
 
 def get_all_data_for_simulation_id(simulation_id: SimulationId) -> BytesIO:
     return data_handler.get_all_data_for_simulation_id(simulation_id)

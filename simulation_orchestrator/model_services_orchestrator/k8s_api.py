@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 import typing
 import time
 
-import kubernetes.client
+from kubernetes import client, config
 
 from simulation_orchestrator.model_services_orchestrator.constants import SIMULATION_NAMESPACE
 from simulation_orchestrator.io.log import LOGGER
@@ -53,33 +53,52 @@ class PodStatus:
 
 
 class K8sApi:
-    k8s_core_api: kubernetes.client.CoreV1Api
-    k8s_apps_api: kubernetes.client.AppsV1Api
+    k8s_core_api: client.CoreV1Api
+    k8s_apps_api: client.AppsV1Api
     pull_image_secret_name: str
 
     def __init__(self,
-                 kubernetes_client: kubernetes.client.ApiClient,
                  generic_model_env_var:dict):
-        self.k8s_core_api = kubernetes.client.CoreV1Api(kubernetes_client)
-        self.k8s_apps_api = kubernetes.client.AppsV1Api(kubernetes_client)
+        config.load_incluster_config()
+
+        self.k8s_core_api = client.CoreV1Api()
+        self.k8s_apps_api = client.AppsV1Api()
         self.generic_model_env_var = generic_model_env_var
+        self.node_names = self._init_node_data()
+        self.deployd_to_node_index = 0
+
+    def _init_node_data(self):
+        response = self.k8s_core_api.list_node()
+        node_names = []
+        for node_info in response.items:
+            if node_info.metadata.labels["type"] == "worker":
+                node_names.append(node_info.metadata.name)
+        LOGGER.info(f"Working with nodes: {node_names}")
+        return node_names
+    
+    def _get_next_node_name(self):
+        self.deployd_to_node_index += 1
+        if self.deployd_to_node_index >= len(self.node_names):
+            self.deployd_to_node_index = 0
+        return self.node_names[self.deployd_to_node_index]
 
     def deploy_new_pod(self, pod_name, container_url, env_vars, labels):
         LOGGER.info(f'Deploying pod {pod_name}')
-        k8s_container = kubernetes.client.V1Container(image=container_url,
+        k8s_container = client.V1Container(image=container_url,
                                                       env=env_vars,
                                                       name=pod_name,
                                                       image_pull_policy='Always')
-        k8s_pod_spec = kubernetes.client.V1PodSpec(restart_policy='Never',
+        k8s_pod_spec = client.V1PodSpec(restart_policy='Never',
+                                        node_name=self._get_next_node_name(),
                                                    containers=[k8s_container],
                                                    node_selector={
                                                        'type': 'worker'
                                                    },
                                                    image_pull_secrets=[])
 
-        k8s_pod_metadata = kubernetes.client.V1ObjectMeta(name=pod_name,
+        k8s_pod_metadata = client.V1ObjectMeta(name=pod_name,
                                                           labels=labels)
-        k8s_pod = kubernetes.client.V1Pod(spec=k8s_pod_spec,
+        k8s_pod = client.V1Pod(spec=k8s_pod_spec,
                                           metadata=k8s_pod_metadata,
                                           kind='Pod',
                                           api_version='v1')
@@ -87,7 +106,7 @@ class K8sApi:
         try:
             self.k8s_core_api.create_namespaced_pod(namespace=SIMULATION_NAMESPACE, body=k8s_pod)
             succeeded = True
-        except kubernetes.client.ApiException as exc:
+        except client.ApiException as exc:
             LOGGER.warning(f'Could not create model {pod_name}. '
                            f'Reason: {exc.reason} ({exc.status}), {exc.body}')
             succeeded = False
@@ -119,7 +138,7 @@ class K8sApi:
 
     def deploy_helics_broker(self, amount_of_federates, amount_of_federates_esdl_message, simulation_id, simulator_id):
         broker_pod_name = self._define_helics_broker_pod_name(simulation_id)
-        self.deploy_new_pod(broker_pod_name, HELICS_BROKER_IMAGE_URL,[kubernetes.client.V1EnvVar("AMOUNT_OF_FEDERATES", str(amount_of_federates)), kubernetes.client.V1EnvVar("HELICS_BROKER_PORT", str(HELICS_BROKER_PORT)), kubernetes.client.V1EnvVar("AMOUNT_OF_ESDL_MESSAGE_FEDERATES", str(amount_of_federates_esdl_message))], {'simulation_id': simulation_id, 'simulator_id': simulator_id, 'model_id': broker_pod_name})
+        self.deploy_new_pod(broker_pod_name, HELICS_BROKER_IMAGE_URL,[client.V1EnvVar("AMOUNT_OF_FEDERATES", str(amount_of_federates)), client.V1EnvVar("HELICS_BROKER_PORT", str(HELICS_BROKER_PORT)), client.V1EnvVar("AMOUNT_OF_ESDL_MESSAGE_FEDERATES", str(amount_of_federates_esdl_message))], {'simulation_id': simulation_id, 'simulator_id': simulator_id, 'model_id': broker_pod_name})
         broker_ip = self.await_pod_to_running_state(broker_pod_name)
         return broker_ip
 
@@ -145,28 +164,13 @@ class K8sApi:
         env_vars["log_level"] = simulation.log_level
         for env_var_value in model.calc_service.additional_environment_variables:
             env_vars[env_var_value.name] = env_var_value.value
-        return self.deploy_new_pod(pod_name, model.calc_service.service_image_url,[kubernetes.client.V1EnvVar(name, value) for name, value in env_vars.items()], labels)
-
-    def delete_model(self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id: ModelId,
-                           delete_by: datetime) -> bool:
-        if not delete_by or delete_by < datetime.now():
-            pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
-            LOGGER.info(f'Deleting pod {pod_name}')
-            try:
-                self.k8s_core_api.delete_namespaced_pod(name=pod_name, namespace=SIMULATION_NAMESPACE)
-            except kubernetes.client.ApiException as exc:
-                LOGGER.warning(f'Could not remove pod {pod_name}: {exc}')
-                success = False
-            else:
-                success = True
-            return success
-        return False
+        return self.deploy_new_pod(pod_name, model.calc_service.service_image_url,[client.V1EnvVar(name, value) for name, value in env_vars.items()], labels)
     
     def _delete_pod_with_name(self, pod_name : str):
         LOGGER.info(f'Deleting pod {pod_name}')
         try:
             self.k8s_core_api.delete_namespaced_pod(name=pod_name, namespace=SIMULATION_NAMESPACE)
-        except kubernetes.client.ApiException as exc:
+        except client.ApiException as exc:
             LOGGER.warning(f'Could not remove pod {pod_name}: {exc}')
     
     def delete_pod_with_model_id(self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id : ModelId):
@@ -177,11 +181,11 @@ class K8sApi:
         self._delete_pod_with_name(self._define_helics_broker_pod_name(simulation_id))
 
     def list_pods_status_per_simulation_id(self) -> typing.Dict[SimulationId, typing.List[PodStatus]]:
-        api_response: kubernetes.client.V1PodList
+        api_response: client.V1PodList
         api_response = self.k8s_core_api.list_namespaced_pod(namespace=SIMULATION_NAMESPACE)
         result: typing.Dict[SimulationId, typing.List[PodStatus]] = {}
 
-        pod: kubernetes.client.V1Pod
+        pod: client.V1Pod
         for pod in api_response.items:
             if 'simulator_id' in pod.metadata.labels:
                 simulator_id = pod.metadata.labels['simulator_id']
@@ -225,7 +229,7 @@ class K8sApi:
         return result
 
     def add_delete_date_to_pods_status_for_simulation_id(self, simulation_id: SimulationId):
-        api_response: kubernetes.client.V1PodList
+        api_response: client.V1PodList
         api_response = self.k8s_core_api.list_namespaced_pod(namespace=SIMULATION_NAMESPACE, label_selector=f"simulation_id={simulation_id}")
 
         for pod in api_response.items:
@@ -241,7 +245,7 @@ class K8sApi:
                 metadata = {'namespace': SIMULATION_NAMESPACE,
                             'name': self.model_to_pod_name(simulator_id, sim_id, model_id),
                             'labels': pod.metadata.labels}
-                body = kubernetes.client.V1Pod(metadata=kubernetes.client.V1ObjectMeta(**metadata))
+                body = client.V1Pod(metadata=client.V1ObjectMeta(**metadata))
                 self.k8s_core_api.patch_namespaced_pod(self.model_to_pod_name(simulator_id, sim_id, model_id),
                                                        SIMULATION_NAMESPACE,
                                                        body)

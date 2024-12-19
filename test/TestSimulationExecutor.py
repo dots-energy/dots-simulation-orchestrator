@@ -3,12 +3,13 @@ import unittest
 from unittest.mock import MagicMock
 import helics as h
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import CalculationServiceInfo
-from simulation_orchestrator.model_services_orchestrator.k8s_api import K8sApi, PodStatus
+from simulation_orchestrator.model_services_orchestrator.k8s_api import PodStatus
 from simulation_orchestrator.model_services_orchestrator.types import ModelState
 from simulation_orchestrator.simulation_logic.simulation_executor import SimulationExecutor, SoFederateInfo
 from simulation_orchestrator.simulation_logic.simulation_inventory import Simulation, SimulationInventory
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import ProgressState
+from K8sApiMock import K8sApi
 
 class TestSimulationExecutor(unittest.TestCase):
 
@@ -31,7 +32,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
-        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
         pod_status_dict = {
             active_simulation_id : [
                 PodStatus("SO", "test", ModelState.TERMINATED_SUCCESSFULL, 0, None, None )
@@ -50,15 +51,13 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
-        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
         pod_status_dict = {
             active_simulation_id : [
                 PodStatus("SO", "test", ModelState.TERMINATED_FAILED, 1, "Exception", None )
             ]
         }
         simulation_executor.k8s_api.list_pods_status_per_simulation_id = MagicMock(return_value=pod_status_dict)
-        simulation_executor.k8s_api.delete_broker_pod_of_simulation_id = MagicMock()
-        simulation_executor.k8s_api.delete_pod_with_model_id = MagicMock()
         so_federate_info = SoFederateInfo(self.simulation_inventory.get_simulation(active_simulation_id))
 
         # Execute
@@ -71,7 +70,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
-        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
         so_federate_info = SoFederateInfo(self.simulation_inventory.get_simulation(active_simulation_id))
         so_federate_info.terminate_requeted_by_user = True
         pod_status_dict = {
@@ -80,8 +79,6 @@ class TestSimulationExecutor(unittest.TestCase):
             ]
         }
         simulation_executor.k8s_api.list_pods_status_per_simulation_id = MagicMock(return_value=pod_status_dict)
-        simulation_executor.k8s_api.delete_broker_pod_of_simulation_id = MagicMock()
-        simulation_executor.k8s_api.delete_pod_with_model_id = MagicMock()
 
         # Execute
         simulation_executor._terminate_simulation_loop(so_federate_info)
@@ -97,7 +94,7 @@ class TestSimulationExecutor(unittest.TestCase):
         next_queued_simulation = Simulation("test2","test-name2", datetime(2024,1,1), 900, 2.0, "DEBUG",[], "")
         next_queued_simulation_id = self.simulation_inventory.queue_simulation(next_queued_simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
-        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
         pod_status_dict = {
             active_simulation_id : [
                 PodStatus("SO", "test", ModelState.TERMINATED_SUCCESSFULL, 0, None, None )
@@ -118,10 +115,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
         self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model, Model("test2", ["test2"], CalculationServiceInfo("test2", "test", 1, 3, "test2", ["test2"], []), ProgressState.DEPLOYED)])
-        simulation_executor = SimulationExecutor(K8sApi(None, {}), self.simulation_inventory)
-        simulation_executor.k8s_api.deploy_model = MagicMock()
-        simulation_executor.k8s_api.await_pod_to_running_state = MagicMock()
-        simulation_executor.k8s_api.deploy_helics_broker = MagicMock()
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
         simulation_executor._send_esdl_file = MagicMock()
 
         # Execute
