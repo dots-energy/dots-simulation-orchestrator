@@ -44,7 +44,7 @@ jobs:
         run: docker build . --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
       - name: Push image
         run: |
-          IMAGE_ID=ghcr.io/EES-TUe/$IMAGE_NAME
+          IMAGE_ID=ghcr.io/dots-energy/$IMAGE_NAME
           # This changes all uppercase characters to lowercase.
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           echo IMAGE_ID=$IMAGE_ID

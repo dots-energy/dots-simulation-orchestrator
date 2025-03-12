@@ -8,7 +8,7 @@
     {
       "esdl_type": "EConnection",
       "calc_service_name": "test2_pv_installation_service",
-      "service_image_url": "ghcr.io/ees-tue/testservice:test",
+      "service_image_url": "ghcr.io/dots-energy-services/testservice:latest",
       "nr_of_models": 1,
       "amount_of_calculations" : 1
     }
