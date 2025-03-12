@@ -1,6 +1,7 @@
 import pathlib
 
-from pydantic import AnyHttpUrl, BaseSettings, validator
+from pydantic import AnyHttpUrl, field_validator
+from pydantic_settings import BaseSettings
 import typing
 
 # Project Directories
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
     BACKEND_CORS_ORIGINS: typing.List[AnyHttpUrl] = []
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    @field_validator("BACKEND_CORS_ORIGINS")
     def assemble_cors_origins(cls, v: typing.Union[str, typing.List[str]]) -> typing.Union[typing.List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]

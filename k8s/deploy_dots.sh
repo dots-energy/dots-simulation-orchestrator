@@ -94,7 +94,7 @@ kubectl apply -f env-secret-config.yaml
 sleep 2
 
 echo ""
-echo "Deploy grafana, influxdb, mosquitto, dots MSO and dots SO ..."
+echo "Deploy grafana, influxdb and dots SO ..."
 kubectl apply -f grafana-deployment.yaml -f so-rest-deployment.yaml -f influxdb-deployment.yaml
 sleep 2
 
