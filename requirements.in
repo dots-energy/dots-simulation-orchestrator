@@ -1,10 +1,11 @@
 overrides==6.1.0
-python-dotenv==0.20.0
+python-dotenv==1.0.1
 typing-utils==0.1.0
 uvicorn==0.30.1
-fastapi==0.111.0
+fastapi==0.115.11
 python-multipart==0.0.9
-pydantic==1.9
+pydantic==2.10.6
+pydantic-settings==2.8.1
 Jinja2==3.0.1
 pyESDL==22.11.2
 influxdb~=5.3.1
@@ -12,6 +13,6 @@ kubernetes==19.*
 passlib==1.7.4
 bcrypt==4.1.1
 python-jose==3.3.0
-helics==3.4.0
-dots-infrastructure==0.4.2
+helics==3.6.1
+dots-infrastructure==0.4.6
 pandas==2.2.3
