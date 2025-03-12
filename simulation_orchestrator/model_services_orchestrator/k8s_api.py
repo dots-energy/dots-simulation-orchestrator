@@ -26,7 +26,7 @@ from simulation_orchestrator.simulation_logic.simulation_inventory import Simula
 from simulation_orchestrator.types import ModelId, SimulationId, SimulatorId
 
 HELICS_BROKER_POD_NAME = 'helics-broker'
-HELICS_BROKER_IMAGE_URL = 'ghcr.io/ees-tue/dots-helics-broker:latest'
+HELICS_BROKER_IMAGE_URL = 'ghcr.io/dots-energy/dots-helics-broker:latest'
 HELICS_BROKER_PORT = 30000
 
 class PodStatus:
