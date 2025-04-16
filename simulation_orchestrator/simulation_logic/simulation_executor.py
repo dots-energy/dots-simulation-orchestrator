@@ -78,9 +78,10 @@ class SimulationExecutor:
             terminate_requested_by_user = so_federate_info.terminate_requeted_by_user
             pod_statuses = self.k8s_api.list_pods_status_per_simulation_id()
             pod_status_simulation =  pod_statuses[so_federate_info.simulation.simulation_id]
-            terminated_because_of_error = any([pod_status.model_state == ModelState.TERMINATED_FAILED for pod_status in pod_status_simulation])
+            terminated_because_of_error = any([pod_status.model_state == ModelState.TERMINATED_FAILED for pod_status in pod_status_simulation]) or \
+                (any([pod_status.model_state == ModelState.TERMINATED_SUCCESSFULL and "helics-broker" in pod_status.model_id for pod_status in pod_status_simulation]) and \
+                 any([pod_status.model_state == ModelState.RUNNING for pod_status in pod_status_simulation]))
             terminated_because_of_succesfull_finish = all([pod_status.model_state == ModelState.TERMINATED_SUCCESSFULL for pod_status in pod_status_simulation])
-
             time.sleep(1)
 
         if terminated_because_of_error:

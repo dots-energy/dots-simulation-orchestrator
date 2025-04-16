@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 import unittest
 from unittest.mock import MagicMock
 import helics as h
@@ -10,6 +11,13 @@ from simulation_orchestrator.simulation_logic.simulation_inventory import Simula
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import ProgressState
 from K8sApiMock import K8sApi
+from dataclasses import dataclass
+
+@dataclass
+class TestTerminationCases:
+    test_case_name : str
+    pod_statuses : List[PodStatus]
+    expected_progress_state : ProgressState
 
 class TestSimulationExecutor(unittest.TestCase):
 
@@ -28,43 +36,32 @@ class TestSimulationExecutor(unittest.TestCase):
         h.helicsFederateGetTimeProperty = self.helicsFederateGetTimeProperty
         h.helicsFederateRequestTime = self.helicsFederateRequestTime
 
-    def test_simulation_state_is_set_to_succesfull_when_all_pods_have_success_state(self):
-        # Arrange
-        active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
-        self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
-        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
-        pod_status_dict = {
-            active_simulation_id : [
-                PodStatus("SO", "test", ModelState.TERMINATED_SUCCESSFULL, 0, None, None )
-            ]
-        }
-        simulation_executor.k8s_api.list_pods_status_per_simulation_id = MagicMock(return_value=pod_status_dict)
-        so_federate_info = SoFederateInfo(self.simulation_inventory.get_simulation(active_simulation_id))
+    def test_given_simulation_pods_are_in_specific_state_then_correct_progressstate_is_reported(self):
+        
+        test_termination_cases = [
+            TestTerminationCases("state_is_set_to_succesfull_when_all_pods_have_success_state", [PodStatus("SO", "test", ModelState.TERMINATED_SUCCESSFULL, 0, None, None )], ProgressState.TERMINATED_SUCCESSFULL),
+            TestTerminationCases("simulation_is_termintad_when_pod_has_a_failed_status", [PodStatus("SO", "test", ModelState.TERMINATED_FAILED, 1, "Exception", None ), PodStatus("SO", "test", ModelState.RUNNING, None, None, None )], ProgressState.TERMINATED_FAILED),
+            TestTerminationCases("when_helics_broker_pod_is_succeeded_and_others_are_running_then_simulation_is_terminated", [PodStatus("SO", "test", ModelState.RUNNING, 1, "Running", None ), PodStatus("SO", "helics-broker-test", ModelState.TERMINATED_SUCCESSFULL, 0, "Timeout", None )], ProgressState.TERMINATED_FAILED)
+        ]
 
-        # Execute
-        simulation_executor._terminate_simulation_loop(so_federate_info)
-
-        # Assert
-        self.assertEqual(self.simulation_inventory.get_simulation_state(active_simulation_id), ProgressState.TERMINATED_SUCCESSFULL)
-
-    def test_simulation_is_termintad_when_pod_has_a_failed_status(self):
-        # Arrange
-        active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
-        self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
-        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
-        pod_status_dict = {
-            active_simulation_id : [
-                PodStatus("SO", "test", ModelState.TERMINATED_FAILED, 1, "Exception", None )
-            ]
-        }
-        simulation_executor.k8s_api.list_pods_status_per_simulation_id = MagicMock(return_value=pod_status_dict)
-        so_federate_info = SoFederateInfo(self.simulation_inventory.get_simulation(active_simulation_id))
-
-        # Execute
-        simulation_executor._terminate_simulation_loop(so_federate_info)
-
-        # Assert
-        self.assertEqual(self.simulation_inventory.get_simulation_state(active_simulation_id), ProgressState.TERMINATED_FAILED)
+        for i in range(len(test_termination_cases)):
+            termination_test_case_params = test_termination_cases[i]
+            with self.subTest(f"{termination_test_case_params.test_case_name} {i+1}"):
+                # Arrange
+                active_simulation_id = self.simulation_inventory.add_simulation(self.simulation)
+                self.simulation.model_inventory.add_models_to_simulation(self.simulation.simulation_id, [self.test_model])
+                simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
+                pod_status_dict = {
+                    active_simulation_id : termination_test_case_params.pod_statuses
+                }
+                simulation_executor.k8s_api.list_pods_status_per_simulation_id = MagicMock(return_value=pod_status_dict)
+                so_federate_info = SoFederateInfo(self.simulation_inventory.get_simulation(active_simulation_id))
+        
+                # Execute
+                simulation_executor._terminate_simulation_loop(so_federate_info)
+        
+                # Assert
+                self.assertEqual(self.simulation_inventory.get_simulation_state(active_simulation_id), termination_test_case_params.expected_progress_state)
 
     def test_simulation_is_termintad_and_pods_are_deleted_when_terminate_is_requested_from_api(self):
         # Arrange
