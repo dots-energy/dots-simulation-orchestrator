@@ -75,5 +75,5 @@ The repository contains several folders with different purposes:
 - **.gitignore:** A file containing which files and directories not to add to the git repository.
 - **.github/workflows** The steps executed by the Github CI workflows when a new commit is pushed to the main branch of the repository
 - **Dockerfile:** The build file for the Docker image.
-- **requirements.txt:** The Python dependencies necessary to run the code to create a boilerplate project.
+- **pyproject.toml:** The project file describing metadata of the python project as well as dependencies.
 - **test_post.json:** POST request body for a test simulation.
