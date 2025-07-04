@@ -3,10 +3,8 @@ FROM python:3.13
 RUN mkdir /app/
 WORKDIR /app
 
-COPY ./pyproject.toml ./
-RUN pip install ./
-
 COPY . .
+RUN pip install ./
 
 EXPOSE 8001
 
