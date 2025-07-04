@@ -12,4 +12,4 @@
 #  Manager:
 #      TNO
 
-SIMULATION_NAMESPACE= 'dots'
+SIMULATION_NAMESPACE = "dots"

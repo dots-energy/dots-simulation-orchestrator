@@ -34,8 +34,10 @@ dependencies = [
   "python-jose==3.3.0",
   "helics==3.6.1",
   "dots-infrastructure==0.4.6",
-  "pandas==2.2.3"
+  "pandas==2.2.3",
+  "pre-commit"
 ]
+
 [project.urls]
 Homepage = "https://github.com/EES-TUe/dots-simulation-orchestrator"
 Issues = "https://github.com/EES-TUe/dots-simulation-orchestrator/issues"
