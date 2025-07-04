@@ -4,6 +4,10 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.13"
+  jobs:
+    post_install:
+      # Build package with doc requirements from pyproject.optional-dependencies
+      - pip install --verbose --editable .[doc]
 
 sphinx:
-  configuration: docs/index.md
+  configuration: docs/conf.py

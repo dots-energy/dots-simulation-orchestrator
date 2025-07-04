@@ -35,8 +35,13 @@ dependencies = [
   "helics==3.6.1",
   "dots-infrastructure==0.4.6",
   "pandas==2.2.3",
-  "pre-commit",
-  "sphinx_rtd_theme"
+  "pre-commit"
+]
+
+[project.optional-dependencies]
+doc = [
+    "sphinx_rtd_theme",
+    "myst-parser"
 ]
 
 [project.urls]
