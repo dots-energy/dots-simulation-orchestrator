@@ -25,16 +25,20 @@ users = {
     }
 }
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
 
 def get_user(username: str):
     if username in users:
         user_dict = users[username]
         return UserInDB(**user_dict)
+
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
@@ -46,6 +50,7 @@ def authenticate_user(username: str, password: str):
         return False
     return user
 
+
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -55,6 +60,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(

@@ -16,7 +16,9 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: typing.List[AnyHttpUrl] = []
 
     @field_validator("BACKEND_CORS_ORIGINS")
-    def assemble_cors_origins(cls, v: typing.Union[str, typing.List[str]]) -> typing.Union[typing.List[str], str]:
+    def assemble_cors_origins(
+        cls, v: typing.Union[str, typing.List[str]]
+    ) -> typing.Union[typing.List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
