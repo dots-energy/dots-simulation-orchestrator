@@ -35,7 +35,8 @@ dependencies = [
   "helics==3.6.1",
   "dots-infrastructure==0.4.6",
   "pandas==2.2.3",
-  "pre-commit"
+  "pre-commit",
+  "sphinx_rtd_theme"
 ]
 
 [project.urls]
