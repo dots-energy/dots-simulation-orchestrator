@@ -12,7 +12,6 @@ test/
 **/.aws
 **/.ssh
 Dockerfile
-README.md
 docker-compose.y*l
 .gitlab-ci.y*l
 **/.DS_Store
