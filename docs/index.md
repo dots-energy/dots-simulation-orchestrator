@@ -10,8 +10,9 @@ Detailed contents of the documentation are structured as follows.
 ```{toctree}
 :caption: "User Manual"
 :maxdepth: 2
-tutorial/calculation services
 usage/introduction
 usage/installation
 usage/running simulations
+usage/calculation services
+
 ```
