@@ -1,5 +1,5 @@
 # Calculation services
-Calculation services are at the heart of a DOTs co-simulation. These services implement logic that simulates a specific entity of the energy system e.g. a PVInstallation, heatpump or HEMS. The idea of calculation services is that they can easily be reused in a wide variety of co-simulations.
+Calculation services are at the heart of a DOTs co-simulation. These services implement logic that simulates a specific entity of the energy system e.g. a PVInstallation, heatpump or HEMS. The idea of calculation services is that they can easily be reused in a wide variety of co-simulations. Existing calculation services can be found in the [dots energy services](https://github.com/dots-energy-services/) organization.
 
 ## Creating a new calculation service (short steps)
 To create a new calculation service follow the following steps (For a more detailed explenation see below):
