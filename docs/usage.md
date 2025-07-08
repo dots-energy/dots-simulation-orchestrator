@@ -1,0 +1,32 @@
+## Authentication
+In order to make use of the api, an authentication token is required, this token can be obtained by sending a post request to the token endpoint. The username and the password should be send as form-urlencoded parameters.
+
+![Openapi authenticate](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/Authentication-token.png)
+
+The token in the response can then be used to authenticate with the other endpoints. The username is "DotsUser" and the password can be found with OpenLens. If you click the so-rest container and scroll to the environment section you will find the password by clicking the eye icon of the OAUTH_PASSWORD property. 
+![Openapi authenticate](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/lens-pwd.png)
+
+## Usage: run a simulation
+Go to the OpenAPI of the Simulation Orchestrator which is running on: `<SO AKS IP>:8001/docs` (&lt;SO AKS IP&gt; is the Simulation Orchestrator Azure IP address), or for local kind cluster: `localhost:8011/docs`. 
+First authorize yourself with button in the top right corner. The username is `DotsUser` and the password can be found in the Simulation Orchestrator container's secrets using OpenLens.
+Use the POST request, see below, with an base64 encoded (without padding) ESDL file.  
+![openapi POST](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/openapi-start-post.png)  
+Most of the parameters in the body are self explanatory. `keep_logs_hours` is the number of hours delay after completion of a simulation. After this delay the pods will be cleaned up and the logs will no longer be accessible. 
+
+For the calculation service paramters, the `number_of_models` sets the number pods that will be started up for that service. If a service is calculation intensive this number could be increased to allow concurrent calculation for the ESDL objects that correspond to the service. A value of `0` will create a pod per ESDL object.
+Furthermore, the `esdl_type` is the esdl type that a calculation service simulates. For example, if you have a calculation service that simulates a pv panel the corresponding esdl_type = `PVInstallation`. The `service_image_url` parameter is used to specify the image url the calculation service template publishes image to this organization's image registry. The default URL is: `ghcr.io/dots-energy/$IMAGE_NAME` where `$IMAGE_NAME` should be replaced by the name of the image. Finally, `amount_of_calculations` specifies the amount of calculations a calculation service has. It is important that this is set to the correct amount.
+
+### View results
+Access the InfluxDB database on `<SO AKS IP>:8086` or `localhost:8096` via [InfluxDB studio](https://github.com/CymaticLabs/InfluxDBStudio/releases) (go to Assets). Or import the database in Grafana which can be accessed on `<SO AKS IP>:3000` or `localhost:3010`. The default user and password for InfluxDB and Grafana are admin, admin. This should have been changed during cloud installation.  
+[OpenLens](https://github.com/MuhammedKalkan/OpenLens), make sure to also install this [extension](https://github.com/alebcay/openlens-node-pod-menu#installing-this-extension), can be used to view the logs of the components running on the cluster, including the calculation service models. Connect to the cluster and go to: Workloads, Pods and select the 'dots' namespace, see the image below. The first 5 pods contain the required components described above. Below are the calculation service model pods, which will be cleaned up eventually.
+Alternatively an export of all the simulation data can be downloaded via the api.
+![Lens screenshot](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/lens-screen.png)  
+### Check simulation progress or terminate simulation
+After a simulation POST a `simulation_id` is returned, this can be used in a GET request to get the simulation status (progress) or in a DELETE request to terminate a simulation. Additionally a list of simulations can be retrieved.  
+![openapi GET DELETE GET](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/openapi-get-delete-get.png)
+
+## Usage: queue a simulation
+In addition to running a single simulation, it is also possible to queue multiple simulations by doing a post request to the queue endpoint:
+![openapi queue simulation](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/openapi-queue-post.png)
+
+This will put the simulation in a FIFO queue, if the queue is empty the simulation will start directly. Whenever the queue is non empty it will be appended to the queue and start when it is its turn.
