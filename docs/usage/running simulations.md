@@ -1,3 +1,11 @@
+# Running simulations
+In order to run a simulation a few things are required:
+* An esdl file describing your energy system
+* Calculation services 
+* A post request describing the simulation parameters
+
+This page is supposed to give guidance on how to come by these elements.
+
 ## Authentication
 In order to make use of the api, an authentication token is required, this token can be obtained by sending a post request to the token endpoint. The username and the password should be send as form-urlencoded parameters.
 
