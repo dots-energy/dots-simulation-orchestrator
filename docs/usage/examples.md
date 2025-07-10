@@ -16,10 +16,8 @@ When the json file is submitted to the simulation api the DOTs framework will st
 
 The picture above shows the results of the co-simulation in a Grafana dashboard. Another option would be to download the data as a collection of csv files and process the data using more suffisticated tools. 
 
-First observe that the apparent power profiles (the two charts on the left) for house 1 and house 2 differ significantly despite having the same load profile. This is the result of what the HEMS has done for us namely, economically optimizing the flexible load for the household.
-
-Second of all observe that the transformer in this small netowork is not overloaded. Meaning that this network is not suffering from congestion.
+First observe that the apparent power profiles (the two charts on the left) for house 1 and house 2 differ significantly despite having the same load profile. This is the result of what the HEMS has done for us namely, economically optimizing the flexible load for the household. Second of all observe that the transformer in this small network is not overloaded. Meaning that this network is not suffering from congestion.
 
 
 ## Other examples
-The other examples found in the example repository all contain the same network from the archetype dataset only with another tariff instrument active. 
+The other examples found in the example repository all contain the same network from the [archetype dataset](https://www.projectgo-e.nl/rekenen-aan-flexibiliteit-in-distributienetten/) only with another tariff instrument active. 
