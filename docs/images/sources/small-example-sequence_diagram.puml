@@ -1,0 +1,78 @@
+@startuml
+participant EConnection [
+= EMS service
+----
+EConnection
+]
+participant ElectricityDemand [
+= Electricity demand service
+----
+ElectricityDemand
+]
+participant EnvironmentalProfiles [
+= Weather service
+----
+EnvironmentalProfiles
+]
+participant EVChargingStation [
+= EV service
+----
+EVChargingStation
+]
+participant HeatPump [
+= Heatpump service
+----
+HeatPump
+]
+participant HybridHeatPump [
+= Hybrid Heatpump service
+----
+HybridHeatPump
+]
+participant EnergySystem [
+= LV network service
+----
+EnergySystem
+]
+participant PVInstallation [
+= PV service
+----
+PVInstallation
+]
+ElectricityDemand -> EConnection : active_power
+ElectricityDemand -> EConnection : reactive_power
+EnvironmentalProfiles -> EConnection : solar_irradiance
+EnvironmentalProfiles -> EConnection : air_temperature
+EnvironmentalProfiles -> EConnection : soil_temperature
+EnvironmentalProfiles -> HeatPump : solar_irradiance
+EnvironmentalProfiles -> HeatPump : air_temperature
+EnvironmentalProfiles -> HeatPump : soil_temperature
+HeatPump -> HeatPump : Execute send_temperatures
+EnvironmentalProfiles -> HybridHeatPump : solar_irradiance
+EnvironmentalProfiles -> HybridHeatPump : air_temperature
+EnvironmentalProfiles -> HybridHeatPump : soil_temperature
+HybridHeatPump -> HybridHeatPump : Execute send_temperatures
+EnvironmentalProfiles -> PVInstallation : solar_irradiance
+PVInstallation -> PVInstallation : Execute predict solar power
+EVChargingStation -> EConnection : state_of_charge_ev
+HeatPump -> EConnection : dhw_temperature
+HeatPump -> EConnection : buffer_temperature
+HeatPump -> EConnection : house_temperatures
+HybridHeatPump -> EConnection : buffer_temperature
+HybridHeatPump -> EConnection : house_temperatures
+PVInstallation -> EConnection : potential_active_power
+EConnection -> EConnection : Execute calculate_dispatch
+EConnection -> EVChargingStation : dispatch_ev
+EVChargingStation -> EVChargingStation : Execute update state of charge
+EConnection -> HeatPump : heat_power_to_tank_dhw
+EConnection -> HeatPump : heat_power_to_buffer
+EConnection -> HeatPump : heat_power_to_dhw
+EConnection -> HeatPump : heat_power_to_house
+HeatPump -> HeatPump : Execute update_temperatures
+EConnection -> HybridHeatPump : heat_power_to_buffer_hhp
+EConnection -> HybridHeatPump : heat_power_to_house_hhp
+HybridHeatPump -> HybridHeatPump : Execute update_temperatures
+EConnection -> EnergySystem : aggregated_active_power
+EConnection -> EnergySystem : aggregated_reactive_power
+EnergySystem -> EnergySystem : Execute load_flow_current_step
+@enduml
