@@ -10,14 +10,12 @@ The [test.esdl](https://github.com/dots-energy/dots-examples/blob/main/esdls/tes
 
 Next the [post-small-test-example.json](https://github.com/dots-energy/dots-examples/blob/main/Small%20test%20example/test-post-small-test-file.json) is a json file containing the Base64 encoding of the `test.esdl` file as well as a mapping for the different esdl files and their associated calculation services.
 
-When the json file is submitted to the simulation api the DOTs framework will start the co-simulation. The status api endpoint or openlens can be used to monitor the status of the simulation. The outputted simulation data will be available as soon as the simulation is finished.
+When the json file is submitted to the simulation api the DOTs framework will start the co-simulation. The status api endpoint or openlens can be used to monitor the status of the simulation. The outputted simulation data will be available as soon as the simulation is finished. The pictures below show the results of the co-simulation in a Grafana dashboard. Another option would be to download the data as a collection of csv files and process the data using more suffisticated tools. 
 
-![small example results](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/Test-example-dashboard.png?raw=true)
+![small example results apparent power](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/apparent-power-graph-small-example.png?raw=true)
+![small example flexible assets and transformer](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/test-small-example-flexible-assets-transformer-loading.png?raw=true)
 
-The picture above shows the results of the co-simulation in a Grafana dashboard. Another option would be to download the data as a collection of csv files and process the data using more suffisticated tools. 
-
-First observe that the apparent power profiles (the two charts on the left) for house 1 and house 2 differ significantly despite having the same load profile. This is the result of what the HEMS has done for us namely, economically optimizing the flexible load for the household. Second of all observe that the transformer in this small network is not overloaded. Meaning that this network is not suffering from congestion.
-
+First observe that in the firs two graphs the apparent power profiles for house 1 and house 2 differ significantly despite having the same load profile. This is the result of what the HEMS has done for us namely, economically optimizing the flexible load for the household. This difference in power profile can also be seen in the third graph where the active power dispatch of the different flexible assets is shown. Second of all the transformer in this small network is not overloaded. Meaning that this network is not suffering from congestion.
 
 ## Other examples
-The other examples found in the example repository all contain the same network from the [archetype dataset](https://www.projectgo-e.nl/rekenen-aan-flexibiliteit-in-distributienetten/) only with another tariff instrument active. 
+The other examples found in the example repository all contain the same network from the [archetype dataset](https://www.projectgo-e.nl/rekenen-aan-flexibiliteit-in-distributienetten/) only with other tariff instruments active. 
