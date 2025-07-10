@@ -7,8 +7,8 @@ The following repositories are used:
 - [Simulation Orchestrator](https://github.com/dots-energy/dots-simulation-orchestrator/): Start and manage simulations and calculation service models via a REST API (_[FastAPI](https://fastapi.tiangolo.com/)_, _[pyESDL](https://pypi.org/project/pyESDL/)_)
 - [Dots Infrastructure](https://github.com/dots-energy/dots-infrastructure): python package that contains code to set up a calculation service and integrate into the Dots [helics federation](https://docs.helics.org/en/latest/user-guide/fundamental_topics/helics_terminology.html).
 - [Calculation Service Template](https://github.com/dots-energy/Dots-calculation-service-template): Create calculation a calculation service by creating a new repository using this Github Template.
+- [Dots Examples](https://github.com/dots-energy/dots-examples): A repository containing example ESDL files and example post requests to try out and see the full capabilities of DOTs.
 - [Calculation service repositories](https://github.com/dots-energy-services/): Calculation service repositories for different energy components (from 'Calculation Service' template). 
-
 Each repository contains a README with more information.
 
 ### Terminology

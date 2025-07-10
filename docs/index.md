@@ -10,5 +10,5 @@ usage/introduction
 usage/installation
 usage/running simulations
 usage/calculation services
-
+usage/examples
 ```
