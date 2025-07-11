@@ -2,8 +2,7 @@
 
 This simulation orchestrator is controlled by api calls (FastAPI) and uses helics to orchestrate a distributed simulation.
 
-On the [MCS wiki](https://github.com/dots-energy/dots-simulation-orchestrator/wiki) you can find a description of the framework along
-with installation and usage details.
+In the [documentation](https://dots-simulation-orchestrator.readthedocs.io/en/latest/) you can find a description of the framework along with installation and usage details.
 
 ## Development
 
