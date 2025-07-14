@@ -7,7 +7,26 @@ In order to run a simulation a few things are required:
 This page is supposed to give guidance on how to come by these elements.
 
 ## Creating an ESDL file
-The easiest way to create an esdl file is by using the [ESDL map editor](https://www.esdl.nl/en/esdl-mapeditor/). Consult their documentation for more details. In the future a tool will be added to easily generate ESDL files.
+The first step of designing a co-simulation with DOTs is building an esdl file. The esdl file defines your whole energy system scenario. From network topology, to weather forecasts, to demand profiles. An esdl file can be created with the [ESDL map editor](https://www.esdl.nl/adviseurs.html#image1-1m) or using the [python package](https://pypi.org/project/pyESDL/) that is offered by the esdl developers. 
+
+Now lets consider an esdl file that has the following energy system in it:
+
+```
+                                            Import             WeatherService
+                                              |
+                                              |
+                                          Transformer
+                                              |
+                                              |
+                ElectricityCable ---------- Joint ---------- ElectricityCable
+                       |                                             |
+                       |                                             |
+PVInstallation -- EConnection -- PVInstallation                 EConnection -- PVInstallation
+```
+First, the energy system that is defined has two connections to the electricity grid (Indicated by EConnection). The two connections are connected to two and one pv panel respectively. Furthermore both connections are connected to a transformer via an electricity cable indicated by the Electricity cable type. The joint represents the connection point both cables have to the transformer. Then the object connected to the top of the transformer is an import object. This can be seen as a node that provides a source for the electricity grid. In a powerflow calculation scenario the econnections can be considered as loads, the electricity cables as lines, the joint object as nodes and the import objects as source. Finally, there is a weatherservice defined this is a time series profile for the weather data.
+
+## Creating calculation services
+In order to run a co-simulation calculation services are required that implement the behaviour of the individual entities in the energy system. In the example denoted above that would mean a calculation service for the esdl types `PVInstallation`, `EConnection`, `WeatherSrvice` and `EnergySystem` (`EnergySystem` is the esdl type denoting the electricity grid). Please refer to [calculation services](./calculation%20services.md) documentation for details on how to create calculation services.
 
 ## Starting a simulation
 ### Authentication
