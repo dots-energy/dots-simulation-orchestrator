@@ -18,4 +18,4 @@ Each repository contains a README with more information.
 
 ## Calculation flow
 What happens when a simulation is started is described in a detailed the sequence diagram below:
-![dots sequence diagram](../images/static/dots_go-e_sequence_diagram.png?raw=true)
+![dots sequence diagram](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/dots_go-e_sequence_diagram.png?raw=true)
