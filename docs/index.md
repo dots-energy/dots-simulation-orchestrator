@@ -6,6 +6,8 @@ DOTS (original name: Distributed Orchestrated Time Simulation) was created with 
 The platform has been used as part of the GO-e project. Within this project the effectiveness of different network tariff instruments have been explored.
 To get an impression of the types of studies performed with DOTs please have a look at [this report](https://www.projectgo-e.nl/wp-content/uploads/2024/06/GO-e_WP33B_rapport_V1_25062024-1.pdf) and/or [this paper](https://doi.org/10.1016/j.segan.2025.101623).
 
+Please consider citing DOTs if you are using the platform in your research, find our citations on our [citations](./info/citations.md)  page.
+
 ```{toctree}
 :caption: "User Manual"
 :maxdepth: 2
@@ -14,4 +16,5 @@ usage/installation
 usage/running simulations
 usage/calculation services
 usage/examples
+info/citations
 ```

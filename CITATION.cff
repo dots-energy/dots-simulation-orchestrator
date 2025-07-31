@@ -1,0 +1,41 @@
+message: "If you are using DOTs in your research work, please consider citing our packages as below."
+url: "https://github.com/dots-energy/dots-simulation-orchestrator"
+authors:
+  - affiliation: Eindhoven University of Technology
+    family-names: Leo
+    given-names: van Schooten
+  - family-names: Mark Vrijlandt
+  - affiliation: '@TNO'
+    family-names: Ruduan Plug
+cff-version: 1.2.0
+date-released: '2025-07-31'
+doi: 10.5281/zenodo.16629404
+identifiers:
+- type: swh
+  value: swh:1:dir:22d36b77091061c86d506e37119c0f0797e57d99;origin=https://doi.org/10.5281/zenodo.16629403;visit=swh:1:snp:98e6adb5dbcb59bb47684f3dea4b967dec57cb99;anchor=swh:1:rel:b81b5d299e44857f20252a14322722dd6e97c8ab;path=dots-energy-dots-simulation-orchestrator-a3d0f30
+license:
+- cc-by-4.0
+message: If you use this software, please cite it using the metadata from this file.
+repository-code: https://github.com/dots-energy/dots-simulation-orchestrator/
+title: 'dots-energy/dots-simulation-orchestrator'
+type: software
+version: v1.0.0
+references:
+  abstract: Infrastructure for calculation services that can run in a helics federation
+  authors:
+  - affiliation: TU/e
+    family-names: Leo van Schooten
+  cff-version: 1.2.0
+  date-released: '2025-07-31'
+  doi: 10.5281/zenodo.16631338
+  identifiers:
+  - type: swh
+    value: swh:1:dir:b577874d78a0dc92606faaf505b47854a88e1975;origin=https://doi.org/10.5281/zenodo.16631337;visit=swh:1:snp:b1c61e6b4101f7bd5be436fa97059dfcf939ac79;anchor=swh:1:rel:b0477e9d5840cb8ccfbc6f408b6c7746a8449193;path=dots-energy-dots-infrastructure-81c1a88
+  license:
+  - apache-2.0
+  message: If you use this software, please cite it using the metadata from this file.
+  repository-code: https://github.com/dots-energy/dots-infrastructure/
+  title: 'dots-energy/dots-infrastructure'
+  type: software
+  version: 1.0.2
+
