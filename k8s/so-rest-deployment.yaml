@@ -20,7 +20,7 @@ spec:
       serviceAccountName: simulation
       containers:
       - name: so-rest # container name
-        image: ghcr.io/dots-energy/simulation-orchestrator:16.0.0
+        image: ghcr.io/dots-energy/simulation-orchestrator:23.0.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8001
