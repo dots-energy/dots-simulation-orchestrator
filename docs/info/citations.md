@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
-
-SPDX-License-Identifier: MPL-2.0
--->
-
 # Citations
 
 If you are using DOTs in your research work, please consider citing our packages using the following references:
