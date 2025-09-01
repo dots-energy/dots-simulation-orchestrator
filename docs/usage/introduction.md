@@ -1,6 +1,6 @@
 # Introduction
 A simulation framework to model energy systems described in [ESDL](https://energytransition.gitbook.io/esdl/). The framework allows for independent development of calculation services for specific energy objects or services (e.g. PV panel, battery, EV, weather prediction, DSO). The simulations are run on a (cloud) cluster, the results are stored in an [influxdb](https://www.influxdata.com/) database which can be analyzed and viewed online using [grafana](https://grafana.com/), see the component diagram below.  
-![dots component diagram](https://github.com/EES-TUe/dots-simulation-orchestrator/blob/main/docs/images/static/dots_go-e_component_diagram.png)
+![dots component diagram](https://github.com/EES-TUe/dots-simulation-orchestrator/blob/main/docs/images/static/dots_go-e_component_diagram.png?raw=true)
 
 ## Repositories
 The following repositories are used:
