@@ -7,6 +7,7 @@ name = "simulation_orchestrator"
 version = "0.1.0"
 authors = [
   { name="Leo van Schooten", email="l.g.t.v.schooten@tue.nl" },
+  { name="Mark Vrijlandt", email="mark.vrijlandt@tno.nl" },
 ]
 description = "Simulation orchestrator"
 readme = "README.md"
