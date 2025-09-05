@@ -1,7 +1,7 @@
 @startuml
 skinparam defaultTextAlignment center
-'skinparam backgroundColor #EEEBDC
-skinparam backgroundColor white
+skinparam backgroundColor transparent
+'skinparam backgroundColor white
 'skinparam arrowFontName Courier
 'skinparam legendFontName Courier
 'skinparam actorFontName Courier
@@ -10,41 +10,36 @@ skinparam backgroundColor white
 'skinparam handwritten true
 skinparam actorBackgroundColor Gold
 
-cloud "Azure Kubernetes Service\n<img:./images/aks.png{scale=0.05}>" as aks {
-    [<img:./images/fastapi_logo.png{scale=0.32}>\nSimulation\nOrchestrator] as so
-    node "<img:./images/python.png{scale=0.02}>\nCalculation models:\n<img:./images/arrow_double.png{scale=0.25}> model IO data" as models
-    [<img:./images/grafana.png{scale=0.05}>\nDashboard] as grafana
+cloud "Kubernetes\n<img:../static/k8s.png{scale=0.1}>" as aks {
+    [<img:../static/fastapi_logo.png{scale=0.32}>\nSimulation\nOrchestrator] as so
+    node "<img:../static/helics-logo.png{scale=0.01}>\nCalculation models:\n<img:../static/arrow_double.png{scale=0.25}> model IO data" as models
+    [<img:../static/grafana.png{scale=0.05}>\nDashboard] as grafana
+    [<img:../static/helics-logo.png{scale=0.01}>\nHelics broker\n<img:../static/arrow_double.png{scale=0.25}> messages] as helics
 
-    models <-r- so: deploy models\ninformation
+    models <. so: deploy models
     models <-r-> so: lifecycle\ncommands
 
-    database "<img:./images/influxdb_crop.png{scale=0.21}>" {
+    database "<img:../static/influxdb_crop.png{scale=0.21}>" {
         [Simulation results] as influxdb
     }
     models ..> influxdb: write to\ndatabase
     influxdb ..> grafana: database\nquery
+
+    grafana -left[hidden]-> helics
 }
 
 actor "service\ndeveloper" as developer
 actor "simulator\nuser" as simulator
 
-node "<img:./images/github.png{scale=0.08}>\nCalculation\nService Repos" as repos
+[<img:../static/github.png{scale=0.08}>\nCalculation\nService Template] as template
+node "<img:../static/python.png{scale=0.02}>\nCalculation\nService Repos" as repos
 
-so .> repos: pull image
+so -up.> repos: pull image
 
-developer <.> repos: implement\nlogic
-'simulator <. simulator: <img:./images/lens-logo-icon.png{scale=0.1}>\n view logs
-[<img:./images/lens-logo-icon.png{scale=0.08}>\nLens] as lens
-simulator <. lens: container\nlogs
-'lens . aks
+developer .> template
+template .> repos
 
-simulator .> so: HTTP: Start simulation <img:./images/esdl_logo_large.png{scale=0.1}>
-simulator <. grafana: HTTP: \nvisualize data
-
-legend right
-    <img:./images/arrow.png{scale=0.02}>
-    Cluster internal communication helics:
-    <img:./images/helics-logo.png{scale=0.02}>
-endlegend
+simulator .> so: HTTP: Start simulation <img:../static/esdl_logo_large.png{scale=0.1}>
+simulator .> grafana
 
 @enduml
