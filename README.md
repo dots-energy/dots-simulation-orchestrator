@@ -12,7 +12,7 @@ When a push is done to a new branch and a pull request is created the github act
 The repository contains several folders with different purposes:
 
 - **k8s:** Contains kubernetes deployment scripts and yaml files.
-- **rest:** FastApi app.
+- **simulation_orchestrator/rest:** FastApi app.
 - **simulation_orchestrator:** Code for managing simulations and hosting the fastapi.
 - **.dockerignore:** A file containing which files and directories to ignore when submitting this repo as a Docker
   build context. In other words, it prevents the entries from being sent to Docker when the Docker image is build.

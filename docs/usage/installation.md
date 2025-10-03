@@ -1,5 +1,8 @@
 # Installation
-To run a simulation first a deploy of the DOTS platform needs to be done. This can either be local or online kubernetes cluster. Secondly, docker images of the calculation services need to be available.
+To run a simulation you need to have a DOTS cluster available. If there is no DOTS cluster avaialable yet you can follow the instructions on this page to get the DOTS platform up and running. This can either be local or an online kubernetes cluster. Secondly, docker images of the calculation services need to be available.
+
+## DOTS platform developer
+Making changes to the DOTS platform requires to have a local kubernetes cluster using kind. Therefore, follow the instruction in the [Deploy on local cluster](#deploy-on-local-cluster) section.
 
 ## Deployment
 For a deployment to a local cluster, two items need to be installed first: [kind](https://kind.sigs.k8s.io/) and [kubectl](https://kubernetes.io/docs/tasks/tools/). Installing kind and kubectl on Windows on WSL works well, other local cluster options have not been tried. For deployment to an online kubernetes cluster, the cluster needs to be configured in the kube config file and needs to have an associated context.
@@ -20,7 +23,7 @@ All components can be deployed on [AKS](https://learn.microsoft.com/en-us/azure/
 The supplied `<user_name>` and `<password>` will be used for InfluxDB and Grafana. The supplied `<context>` is the name of the context in your kube config that is connected to an azure kubernetes cluster.
 
 ### Deploy on local cluster
-With kind and [kubectl](https://kubernetes.io/docs/tasks/tools/) installed run [deploy_dots.sh](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/k8s/deploy_dots.sh) but with the `-k` flag. This will result in the same steps as above but will start by creating a cluster. For more information, and a test POST body for a test simulation, see the [Simulation Orchestrator README](https://github.com/dots-energy/dots-simulation-orchestrator?tab=readme-ov-file#simulation-orchestrator-for-the-energy-system-microservices-cloud-simulator). If you are deploying the cluster locally for the first time don't forget to add the execution permission to the `deploy_dots.sh` file i.e. run `chmod +x *.sh`.
+With kind and [kubectl](https://kubernetes.io/docs/tasks/tools/) installed run [deploy_dots.sh](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/k8s/deploy_dots.sh) but with the `-k` flag. This will result in the same steps as above but will start by creating a cluster. If you are deploying the cluster locally for the first time don't forget to add the execution permission to the `deploy_dots.sh` file i.e. run `chmod +x *.sh`.
 
 After deployment the simulator should be ready for use, see [running simulations](running%20simulations.md) to get started on running the simulations.
 
