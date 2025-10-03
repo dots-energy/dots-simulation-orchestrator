@@ -28,7 +28,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Define version for pull request
         if: ${{ github.event_name == 'pull_request'}}
-        run: echo "VERSION=test" >> $GITHUB_ENV
+        run: echo "VERSION=${{ github.head_ref }}" >> $GITHUB_ENV
       - name: Define version for pushing to main branch
         if: ${{ github.event_name == 'push' }}
         run: |
