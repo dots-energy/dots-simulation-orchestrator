@@ -184,7 +184,7 @@ class SimulationExecutor:
                 if logs != "":
                     has_data = True
                     zip_archive.writestr(
-                        zinfo_or_arcname=file_name,
+                        zinfo_or_arcname=f"{file_name}.log",
                         data=logs,
                     )
 
