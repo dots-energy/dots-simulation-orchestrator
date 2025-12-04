@@ -8,7 +8,7 @@ class K8sApi:
         self.await_pod_to_running_state = MagicMock()
         self.deploy_helics_broker = MagicMock()
         self.deploy_model = MagicMock()
-        self.delete_pod_with_model_id = MagicMock()
+        self.delete_pod_with_simulation_meta_data = MagicMock()
         self.delete_broker_pod_of_simulation_id = MagicMock()
         self.list_pods_status_per_simulation_id = MagicMock()
         self.add_delete_date_to_pods_status_for_simulation_id = MagicMock()

@@ -114,5 +114,12 @@ def delete_pods(simulation_id: SimulationId):
     return simulation
 
 
+def get_all_logs_for_simulation_id(simulation_id: SimulationId) -> BytesIO | None:
+    simulation = simulation_inventory.get_simulation(simulation_id)
+    if simulation is not None:
+        return simulation_executor.get_all_logs_from_simulation(simulation)
+    return None
+
+
 def get_all_data_for_simulation_id(simulation_id: SimulationId) -> BytesIO:
     return data_handler.get_all_data_for_simulation_id(simulation_id)

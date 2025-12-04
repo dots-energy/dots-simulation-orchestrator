@@ -134,7 +134,7 @@ class TestSimulationExecutor(unittest.TestCase):
         simulation_executor.k8s_api.delete_broker_pod_of_simulation_id.assert_called_once_with(
             active_simulation_id
         )
-        simulation_executor.k8s_api.delete_pod_with_model_id.assert_called_once_with(
+        simulation_executor.k8s_api.delete_pod_with_simulation_meta_data.assert_called_once_with(
             "test", active_simulation_id, "test"
         )
         self.assertEqual(

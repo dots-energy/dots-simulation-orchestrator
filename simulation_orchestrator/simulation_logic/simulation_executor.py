@@ -1,6 +1,8 @@
+from io import BytesIO
 from threading import Thread
 import time
 from typing import List
+import zipfile
 from simulation_orchestrator.model_services_orchestrator.k8s_api import (
     K8sApi,
     HELICS_BROKER_PORT,
@@ -156,10 +158,39 @@ class SimulationExecutor:
 
     def delete_all_pods_from_simulation(self, simulation: Simulation):
         for model in simulation.model_inventory.get_models():
-            self.k8s_api.delete_pod_with_model_id(
+            self.k8s_api.delete_pod_with_simulation_meta_data(
                 simulation.simulator_id, simulation.simulation_id, model.model_id
             )
         self.k8s_api.delete_broker_pod_of_simulation_id(simulation.simulation_id)
+
+    def get_all_logs_from_simulation(self, simulation: Simulation) -> BytesIO | None:
+        log_output = {}
+        for model in simulation.model_inventory.get_models():
+            pod_name = self.k8s_api.model_to_pod_name(
+                simulation.simulator_id, simulation.simulation_id, model.model_id
+            )
+            log_output[pod_name] = (
+                self.k8s_api.get_logs_of_pod_with_simulation_meta_data(
+                    simulation.simulator_id, simulation.simulation_id, model.model_id
+                )
+            )
+
+        has_data = False
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(
+            file=zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+        ) as zip_archive:
+            for file_name, logs in log_output.items():
+                if logs != "":
+                    has_data = True
+                    zip_archive.writestr(
+                        zinfo_or_arcname=file_name,
+                        data=logs,
+                    )
+
+        zip_buffer.seek(0)
+
+        return zip_buffer if has_data else None
 
     def _create_so_federate(self, broker_ip: str, simulation: Simulation):
         federate_info = self._create_new_so_federate_info(broker_ip)
