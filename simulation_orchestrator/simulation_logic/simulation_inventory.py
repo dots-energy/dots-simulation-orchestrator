@@ -255,9 +255,6 @@ class SimulationInventory:
         state = self.get_simulation_state(simulation_id)
         if state is None:
             return f"Simulation id '{simulation_id}' could not be found."
-        elif state == ProgressState.STEP_STARTED:
-            simulation = self.get_simulation(simulation_id)
-            return f"Calculating time step {simulation.current_time_step_nr} (of {simulation.simulation_duration_in_seconds})"
         else:
             return progress_state_description[state]
 
