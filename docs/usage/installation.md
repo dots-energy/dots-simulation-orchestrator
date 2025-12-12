@@ -13,7 +13,7 @@ In the `k8s` folder of the simulation orchestrator's repository you can find the
 - deploy k8s env vars and secrets containing influxdb and grafana passwords
 - deploy grafana, influxdb and SO
 
-For the SO the 'imagePullPolicy' is set to 'Always'. Furthermore, a password for the api user account `DotsUser` is generated and put in the Simulation Orchestrator container's environment variable.
+For the SO the 'imagePullPolicy' is set to 'Always'. Furthermore, a password for the api user account `DotsUser` is generated and put in the Simulation Orchestrator container's environment variable. 
  
 ### Deploy on Azure Kubernetes Service
 All components can be deployed on [AKS](https://learn.microsoft.com/en-us/azure/aks/). On Azure use [deploy_dots.sh](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/k8s/deploy_dots.sh) to deploy DOTS:
@@ -21,6 +21,18 @@ All components can be deployed on [AKS](https://learn.microsoft.com/en-us/azure/
 ./deploy_dots.sh -u <user_name> -p <password> -c <context>
 ```
 The supplied `<user_name>` and `<password>` will be used for InfluxDB and Grafana. The supplied `<context>` is the name of the context in your kube config that is connected to an azure kubernetes cluster.
+
+When the script has executed sucessfull the services are not yet reachable via an external client. In order to do so, there are two options: either deploy the ingress routing configuration for which domain names and corresponding ssl certificates are required (option 1), or, make all the services of type loadbalancer in their respective deployment files (option 2).
+
+#### Deploy ingress (option 1)
+To be able to address the services on the Azure Kubernetes Cluster via domain names an ingress configuration file can be found in the `k8s` folder of the simulation orchestrator. The file is called `ingress_template.yaml` and the values of the configuration settings ecapsulated between `<<` and `>>` need to be replaced by values that are applicable for the aks cluster. Then deploy the ingress configuration using the following command:
+
+```kubectl apply -f ingress.yaml -n <<AZURE_NAMESPACE>>```
+
+Where `<<AZURE_NAMESPACE>>` needs to be replaced by the namespace in azure the configuration needs to be applied to. For information on how to configure the ssl certificate in Azure see this [documentation page](https://learn.microsoft.com/en-us/azure/aks/app-routing-dns-ssl) of Azure.
+
+#### Change service type (option 2)
+The second options is to change the kubernetes service types to loadbalancer. Open the `grafana-deployment.yaml`, `influxdb-deployment.yaml` and `so-rest-deployment.yaml` files and change the kubernetes service from `ClusterIP` to `LoadBalancer` in each of the files respectively. Then run the `./deploy_dots.sh` script again to apply the changes to the Azure cluster. Azure will appoint each of the services a public IP adress for which the services are reachable.
 
 ### Deploy on local cluster
 With kind and [kubectl](https://kubernetes.io/docs/tasks/tools/) installed run [deploy_dots.sh](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/k8s/deploy_dots.sh) but with the `-k` flag. This will result in the same steps as above but will start by creating a cluster. If you are deploying the cluster locally for the first time don't forget to add the execution permission to the `deploy_dots.sh` file i.e. run `chmod +x *.sh`.
