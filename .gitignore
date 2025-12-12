@@ -128,3 +128,5 @@ dmypy.json
 k8s/env-secret-config.yaml
 
 requirements.txt
+k8s/*.txt
+k8s/ingress.yaml

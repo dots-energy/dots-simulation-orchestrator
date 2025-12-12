@@ -54,8 +54,8 @@ metadata:
 spec:
   selector:
     app: influxdb
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - protocol: TCP
-      port: 8086 # service port
-      targetPort: 8086 # needs to match containerPort
+      port: 8086
+      targetPort: 8086

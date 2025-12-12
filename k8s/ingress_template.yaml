@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dots-platform
+  namespace: dots
+  annotations:
+    kubernetes.azure.com/tls-cert-keyvault-uri: <<TLS-KEYVAULT-URI>>
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+  - host: "<<SO-HOST>>"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: so-rest
+            port: 
+              number: 8001
+  - host: "<<GRAFANA-HOST>>"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: grafana
+            port: 
+              number: 3000
+  - host: "<<INFLUXDB-HOST>>"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: influxdb
+            port: 
+              number: 8086
+  tls:
+  - hosts:
+    - "<<SO-HOST>>"
+    - "<<GRAFANA-HOST>>"
+    - "<<INFLUXDB-HOST>>"
+    secretName: keyvault-dots-platform

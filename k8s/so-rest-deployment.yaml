@@ -75,7 +75,7 @@ metadata:
 spec:
   selector:
     app: so-rest
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - protocol: TCP
       port: 8001 # service port
