@@ -117,6 +117,26 @@ def download_simulation_data(
         )
 
 
+@router.get("/logs/{simulation_id}", response_class=StreamingResponse)
+def download_logs_data(
+    current_user: Annotated[User, Depends(get_current_user)], *, simulation_id: str
+):
+    zip_buffer = actions.get_all_logs_for_simulation_id(simulation_id)
+    if zip_buffer is not None:
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f"attachment; filename=logs_{simulation_id}.zip"
+            },
+        )
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No logs found for simulation with id: {simulation_id}",
+        )
+
+
 @router.delete(
     "/terminate/{simulation_id}", status_code=200, response_model=SimulationStatus
 )

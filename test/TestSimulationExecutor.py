@@ -1,6 +1,7 @@
 from datetime import datetime
 import unittest
 from unittest.mock import MagicMock
+import zipfile
 import helics as h
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
     CalculationServiceInfo,
@@ -134,12 +135,12 @@ class TestSimulationExecutor(unittest.TestCase):
         simulation_executor.k8s_api.delete_broker_pod_of_simulation_id.assert_called_once_with(
             active_simulation_id
         )
-        simulation_executor.k8s_api.delete_pod_with_model_id.assert_called_once_with(
+        simulation_executor.k8s_api.delete_pod_with_simulation_meta_data.assert_called_once_with(
             "test", active_simulation_id, "test"
         )
         self.assertEqual(
             self.simulation_inventory.get_simulation_state(active_simulation_id),
-            ProgressState.TERMINATED_SUCCESSFULL,
+            ProgressState.POD_DELETED,
         )
 
     def test_next_simulation_in_queue_is_started_when_active_simulation_is_terminated(
@@ -213,6 +214,95 @@ class TestSimulationExecutor(unittest.TestCase):
         simulation_executor.k8s_api.deploy_helics_broker.assert_called_once_with(
             4, 3, active_simulation_id, self.simulation.simulator_id
         )
+
+    def test_zip_containing_logs_is_created_when_simulation_contains_logs(self):
+        # Arrange
+        self.simulation_inventory.add_simulation(self.simulation)
+        self.simulation.model_inventory.add_models_to_simulation(
+            self.simulation.simulation_id, [self.test_model]
+        )
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
+        self.k8s_api_get_logs_mock = MagicMock()
+
+        # Execute
+        zip_file = simulation_executor.get_all_logs_from_simulation(self.simulation)
+
+        expected_filenames = [
+            f"{self.simulation.simulator_id.lower()}-{self.simulation.simulation_id.lower()}-{self.test_model.model_id.lower()}.log"
+        ]
+
+        # assert
+        self.assertTrue(zipfile.is_zipfile(zip_file))
+
+        with zipfile.ZipFile(zip_file) as zip_archive:
+            self.assertIsNone(zip_archive.testzip())
+            self.assertListEqual(sorted(zip_archive.namelist()), expected_filenames)
+
+    progress_states_to_test = [
+        ProgressState.TERMINATED_SUCCESSFULL_POD_DELETED,
+        ProgressState.POD_DELETED,
+    ]
+
+    def test_given_logs_are_requested_for_simulation_without_pods_none_is_returned(
+        self,
+    ):
+        for state in self.progress_states_to_test:
+            with self.subTest(state=state):
+                # Arrange
+                self.simulation_inventory.add_simulation(self.simulation)
+                self.simulation.model_inventory.add_models_to_simulation(
+                    self.simulation.simulation_id, [self.test_model]
+                )
+                self.simulation_inventory.set_state_for_all_models(
+                    self.simulation.simulation_id, state
+                )
+
+                simulation_executor = SimulationExecutor(
+                    K8sApi(), self.simulation_inventory
+                )
+                simulation_executor.delete_all_pods_from_simulation(self.simulation)
+
+                # Execute
+                zip_file = simulation_executor.get_all_logs_from_simulation(
+                    self.simulation
+                )
+
+                # assert
+                self.assertIsNone(zip_file)
+
+    progress_states_to_test_delte_pods = {
+        ProgressState.TERMINATED_SUCCESSFULL: ProgressState.TERMINATED_SUCCESSFULL_POD_DELETED,
+        ProgressState.TERMINATED_FAILED: ProgressState.TERMINATED_FAILED_POD_DELETED,
+    }
+
+    def test_when_pods_are_deleted_simulation_states_is_updated_correctly(self):
+        for (
+            termination_sate,
+            termination_sate_pod_deleted,
+        ) in self.progress_states_to_test_delte_pods.items():
+            with self.subTest(state=termination_sate):
+                # Arrange
+                self.simulation_inventory.add_simulation(self.simulation)
+                self.simulation.model_inventory.add_models_to_simulation(
+                    self.simulation.simulation_id, [self.test_model]
+                )
+                simulation_executor = SimulationExecutor(
+                    K8sApi(), self.simulation_inventory
+                )
+                self.simulation_inventory.set_state_for_all_models(
+                    self.simulation.simulation_id, termination_sate
+                )
+
+                # Execute
+                simulation_executor.delete_all_pods_from_simulation(self.simulation)
+
+                # Assert
+                self.assertEqual(
+                    self.simulation_inventory.get_simulation_state(
+                        self.simulation.simulation_id
+                    ),
+                    termination_sate_pod_deleted,
+                )
 
 
 if __name__ == "__main__":

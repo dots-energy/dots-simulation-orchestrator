@@ -8,12 +8,12 @@ EsdlId = str
 
 class ProgressState(enum.IntEnum):
     TERMINATED_FAILED = 0
-    REGISTERED = 1
-    DEPLOYED = 2
-    PARAMETERIZED = 3
-    STEP_STARTED = 4
-    STEP_FINISHED = 5
-    TERMINATED_SUCCESSFULL = 6
+    TERMINATED_FAILED_POD_DELETED = 1
+    REGISTERED = 2
+    DEPLOYED = 3
+    POD_DELETED = 4
+    TERMINATED_SUCCESSFULL = 5
+    TERMINATED_SUCCESSFULL_POD_DELETED = 6
 
 
 ModelState_TERMINATED = (
@@ -24,11 +24,11 @@ ModelState_TERMINATED = (
 progress_state_description = dict(
     {
         0: "(a) model(s) terminated with an error, the simulation has been terminated",
-        1: "all models registered",
-        2: "all models deployed",
-        3: "all models parameterized",
-        4: "started with calculation step",
-        5: "finished calculation step",
-        6: "the simulation terminated successfully",
+        1: "(a) model(s) terminated with an error, pods are deleted",
+        2: "all models registered",
+        3: "all models deployed",
+        4: "all podds are deleted",
+        5: "all models terminated successfully, the simulation has been terminated",
+        6: "all models terminated successfully, the simulation has been terminated and pods are deleted",
     }
 )

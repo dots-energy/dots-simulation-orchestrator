@@ -1,6 +1,8 @@
+from io import BytesIO
 from threading import Thread
 import time
 from typing import List
+import zipfile
 from simulation_orchestrator.model_services_orchestrator.k8s_api import (
     K8sApi,
     HELICS_BROKER_PORT,
@@ -121,16 +123,12 @@ class SimulationExecutor:
                 so_federate_info.simulation.simulation_id
             ]
             terminated_because_of_error = any(
-                [
-                    pod_status.model_state == ModelState.TERMINATED_FAILED
-                    for pod_status in pod_status_simulation
-                ]
+                pod_status.model_state == ModelState.TERMINATED_FAILED
+                for pod_status in pod_status_simulation
             )
             terminated_because_of_succesfull_finish = all(
-                [
-                    pod_status.model_state == ModelState.TERMINATED_SUCCESSFULL
-                    for pod_status in pod_status_simulation
-                ]
+                pod_status.model_state == ModelState.TERMINATED_SUCCESSFULL
+                for pod_status in pod_status_simulation
             )
 
             time.sleep(1)
@@ -147,19 +145,73 @@ class SimulationExecutor:
             )
         elif terminate_requested_by_user:
             self.delete_all_pods_from_simulation(so_federate_info.simulation)
-            self.simulation_inventory.set_state_for_all_models(
-                so_federate_info.simulation.simulation_id,
-                ProgressState.TERMINATED_SUCCESSFULL,
-            )
 
         self._start_next_simulation_in_queue(so_federate_info)
 
     def delete_all_pods_from_simulation(self, simulation: Simulation):
         for model in simulation.model_inventory.get_models():
-            self.k8s_api.delete_pod_with_model_id(
+            self.k8s_api.delete_pod_with_simulation_meta_data(
                 simulation.simulator_id, simulation.simulation_id, model.model_id
             )
         self.k8s_api.delete_broker_pod_of_simulation_id(simulation.simulation_id)
+        simulation_state = self.simulation_inventory.get_simulation_state(
+            simulation.simulation_id
+        )
+        if simulation_state == ProgressState.TERMINATED_SUCCESSFULL:
+            self.simulation_inventory.set_state_for_all_models(
+                simulation.simulation_id,
+                ProgressState.TERMINATED_SUCCESSFULL_POD_DELETED,
+            )
+        elif simulation_state == ProgressState.TERMINATED_FAILED:
+            self.simulation_inventory.set_state_for_all_models(
+                simulation.simulation_id,
+                ProgressState.TERMINATED_FAILED_POD_DELETED,
+            )
+        else:
+            self.simulation_inventory.set_state_for_all_models(
+                simulation.simulation_id,
+                ProgressState.POD_DELETED,
+            )
+
+    def get_all_logs_from_simulation(self, simulation: Simulation) -> BytesIO | None:
+        log_output = {}
+        for model in simulation.model_inventory.get_models():
+            if (
+                model.current_state != ProgressState.POD_DELETED
+                and model.current_state
+                != ProgressState.TERMINATED_SUCCESSFULL_POD_DELETED
+            ):
+                pod_name = self.k8s_api.model_to_pod_name(
+                    simulation.simulator_id, simulation.simulation_id, model.model_id
+                )
+                log_output[pod_name] = (
+                    self.k8s_api.get_logs_of_pod_with_simulation_meta_data(
+                        simulation.simulator_id,
+                        simulation.simulation_id,
+                        model.model_id,
+                    )
+                )
+
+        has_data = len(log_output) > 0
+        zip_buffer = BytesIO()
+
+        if has_data:
+            with zipfile.ZipFile(
+                file=zip_buffer,
+                mode="w",
+                compression=zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as zip_archive:
+                for file_name, logs in log_output.items():
+                    if logs != "":
+                        zip_archive.writestr(
+                            zinfo_or_arcname=f"{file_name}.log",
+                            data=logs,
+                        )
+
+            zip_buffer.seek(0)
+
+        return zip_buffer if has_data else None
 
     def _create_so_federate(self, broker_ip: str, simulation: Simulation):
         federate_info = self._create_new_so_federate_info(broker_ip)

@@ -212,6 +212,23 @@ class K8sApi:
             labels,
         )
 
+    def get_logs_of_pod_with_simulation_meta_data(
+        self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id: ModelId
+    ) -> str:
+        pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
+        return self._get_logs_of_pod(pod_name)
+
+    def _get_logs_of_pod(self, pod_name: str) -> str:
+        LOGGER.info(f"Getting logs of pod {pod_name}")
+        try:
+            pod_logs = self.k8s_core_api.read_namespaced_pod_log(
+                name=pod_name, namespace=SIMULATION_NAMESPACE
+            )
+            return pod_logs
+        except client.ApiException as exc:
+            LOGGER.warning(f"Could not get logs of pod {pod_name}: {exc}")
+            return ""
+
     def _delete_pod_with_name(self, pod_name: str):
         LOGGER.info(f"Deleting pod {pod_name}")
         try:
@@ -221,7 +238,7 @@ class K8sApi:
         except client.ApiException as exc:
             LOGGER.warning(f"Could not remove pod {pod_name}: {exc}")
 
-    def delete_pod_with_model_id(
+    def delete_pod_with_simulation_meta_data(
         self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id: ModelId
     ):
         pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
