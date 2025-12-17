@@ -4,7 +4,7 @@ from typing import List
 from esdl import esdl, EnergySystem
 from esdl.esdl_handler import EnergySystemHandler
 from base64 import b64decode
-
+from simulation_orchestrator.helpers.string_helpers import StringHelpers
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
     CalculationServiceInfo,
@@ -105,7 +105,10 @@ def add_service_models(service_info: CalculationServiceInfo, model_list):
     i_model = 0
     while i_model * nr_of_objects_in_model < nr_of_esdl_objects:
         i_model += 1
-        model_id = f"{service_info.calc_service_name.replace('_', '-')}-{i_model}"
+        service_calc_name_sanetized = StringHelpers.sanitize_string(
+            service_info.calc_service_name
+        )
+        model_id = f"{service_calc_name_sanetized}-{i_model}"
 
         esdl_ids = []
         for i_esdl_id in range(
@@ -117,6 +120,7 @@ def add_service_models(service_info: CalculationServiceInfo, model_list):
         model_list.append(
             Model(
                 model_id=model_id,
+                model_instance=i_model,
                 esdl_ids=esdl_ids,
                 calc_service=service_info,
                 current_state=ProgressState.REGISTERED,

@@ -37,6 +37,7 @@ class TestActions(unittest.TestCase):
         actions.simulation_executor.deploy_simulation = MagicMock()
         self.mock_model = Model(
             "test",
+            1,
             ["test"],
             CalculationServiceInfo("test", "test", 1, 1, "test", ["test"], []),
             ProgressState.DEPLOYED,

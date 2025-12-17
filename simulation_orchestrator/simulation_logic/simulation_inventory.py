@@ -16,6 +16,8 @@ import typing
 import uuid
 from datetime import datetime, timedelta
 
+from simulation_orchestrator.helpers.string_helpers import StringHelpers
+
 from threading import Lock
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.io.log import LOGGER
@@ -82,7 +84,7 @@ class Simulation:
         self.calculation_end_datetime = None
         self.current_step_calculation_start_datetime = None
         self.modelparameters_start_datetime = None
-        self.model_inventory = ModelInventory()
+        self.model_inventory = ModelInventory(simulator_id)
         self.error_message = ""
         self.terminated = False
 
@@ -97,13 +99,14 @@ class SimulationInventory:
         self.activeSimulations = {}
         self.simulationQueue = []
 
-    def _generate_new_simulationId(self, simulation_name):
-        return (
-            f"{simulation_name.lower().replace(' ', '-')[:20]}-{str(uuid.uuid4())[:8]}"
-        )
+    def _generate_new_simulation_id(self, simulation_name) -> str:
+        simulation_name_sanatized = StringHelpers.sanitize_string(simulation_name)
+        simulation_id = f"{simulation_name_sanatized[:20]}-{str(uuid.uuid4())[:8]}"
+        simulation_id = StringHelpers.sanitize_string(simulation_id)
+        return simulation_id
 
     def add_simulation(self, new_simulation: Simulation) -> SimulationId:
-        new_simulation.simulation_id = self._generate_new_simulationId(
+        new_simulation.simulation_id = self._generate_new_simulation_id(
             new_simulation.simulation_name
         )
 
@@ -150,11 +153,6 @@ class SimulationInventory:
         self, simulation_id: SimulationId
     ) -> typing.List[Model]:
         return list(self.get_simulation(simulation_id).model_inventory.get_models())
-
-    def get_model_from_simulation(
-        self, simulation_id: SimulationId, model_id: ModelId
-    ) -> typing.Optional[Model]:
-        return self.get_simulation(simulation_id).model_inventory.get_model(model_id)
 
     def get_all_models(self, simulation_id: SimulationId) -> typing.List[Model]:
         simulation = self.get_simulation(simulation_id)

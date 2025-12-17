@@ -28,6 +28,7 @@ class TestSimulationExecutor(unittest.TestCase):
         self.helicsFederateRequestTime = h.helicsFederateRequestTime
         self.test_model = Model(
             "test",
+            1,
             ["test"],
             CalculationServiceInfo("test", "test", 1, 1, "test", ["test"], []),
             ProgressState.DEPLOYED,
@@ -135,8 +136,8 @@ class TestSimulationExecutor(unittest.TestCase):
         simulation_executor.k8s_api.delete_broker_pod_of_simulation_id.assert_called_once_with(
             active_simulation_id
         )
-        simulation_executor.k8s_api.delete_pod_with_simulation_meta_data.assert_called_once_with(
-            "test", active_simulation_id, "test"
+        simulation_executor.k8s_api.delete_pod_with_model.assert_called_once_with(
+            self.test_model
         )
         self.assertEqual(
             self.simulation_inventory.get_simulation_state(active_simulation_id),
@@ -196,6 +197,7 @@ class TestSimulationExecutor(unittest.TestCase):
                 self.test_model,
                 Model(
                     "test2",
+                    1,
                     ["test2"],
                     CalculationServiceInfo(
                         "test2", "test", 1, 3, "test2", ["test2"], []
