@@ -150,9 +150,7 @@ class SimulationExecutor:
 
     def delete_all_pods_from_simulation(self, simulation: Simulation):
         for model in simulation.model_inventory.get_models():
-            self.k8s_api.delete_pod_with_simulation_meta_data(
-                simulation.simulator_id, simulation.simulation_id, model.model_id
-            )
+            self.k8s_api.delete_pod_with_model(model)
         self.k8s_api.delete_broker_pod_of_simulation_id(simulation.simulation_id)
         simulation_state = self.simulation_inventory.get_simulation_state(
             simulation.simulation_id
@@ -184,13 +182,7 @@ class SimulationExecutor:
                 pod_name = self.k8s_api.model_to_pod_name(
                     simulation.simulator_id, simulation.simulation_id, model.model_id
                 )
-                log_output[pod_name] = (
-                    self.k8s_api.get_logs_of_pod_with_simulation_meta_data(
-                        simulation.simulator_id,
-                        simulation.simulation_id,
-                        model.model_id,
-                    )
-                )
+                log_output[pod_name] = self.k8s_api.get_logs_of_pod_with_model(model)
 
         has_data = len(log_output) > 0
         zip_buffer = BytesIO()

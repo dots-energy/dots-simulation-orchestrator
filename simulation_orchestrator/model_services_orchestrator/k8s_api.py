@@ -178,9 +178,7 @@ class K8sApi:
         broker_ip: str,
         esdl_types_calculation_services: typing.List[str],
     ) -> bool:
-        pod_name = self.model_to_pod_name(
-            simulation.simulator_id, simulation.simulation_id, model.model_id
-        )
+        pod_name = model.pod_name
         LOGGER.info(f"Deploying pod {pod_name}")
         labels = {
             "simulator_id": simulation.simulator_id,
@@ -212,10 +210,8 @@ class K8sApi:
             labels,
         )
 
-    def get_logs_of_pod_with_simulation_meta_data(
-        self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id: ModelId
-    ) -> str:
-        pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
+    def get_logs_of_pod_with_model(self, model: Model) -> str:
+        pod_name = model.pod_name
         return self._get_logs_of_pod(pod_name)
 
     def _get_logs_of_pod(self, pod_name: str) -> str:
@@ -238,10 +234,8 @@ class K8sApi:
         except client.ApiException as exc:
             LOGGER.warning(f"Could not remove pod {pod_name}: {exc}")
 
-    def delete_pod_with_simulation_meta_data(
-        self, simulator_id: SimulatorId, simulation_id: SimulationId, model_id: ModelId
-    ):
-        pod_name = self.model_to_pod_name(simulator_id, simulation_id, model_id)
+    def delete_pod_with_model(self, model: Model):
+        pod_name = model.pod_name
         self._delete_pod_with_name(pod_name)
 
     def delete_broker_pod_of_simulation_id(self, simulation_id: str):
