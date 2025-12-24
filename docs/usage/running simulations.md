@@ -57,7 +57,6 @@ This will put the simulation in a FIFO queue, if the queue is empty the simulati
 Access the InfluxDB database on `<SO AKS IP>:8086` or `localhost:8096` via [InfluxDB studio](https://github.com/CymaticLabs/InfluxDBStudio/releases) (go to Assets). Or import the database in Grafana which can be accessed on `<SO AKS IP>:3000` or `localhost:3010`. The default user and password for InfluxDB and Grafana are admin, admin. This should have been changed during cloud installation.  
 [OpenLens](https://github.com/MuhammedKalkan/OpenLens), make sure to also install this [extension](https://github.com/alebcay/openlens-node-pod-menu#installing-this-extension), can be used to view the logs of the components running on the cluster, including the calculation service models. Connect to the cluster and go to: Workloads, Pods and select the 'dots' namespace, see the image below. The first 5 pods contain the required components described above. Below are the calculation service model pods, which will be cleaned up eventually.
 Alternatively an export of all the simulation data can be downloaded via the api.
-![Lens screenshot](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/lens-screen.png?raw=true)
 
 ### Check simulation progress or terminate simulation
 After a simulation POST a `simulation_id` is returned, this can be used in a GET request to get the simulation status (progress) or in a DELETE request to terminate a simulation. Additionally a list of simulations can be retrieved.  
