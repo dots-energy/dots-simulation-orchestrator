@@ -54,7 +54,6 @@ def add_esdl_object(
                 calc_service.calc_service_name,
                 calc_service.service_image_url,
                 calc_service.nr_of_models,
-                calc_service.amount_of_calculations,
                 type(esdl_obj).__name__,
                 [esdl_obj.id],
                 calc_service.additional_env_variable,

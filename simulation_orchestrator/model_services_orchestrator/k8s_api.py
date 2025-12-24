@@ -28,7 +28,9 @@ from simulation_orchestrator.simulation_logic.simulation_inventory import Simula
 from simulation_orchestrator.types import ModelId, SimulationId, SimulatorId
 
 HELICS_BROKER_POD_NAME = "helics-broker"
-HELICS_BROKER_IMAGE_URL = "ghcr.io/dots-energy/dots-helics-broker:latest"
+HELICS_BROKER_IMAGE_URL = (
+    "ghcr.io/dots-energy/dots-helics-broker:amount_of_calculations_in_federation"
+)
 HELICS_BROKER_PORT = 30000
 
 
@@ -145,7 +147,6 @@ class K8sApi:
 
     def deploy_helics_broker(
         self,
-        amount_of_federates,
         amount_of_federates_esdl_message,
         simulation_id,
         simulator_id,
@@ -155,10 +156,9 @@ class K8sApi:
             broker_pod_name,
             HELICS_BROKER_IMAGE_URL,
             [
-                client.V1EnvVar("AMOUNT_OF_FEDERATES", str(amount_of_federates)),
                 client.V1EnvVar("HELICS_BROKER_PORT", str(HELICS_BROKER_PORT)),
                 client.V1EnvVar(
-                    "AMOUNT_OF_ESDL_MESSAGE_FEDERATES",
+                    "AMOUNT_OF_INITIALIZATION_MESSAGE_FEDERATES",
                     str(amount_of_federates_esdl_message),
                 ),
             ],

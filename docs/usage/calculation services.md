@@ -173,3 +173,6 @@ Every calculation service has an instance of `InfluxDBConnector` this class can 
 4. A github action will now run building the calculation service as a docker image and pushing it to the registry, as long as the pull request is not merged in the main branch the version number will be equal to the branch name.
 5. When finished complete the pull request and a new docker image will be built and pushed with version number `latest`
 6. Change the visibility of the package to public, follow the steps detail [here](https://docs.github.com/en/enterprise-server@3.12/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility#configuring-visibility-of-packages-for-an-organization).
+
+## Debugging
+Problems may arrise when running a co-simulation with a calculation service under development. Therefore there is the option to download all the logs files from all the calculation services participating in the co-simulation. This can be done via the `/api/v1/simulation/logs/{simulation_id}` endpoint.

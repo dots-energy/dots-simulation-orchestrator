@@ -57,7 +57,9 @@ class SimulationExecutor:
 
         h.helicsFederateEnterExecutingMode(message_federate)
         for i in range(0, len(simulation.esdl_base64string), step_size):
-            h.helicsFederateRequestTime(message_federate, i)
+            FEDERATE_OFFSET = 2
+            time_to_request = i / step_size + FEDERATE_OFFSET
+            h.helicsFederateRequestTime(message_federate, time_to_request)
             esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
             esdl_file_part = simulation.esdl_base64string[i : i + step_size]
             LOGGER.info(
@@ -76,15 +78,9 @@ class SimulationExecutor:
 
     def _init_simulation(self, simulation: Simulation):
         models = simulation.model_inventory.get_models()
-        amount_of_helics_federates_esdl_message = (
-            len(models) + 1
-        )  # SO is also a federate that is part of the esdl federation
-        amount_of_helics_federates = sum(
-            [model.calc_service.amount_of_calculations for model in models]
-        )
+        amount_of_helics_federates_initialization_stage = len(models) + 1
         broker_ip = self.k8s_api.deploy_helics_broker(
-            amount_of_helics_federates,
-            amount_of_helics_federates_esdl_message,
+            amount_of_helics_federates_initialization_stage,
             simulation.simulation_id,
             simulation.simulator_id,
         )

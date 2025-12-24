@@ -30,7 +30,7 @@ class TestSimulationExecutor(unittest.TestCase):
             "test",
             1,
             ["test"],
-            CalculationServiceInfo("test", "test", 1, 1, "test", ["test"], []),
+            CalculationServiceInfo("test", "test", 1, "test", ["test"], []),
             ProgressState.DEPLOYED,
         )
         h.helicsFederateEnterExecutingMode = MagicMock()
@@ -199,9 +199,7 @@ class TestSimulationExecutor(unittest.TestCase):
                     "test2",
                     1,
                     ["test2"],
-                    CalculationServiceInfo(
-                        "test2", "test", 1, 3, "test2", ["test2"], []
-                    ),
+                    CalculationServiceInfo("test2", "test", 3, "test2", ["test2"], []),
                     ProgressState.DEPLOYED,
                 ),
             ],
@@ -214,7 +212,7 @@ class TestSimulationExecutor(unittest.TestCase):
 
         # Assert
         simulation_executor.k8s_api.deploy_helics_broker.assert_called_once_with(
-            4, 3, active_simulation_id, self.simulation.simulator_id
+            3, active_simulation_id, self.simulation.simulator_id
         )
 
     def test_zip_containing_logs_is_created_when_simulation_contains_logs(self):

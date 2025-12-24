@@ -19,10 +19,6 @@ class CalculationService(BaseModel):
     nr_of_models: int = Field(
         default=1, description="'0' will create a model (container) per ESDL object"
     )
-    amount_of_calculations: int = Field(
-        default=1,
-        description="Amount of calculations executed by the calculation service",
-    )
     additional_env_variable: list[EnvironmentVariable] = Field(
         default=[], description="A"
     )
