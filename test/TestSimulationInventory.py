@@ -51,7 +51,7 @@ class TestSimulationExecutor(unittest.TestCase):
             "model1",
             1,
             ["esdl1"],
-            CalculationServiceInfo("test-name", "test-url", 4, 2, "pv", ["bla"], []),
+            CalculationServiceInfo("test-name", "test-url", 2, "pv", ["bla"], []),
             ProgressState.REGISTERED,
         ),
         Model(
@@ -61,7 +61,6 @@ class TestSimulationExecutor(unittest.TestCase):
             CalculationServiceInfo(
                 "test-name_dase-way-to-long-name-jala-ajdas-jeasfd",
                 "test-url",
-                4,
                 2,
                 "pv",
                 ["bla"],
