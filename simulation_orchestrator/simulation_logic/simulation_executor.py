@@ -57,7 +57,9 @@ class SimulationExecutor:
 
         h.helicsFederateEnterExecutingMode(message_federate)
         for i in range(0, len(simulation.esdl_base64string), step_size):
-            h.helicsFederateRequestTime(message_federate, i)
+            FEDERATE_OFFSET = 2
+            time_to_request = i / step_size + FEDERATE_OFFSET
+            h.helicsFederateRequestTime(message_federate, time_to_request)
             esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
             esdl_file_part = simulation.esdl_base64string[i : i + step_size]
             LOGGER.info(
