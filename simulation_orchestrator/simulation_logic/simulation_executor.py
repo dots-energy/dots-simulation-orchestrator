@@ -78,15 +78,9 @@ class SimulationExecutor:
 
     def _init_simulation(self, simulation: Simulation):
         models = simulation.model_inventory.get_models()
-        amount_of_helics_federates_esdl_message = (
-            len(models) + 1
-        )  # SO is also a federate that is part of the esdl federation
-        amount_of_helics_federates = sum(
-            [model.calc_service.amount_of_calculations for model in models]
-        )
+        amount_of_helics_federates_initialization_stage = len(models) + 1
         broker_ip = self.k8s_api.deploy_helics_broker(
-            amount_of_helics_federates,
-            amount_of_helics_federates_esdl_message,
+            amount_of_helics_federates_initialization_stage,
             simulation.simulation_id,
             simulation.simulator_id,
         )
