@@ -21,6 +21,7 @@ from dots_infrastructure.influxdb_connector import InfluxDBConnector
 from pathlib import Path
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from simulation_orchestrator.rest.api.api_v1.api import api_router
 import simulation_orchestrator.rest.oauth.OAuthUtilities
@@ -29,10 +30,15 @@ from simulation_orchestrator.rest.core.config import settings
 load_dotenv()  # take environment variables from .env
 
 BASE_PATH = Path(__file__).resolve().parent
-TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "rest/templates"))
+TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "rest/templates/"))
 
 root_router = APIRouter()
 app = FastAPI(title="DOTS Simulation Orchestrator API")
+app.mount(
+    "/rest/images/",
+    StaticFiles(directory=str(BASE_PATH / "rest/images/")),
+    name="images",
+)
 
 
 @root_router.get("/", status_code=200)
