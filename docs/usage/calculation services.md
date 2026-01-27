@@ -94,7 +94,21 @@ Second, you can see a list called `inputs`. This list defines the inputs of the 
 
 The second list describes the publications or outputs of the calculation. Observe that for the outputs similar properties as for the inputs need to be defined except the `esdl_type`.
 
-When your calculations with their respective inputs and outpus are defined the code generator can be used to generate a base class for your calculation service and documentation. The generator will also rename the example test file and the example implementation files that fit the name that you have specified in the `input.json` file. In order to implement the calculations yourself you need to either create a new python file and inherit from the generated base class or edit the supplied example implementation file.
+When your calculations with their respective inputs and outpus are defined the code generator can be used to generate the initial files for your calculation service and documentation. The generator will initially generate the following files:
+```
+src/**/**_base.py
+src/**/**_dataclasses.py
+src/**/**.py
+docs/**.md
+```
+The generator will also rename the example test file and the example implementation files that fit the name that you have specified in the `input.json` file. Note that the the double `**` in the example file listing above represents the name of the calculation service as specified in the input.
+
+First a base class is generated in the `**_base.py` file. This file will implement an initialization function and can be used to copy paste method signartures to the implementation file.
+Second the `**_dataclasses.py` file is generated. This file contains the dataclasses in which you can provide the output of your calculation.
+The final python file is the implementation file `**.py`. This file is only generated if it does not exist yet. Here is where you put the implementation of the calculation functions. The class inside the file inherits from the class in the `**_base.py` file.
+Finally, there is the file generated in the docs folder. This essentially contains a nicely formatted markdown description of what was put in the `input.json`.
+
+In order to implement the calculations yourself you need to implement the empty functions that the code generator generates for you in the generated implementation file. Be aware that when you update a calculation service the implementation file will not get re-generated so you need to copy the function signature from the base class to the implementation class.
 
 The generated code adds the calculations to a new calculation service and ensures that the calculation is executed during a running co-simulation. Every added calculation will become a [helics federate](https://docs.helics.org/en/latest/user-guide/fundamental_topics/helics_terminology.html) with their own timing parameters as defined in the `calculation_information`. To get an idea of how helics timing works have a look at this [page](https://docs.helics.org/en/latest/user-guide/fundamental_topics/timing_configuration.html) of the helics documentation.
 
@@ -102,6 +116,7 @@ The generated code adds the calculations to a new calculation service and ensure
 class CalculationServiceTest(CalculationServiceTestBase):
 
     def init_calculation_service(self, energy_system: esdl.EnergySystem):
+        super().init_calculation_service(energy_system)
         LOGGER.info("init calculation service")
         for esdl_id in self.simulator_configuration.esdl_ids:
             LOGGER.info(f"Example of iterating over esdl ids: {esdl_id}")
