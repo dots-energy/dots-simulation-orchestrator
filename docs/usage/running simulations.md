@@ -47,6 +47,9 @@ Most of the parameters in the body are self explanatory. `keep_logs_hours` is th
 For the calculation service paramters, the `number_of_models` sets the number pods that will be started up for that service. If a service is calculation intensive this number could be increased to allow concurrent calculation for the ESDL objects that correspond to the service. A value of `0` will create a pod per ESDL object.
 Furthermore, the `esdl_type` is the esdl type that a calculation service simulates. For example, if you have a calculation service that simulates a pv panel the corresponding esdl_type = `PVInstallation`. The `service_image_url` parameter is used to specify the image url the calculation service template publishes image to this organization's image registry. The default URL is: `ghcr.io/dots-energy/$IMAGE_NAME` where `$IMAGE_NAME` should be replaced by the name of the image.
 
+### Using simulation tools
+We have also developed some python scripts to automate the process of queuing and running simulations. They can be found in the [Simulation tools](https://github.com/dots-energy/dots-simulation-tools) repository. In order to use the scripts clone the respository install its dependencies and call the scripts as explained in the README of the repository.
+
 ## Queue a simulation
 In addition to running a single simulation, it is also possible to queue multiple simulations by doing a post request to the queue endpoint:
 ![openapi queue simulation](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/openapi-queue-post.png?raw=true)
