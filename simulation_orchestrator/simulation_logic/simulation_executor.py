@@ -76,33 +76,45 @@ class SimulationExecutor:
         h.helicsFederateDisconnect(message_federate)
         h.helicsFederateDestroy(message_federate)
 
-    def _init_simulation(self, simulation: Simulation):
+    def _init_simulation(self, simulation: Simulation) -> SoFederateInfo:
         models = simulation.model_inventory.get_models()
         amount_of_helics_federates_initialization_stage = len(models) + 1
+        ret_val = SoFederateInfo(simulation)
+
         broker_ip = self.k8s_api.deploy_helics_broker(
             amount_of_helics_federates_initialization_stage,
             simulation.simulation_id,
             simulation.simulator_id,
         )
-        calculation_service_names = [
-            calculation_service.esdl_type
-            for calculation_service in simulation.calculation_services
-        ]
-        for model in models:
-            self.k8s_api.deploy_model(
-                simulation, model, broker_ip, calculation_service_names
-            )
-            self.k8s_api.await_pod_to_running_state(
-                self.k8s_api.model_to_pod_name(
-                    simulation.simulator_id, simulation.simulation_id, model.model_id
-                )
-            )
 
-        self._send_esdl_file(simulation, models, broker_ip)
-        self.simulation_inventory.set_state_for_all_models(
-            simulation.simulation_id, ProgressState.DEPLOYED
-        )
-        return SoFederateInfo(simulation)
+        if broker_ip is not None:
+            calculation_service_names = [
+                calculation_service.esdl_type
+                for calculation_service in simulation.calculation_services
+            ]
+            deploy_error = False
+            for model in models:
+                if not deploy_error:
+                    self.k8s_api.deploy_model(
+                        simulation, model, broker_ip, calculation_service_names
+                    )
+                    pod_ip = self.k8s_api.await_pod_to_running_state(
+                        self.k8s_api.model_to_pod_name(
+                            simulation.simulator_id,
+                            simulation.simulation_id,
+                            model.model_id,
+                        )
+                    )
+                deploy_error = deploy_error or pod_ip is None
+
+            if not deploy_error:
+                self._send_esdl_file(simulation, models, broker_ip)
+                self.simulation_inventory.set_state_for_all_models(
+                    simulation.simulation_id, ProgressState.DEPLOYED
+                )
+                ret_val.simulation.deployed_correctly = True
+
+        return ret_val
 
     def _terminate_simulation_loop(self, so_federate_info: SoFederateInfo):
         terminate_requested_by_user = False
@@ -224,10 +236,17 @@ class SimulationExecutor:
                 self._deploy_simulation(next_simulation)
 
     def _deploy_simulation(self, simulation: Simulation):
-        self.simulation_book[simulation.simulation_id] = self._init_simulation(
-            simulation
-        )
-        self._terminate_simulation_loop(self.simulation_book[simulation.simulation_id])
+        so_federate_info = self._init_simulation(simulation)
+        if so_federate_info.simulation.deployed_correctly:
+            self._terminate_simulation_loop(
+                self.simulation_book[simulation.simulation_id]
+            )
+        else:
+            simulation.terminated = True
+            self.simulation_inventory.set_state_for_all_models(
+                simulation.simulation_id, ProgressState.TERMINATED_FAILED
+            )
+            self._start_next_simulation_in_queue(so_federate_info)
 
     def deploy_simulation(self, simulation: Simulation):
         thread = Thread(target=self._deploy_simulation, args=[simulation])
