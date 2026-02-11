@@ -47,14 +47,44 @@ Most of the parameters in the body are self explanatory. `keep_logs_hours` is th
 For the calculation service paramters, the `number_of_models` sets the number pods that will be started up for that service. If a service is calculation intensive this number could be increased to allow concurrent calculation for the ESDL objects that correspond to the service. A value of `0` will create a pod per ESDL object.
 Furthermore, the `esdl_type` is the esdl type that a calculation service simulates. For example, if you have a calculation service that simulates a pv panel the corresponding esdl_type = `PVInstallation`. The `service_image_url` parameter is used to specify the image url the calculation service template publishes image to this organization's image registry. The default URL is: `ghcr.io/dots-energy/$IMAGE_NAME` where `$IMAGE_NAME` should be replaced by the name of the image.
 
-### Using simulation tools
-We have also developed some python scripts to automate the process of queuing and running simulations. They can be found in the [Simulation tools](https://github.com/dots-energy/dots-simulation-tools) repository. In order to use the scripts clone the respository install its dependencies and call the scripts as explained in the README of the repository.
-
-## Queue a simulation
+### Queue a simulation
 In addition to running a single simulation, it is also possible to queue multiple simulations by doing a post request to the queue endpoint:
 ![openapi queue simulation](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/openapi-queue-post.png?raw=true)
 
 This will put the simulation in a FIFO queue, if the queue is empty the simulation will start directly. Whenever the queue is non empty it will be appended to the queue and start when it is its turn.
+
+### Using simulation tools
+We have also developed some python scripts to automate the process of queuing and running simulations. They can be found in the [simulation tools](https://github.com/dots-energy/dots-simulation-tools) repository. In order to use the scripts clone the respository and install its dependencies. There are two core functionalities the scripts provide.
+
+1. Queing simulations that are specified in the `simulations_example.xlsx` file.
+2. Listing the status of the simulations that have been queued, started, or finished.
+
+The `simulations_example.xlsx` excel file specifies the simulations that need to be queued by the `queue_simulations.py` script. The file consists of two tabs one tab describing the simulations and one tab describing the calculation services. An example of both tabs can be found below.
+
+![simulations](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/simulations.png?raw=true)
+The simulations tab describes the simulations that will be queued. Most columns describe a parameter described in the [simulation api](#simulation-api) section. The `calculation_services_name` describes the calculation services to be used which are defined in the calculation services tab.
+
+![calculation-services](https://github.com/dots-energy/dots-simulation-orchestrator/blob/main/docs/images/static/calculation-services.png?raw=true)
+The calculation services tab describe the calculation services used in a simulation which are coupled by the `calculation_services_name` field. The other column values are described in the [simulation api](#simulation-api) section.
+
+In order to start the simulations specified in the excel file use the following command:
+`python queue_simulations.py "{URL_TO_SO_API}" -i "{PATH_TO_EXCEL}" -u {USERNAME} -p {PASSWORD}`
+Where the values between `{ }` need to be supplied by the user. As of now `{USERNAME}` is always set to `DotsUser`. The password can be found in the secrets of the simulation orchestrator using OpenLens. Once the script is done executing the simulations will be queued according to what is specified in the excel file. They will be queued from top to bottom. 
+
+Observe that in the example above there are two simulations that use different sets of calculation services services. This can be usefull for when you would want to compare different versions of calculation services. 
+
+To list the status of all the simulations the following command can be used:
+`python queue_simulations.py "{URL_TO_SO_API}" --liststatus -u {USERNAME} -p {PASSWORD}`
+Example output can be found below:
+
+```
+Simulation Status, simulation_id test7-simulationjjm-d228efed, simulation_name: test7 simulation_jjm, simulation_status: all models terminated successfully, the simulation has been terminated
+Simulation Status, simulation_id test-niek-f7bfb307, simulation_name: test-niek, simulation_status: all models terminated successfully, the simulation has been terminated
+Simulation Status, simulation_id test7-simulation-han-93a68173, simulation_name: test7 simulation-Hang, simulation_status: all models terminated successfully, the simulation has been terminated
+Simulation Status, simulation_id test7-simulationjjm-180beeec, simulation_name: test7 simulation_jjm, simulation_status: (a) model(s) terminated with an error, the simulation has been terminated
+Simulation Status, simulation_id marttest-simulation-cfae5377, simulation_name: Mart_Test_ Simulation, simulation_status: all models terminated successfully, the simulation has been terminated
+Simulation Status, simulation_id test7-simulation-han-9df1fa71, simulation_name: test7 simulation-Hang, simulation_status: all models terminated successfully, the simulation has been terminated
+```
 
 ## View results
 Access the InfluxDB database on `<SO AKS IP>:8086` or `localhost:8096` via [InfluxDB studio](https://github.com/CymaticLabs/InfluxDBStudio/releases) (go to Assets). Or import the database in Grafana which can be accessed on `<SO AKS IP>:3000` or `localhost:3010`. The default user and password for InfluxDB and Grafana are admin, admin. This should have been changed during cloud installation.  
