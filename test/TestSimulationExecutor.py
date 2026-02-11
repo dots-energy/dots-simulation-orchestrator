@@ -321,7 +321,7 @@ class TestSimulationExecutor(unittest.TestCase):
             self.simulation_inventory.get_simulation_state(
                 self.simulation.simulation_id
             ),
-            ProgressState.TERMINATED_FAILED,
+            ProgressState.TERMINATED_DEPLOYMENT_FAILED,
         )
 
     def test_when_model_deployment_fails_simulation_state_is_set_to_failed(self):
@@ -348,7 +348,7 @@ class TestSimulationExecutor(unittest.TestCase):
             self.simulation_inventory.get_simulation_state(
                 self.simulation.simulation_id
             ),
-            ProgressState.TERMINATED_FAILED,
+            ProgressState.TERMINATED_DEPLOYMENT_FAILED,
         )
 
     def test_when_deployment_fails_simulation_next_simulation_in_queue_is_started(self):

@@ -244,7 +244,7 @@ class SimulationExecutor:
         else:
             simulation.terminated = True
             self.simulation_inventory.set_state_for_all_models(
-                simulation.simulation_id, ProgressState.TERMINATED_FAILED
+                simulation.simulation_id, ProgressState.TERMINATED_DEPLOYMENT_FAILED
             )
             self._start_next_simulation_in_queue(so_federate_info)
 
