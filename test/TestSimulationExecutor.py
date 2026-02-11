@@ -304,6 +304,74 @@ class TestSimulationExecutor(unittest.TestCase):
                     termination_sate_pod_deleted,
                 )
 
+    def test_when_broker_deployment_fails_simulation_state_is_set_to_failed(self):
+        # Arrange
+        self.simulation_inventory.add_simulation(self.simulation)
+        self.simulation.model_inventory.add_models_to_simulation(
+            self.simulation.simulation_id, [self.test_model]
+        )
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
+        simulation_executor.k8s_api.deploy_helics_broker = MagicMock(return_value=None)
+
+        # Execute
+        simulation_executor._deploy_simulation(self.simulation)
+
+        # Assert
+        self.assertEqual(
+            self.simulation_inventory.get_simulation_state(
+                self.simulation.simulation_id
+            ),
+            ProgressState.TERMINATED_DEPLOYMENT_FAILED,
+        )
+
+    def test_when_model_deployment_fails_simulation_state_is_set_to_failed(self):
+        def await_running_state_side_effect(pod_name: str):
+            if "broker" in pod_name:
+                return "localhost"
+            return None
+
+        # Arrange
+        self.simulation_inventory.add_simulation(self.simulation)
+        self.simulation.model_inventory.add_models_to_simulation(
+            self.simulation.simulation_id, [self.test_model]
+        )
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
+        simulation_executor.k8s_api.await_pod_to_running_state = (
+            await_running_state_side_effect
+        )
+
+        # Execute
+        simulation_executor._deploy_simulation(self.simulation)
+
+        # Assert
+        self.assertEqual(
+            self.simulation_inventory.get_simulation_state(
+                self.simulation.simulation_id
+            ),
+            ProgressState.TERMINATED_DEPLOYMENT_FAILED,
+        )
+
+    def test_when_deployment_fails_simulation_next_simulation_in_queue_is_started(self):
+        # Arrange
+        self.simulation_inventory.queue_simulation(self.simulation)
+        next_queued_simulation = Simulation(
+            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
+        )
+        self.simulation_inventory.queue_simulation(next_queued_simulation)
+        self.simulation.model_inventory.add_models_to_simulation(
+            self.simulation.simulation_id, [self.test_model]
+        )
+
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
+        simulation_executor.k8s_api.deploy_helics_broker = MagicMock(return_value=None)
+        simulation_executor._start_next_simulation_in_queue = MagicMock()
+
+        # Execute
+        simulation_executor._deploy_simulation(self.simulation)
+
+        # Assert
+        simulation_executor._start_next_simulation_in_queue.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

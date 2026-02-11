@@ -118,7 +118,7 @@ class K8sApi:
 
         return succeeded
 
-    def await_pod_to_running_state(self, pod_name):
+    def await_pod_to_running_state(self, pod_name) -> typing.Optional[str]:
         pod_ip = None
         LOGGER.info(f"Waiting for {pod_name} to be in running state")
         max_iterations = 300
@@ -136,7 +136,7 @@ class K8sApi:
             time.sleep(1)
 
         if iteration == max_iterations:
-            raise ConnectionError("Took to long to put pod into running state")
+            LOGGER.error(f"Took to long to put pod {pod_name} into running state")
         return pod_ip
 
     def _define_helics_broker_pod_name(self, simulation_id):

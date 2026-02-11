@@ -57,6 +57,7 @@ class Simulation:
     error_message: str
 
     terminated: bool
+    deployed_correctly: bool
 
     def __init__(
         self,
@@ -87,6 +88,7 @@ class Simulation:
         self.model_inventory = ModelInventory(simulator_id)
         self.error_message = ""
         self.terminated = False
+        self.deployed_correctly = False
 
         self.lock = Lock()
 
