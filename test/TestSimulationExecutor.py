@@ -372,6 +372,30 @@ class TestSimulationExecutor(unittest.TestCase):
         # Assert
         simulation_executor._start_next_simulation_in_queue.assert_called_once()
 
+    def test_when_deployment_succeeds_simulation_status_set_is_deployed(self):
+        # Arrange
+        self.simulation_inventory.add_simulation(self.simulation)
+        self.simulation.model_inventory.add_models_to_simulation(
+            self.simulation.simulation_id, [self.test_model]
+        )
+        simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
+        simulation_executor.k8s_api.await_pod_to_running_state = MagicMock(
+            return_value="localhost"
+        )
+        simulation_executor._send_esdl_file = MagicMock()
+        simulation_executor._terminate_simulation_loop = MagicMock()
+
+        # Execute
+        simulation_executor._deploy_simulation(self.simulation)
+
+        # Assert
+        self.assertEqual(
+            self.simulation_inventory.get_simulation_state(
+                self.simulation.simulation_id
+            ),
+            ProgressState.DEPLOYED,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

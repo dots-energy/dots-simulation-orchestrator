@@ -237,6 +237,7 @@ class SimulationExecutor:
 
     def _deploy_simulation(self, simulation: Simulation):
         so_federate_info = self._init_simulation(simulation)
+        self.simulation_book[simulation.simulation_id] = so_federate_info
         if so_federate_info.simulation.deployed_correctly:
             self._terminate_simulation_loop(
                 self.simulation_book[simulation.simulation_id]

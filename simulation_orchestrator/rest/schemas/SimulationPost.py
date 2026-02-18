@@ -5,9 +5,9 @@ from simulation_orchestrator.rest.schemas.CalculationService import CalculationS
 
 class SimulationPost(BaseModel):
     name: str = "simulation name"
-    start_date: datetime = "2023-01-25 00:00:00"
-    simulation_duration_in_seconds: int = "86400"
-    keep_logs_hours: float = "24.0"
+    start_date: datetime = datetime(2023, 1, 25, 0, 0, 0)
+    simulation_duration_in_seconds: int = 86400
+    keep_logs_hours: float = 24.0
     log_level: str = Field(
         default="info", description="Options: 'debug', 'info', 'warning', 'error'"
     )
