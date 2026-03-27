@@ -63,8 +63,9 @@ class EnvConfig:
         ("INFLUXDB_USER", "", str, False),
         ("INFLUXDB_PASSWORD", "", str, True),
         ("INFLUXDB_NAME", "", str, False),
-        ("SECRET_KEY", None, str, True),
-        ("OAUTH_PASSWORD", None, str, True),
+        ("USE_AUTH", "true", lambda v: str(v).lower() in ("1", "true", "yes"), False),
+        ("SECRET_KEY", "", str, True),
+        ("OAUTH_PASSWORD", "", str, True),
     ]
 
     @staticmethod
@@ -74,11 +75,19 @@ class EnvConfig:
         result = {}
         LOGGER.info("Config:")
         max_length_name = max(len(key[0]) for key in keys)
-        for name, default, transform, hide in keys:
-            if default is None and (name not in os.environ):
-                raise Exception(f"Missing environment variable {name}")
 
-            env_value = os.getenv(name, default)
+        use_auth_value = os.getenv("USE_AUTH", "true")
+        use_auth = str(use_auth_value).lower() in ("1", "true", "yes")
+
+        for name, default, transform, hide in keys:
+            if name in ("SECRET_KEY", "OAUTH_PASSWORD") and not use_auth:
+                # no auth requested: allow these to be empty
+                env_value = os.getenv(name, "")
+            else:
+                if default is None and (name not in os.environ):
+                    raise Exception(f"Missing environment variable {name}")
+                env_value = os.getenv(name, default)
+
             LOGGER.info(
                 f"    {f'{name}:'.ljust(max_length_name + 4)}{'<hidden>' if hide else env_value}"
             )
@@ -97,14 +106,23 @@ def start():
         if key.startswith("INFLUXDB"):
             generic_model_env_var[key] = value
 
-    simulation_orchestrator.rest.oauth.OAuthUtilities.SECRET_KEY = env_config[
-        "SECRET_KEY"
-    ]
-    simulation_orchestrator.rest.oauth.OAuthUtilities.users["DotsUser"][
-        "hashed_password"
-    ] = simulation_orchestrator.rest.oauth.OAuthUtilities.get_password_hash(
-        env_config["OAUTH_PASSWORD"]
-    )
+    simulation_orchestrator.rest.oauth.OAuthUtilities.USE_AUTH = env_config["USE_AUTH"]
+    if env_config["USE_AUTH"]:
+        if not env_config["SECRET_KEY"]:
+            raise Exception("Missing SECRET_KEY when USE_AUTH=true")
+        if not env_config["OAUTH_PASSWORD"]:
+            raise Exception("Missing OAUTH_PASSWORD when USE_AUTH=true")
+
+        simulation_orchestrator.rest.oauth.OAuthUtilities.SECRET_KEY = env_config[
+            "SECRET_KEY"
+        ]
+        simulation_orchestrator.rest.oauth.OAuthUtilities.users["DotsUser"][
+            "hashed_password"
+        ] = simulation_orchestrator.rest.oauth.OAuthUtilities.get_password_hash(
+            env_config["OAUTH_PASSWORD"]
+        )
+    else:
+        LOGGER.info("Auth disabled by USE_AUTH=false: endpoints are public")
 
     actions.simulation_inventory = simulation_inventory
     actions.simulation_executor = SimulationExecutor(

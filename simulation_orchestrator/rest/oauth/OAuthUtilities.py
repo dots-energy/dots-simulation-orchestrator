@@ -1,4 +1,4 @@
-from typing import Annotated, Union
+from typing import Annotated, Union, Optional
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from passlib.context import CryptContext
@@ -12,10 +12,11 @@ from jose import JWTError, jwt
 SECRET_KEY = ""
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+USE_AUTH = True
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/simulation/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/simulation/token", auto_error=False)
 
 users = {
     "DotsUser": {
@@ -62,7 +63,19 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     return encoded_jwt
 
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+def get_current_user(token: Annotated[Optional[str], Depends(oauth2_scheme)]):
+    if not USE_AUTH:
+        # bypass auth if configured to disable
+        return UserInDB(username="anonymous", hashed_password="", disabled=False)
+
+    if token is None:
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        raise credentials_exception
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
