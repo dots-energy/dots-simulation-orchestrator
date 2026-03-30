@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from threading import Thread
 import time
@@ -43,6 +44,23 @@ class SimulationExecutor:
             federate_info, h.HelicsProperty.INT_LOG_LEVEL, h.HelicsLogLevel.DEBUG
         )
         return federate_info
+
+    def _deploy_model_and_await(self, simulation: Simulation, model: Model, broker_ip: str, calculation_service_names: List[str]) -> bool:
+        """Deploy a single model and wait for it to reach running state.
+        
+        Returns True if deployment was successful, False otherwise.
+        """
+        self.k8s_api.deploy_model(
+            simulation, model, broker_ip, calculation_service_names
+        )
+        pod_ip = self.k8s_api.await_pod_to_running_state(
+            self.k8s_api.model_to_pod_name(
+                simulation.simulator_id,
+                simulation.simulation_id,
+                model.model_id,
+            )
+        )
+        return pod_ip is not None
 
     def _send_esdl_file(self, simulation: Simulation, models: List[Model], broker_ip):
         federate_info = self._create_new_so_federate_info(broker_ip)
@@ -92,20 +110,26 @@ class SimulationExecutor:
                 calculation_service.esdl_type
                 for calculation_service in simulation.calculation_services
             ]
+            
+            # Deploy all models in parallel
             deploy_error = False
-            for model in models:
-                if not deploy_error:
-                    self.k8s_api.deploy_model(
-                        simulation, model, broker_ip, calculation_service_names
-                    )
-                    pod_ip = self.k8s_api.await_pod_to_running_state(
-                        self.k8s_api.model_to_pod_name(
-                            simulation.simulator_id,
-                            simulation.simulation_id,
-                            model.model_id,
-                        )
-                    )
-                deploy_error = deploy_error or pod_ip is None
+            with ThreadPoolExecutor(max_workers=len(models)) as executor:
+                futures = {
+                    executor.submit(
+                        self._deploy_model_and_await,
+                        simulation,
+                        model,
+                        broker_ip,
+                        calculation_service_names
+                    ): model
+                    for model in models
+                }
+                
+                # Wait for all deployments to complete and check for errors
+                for future in as_completed(futures):
+                    success = future.result()
+                    if not success:
+                        deploy_error = True
 
             if not deploy_error:
                 self._send_esdl_file(simulation, models, broker_ip)
