@@ -1,8 +1,9 @@
 #!/bin/bash
 
 function usage {
-    echo "usage: deploy_dots [-k] [-u username] [-p password] [-c context]"
+    echo "usage: deploy_dots [-k] [-d] [-u username] [-p password] [-c context]"
     echo "  -k            create kind cluster (optional, do not use for Azure)"
+    echo "  -d            disable authentication (optional, will use auth when omitted)"
     echo "  -u username   specify username"
     echo "  -p password   specify password"
     echo "  -c context    kubectl context name to which to deploy to if -k is supplied context will be set to kind-dots-kind"
@@ -10,12 +11,15 @@ function usage {
 }
 
 create_kind_cluster=false
+use_auth=true
 # Read parameters
-while getopts "hku:p:c:" opt; do
+while getopts "hkdu:p:c:" opt; do
   case $opt in
     h) usage
     ;;
     k) create_kind_cluster=true
+    ;;
+    d) use_auth=false
     ;;
     u) username="$OPTARG"
     ;;
@@ -48,6 +52,7 @@ if [ -z "${context}" ] && [[ $create_kind_cluster == false ]]; then
   usage
 fi
 
+use_auth_base64=$(echo -n $use_auth | base64)
 username_base64=$(echo -n $username | base64)
 password_base64=$(echo -n $password | base64)
 
@@ -81,6 +86,7 @@ echo ""
 echo "Copy kube api token to secret"
 rm -f env-secret-config.yaml
 cp env-secret-config_template.yaml env-secret-config.yaml
+sed -i -e "s/<<USE_AUTH>>/${use_auth_base64}/g" env-secret-config.yaml
 sed -i -e "s/<<USER>>/${username_base64}/g; s/<<PASSWORD>>/${password_base64}/g" env-secret-config.yaml
 so_secret_base64=$(echo -n ${so_secret} | base64 -w0)
 sed -i -e "s/<<SECRET_KEY>>/${so_secret_base64}/g" env-secret-config.yaml
