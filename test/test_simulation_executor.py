@@ -18,7 +18,7 @@ from simulation_orchestrator.simulation_logic.simulation_inventory import (
 )
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import ProgressState
-from K8sApiMock import K8sApi
+from k8s_api_mock import K8sApi
 
 
 class TestSimulationExecutor(unittest.TestCase):
