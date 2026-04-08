@@ -1,6 +1,10 @@
 from datetime import datetime
+from io import BytesIO
+from pathlib import Path
 import unittest
 from unittest.mock import MagicMock
+
+from fastapi import UploadFile
 
 from simulation_orchestrator import actions, parse_esdl
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
@@ -80,6 +84,44 @@ class TestActions(unittest.TestCase):
 
         # assert
         actions.simulation_executor.deploy_simulation.assert_called_once()
+
+    def test_given_invalid_fmu_file_upload_status_error_is_returned(self):
+        # Arrange
+        test_path = Path(__file__).parent / "fmu_testcases" / "invalid"
+        for test_case_folder in test_path.iterdir():
+            with self.subTest(test_case=str(test_case_folder)):
+                files = []
+                for file in test_case_folder.iterdir():
+                    with open(file, "rb") as test_file:
+                        io = BytesIO(test_file.read())
+                        files.append(UploadFile(filename=file.name, file=io))
+
+                # Act
+                fmu_simulation_status = actions.add_fmu_simulation(files)
+
+                # Assert
+                self.assertTrue(fmu_simulation_status.has_error)
+                self.assertNotEqual(fmu_simulation_status.error_message, "")
+                self.assertEqual(actions.simulation_inventory.activeSimulations, {})
+
+    def test_given_valid_fmu_simulation_file_upload_valid_status_is_returned(self):
+        # Arrange
+        test_path = Path(__file__).parent / "fmu_testcases" / "valid"
+        for test_case_folder in test_path.iterdir():
+            with self.subTest(test_case=str(test_case_folder)):
+                files = []
+                for file in test_case_folder.iterdir():
+                    with open(file, "rb") as test_file:
+                        io = BytesIO(test_file.read())
+                        files.append(UploadFile(filename=file.name, file=io))
+
+                # Act
+                fmu_simulation_status = actions.add_fmu_simulation(files)
+
+                # Assert
+                self.assertFalse(fmu_simulation_status.has_error)
+                self.assertEqual(fmu_simulation_status.error_message, "")
+                self.assertEqual(len(actions.simulation_inventory.activeSimulations), 1)
 
 
 if __name__ == "__main__":

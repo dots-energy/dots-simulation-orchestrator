@@ -1,9 +1,17 @@
 # ruff: noqa: F821
 
 from io import BytesIO
+import json
+from pathlib import Path
 import typing
+from zipfile import BadZipFile
+
+from fastapi import UploadFile
+from pydantic import ValidationError
+from fmpy.validation import validate_fmu
 
 from simulation_orchestrator.data_handler.data_handler import DataHandler
+from simulation_orchestrator.rest.schemas.FmuSimulationStatus import FmuSimulationStatus
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.simulation_logic.simulation_inventory import (
@@ -123,3 +131,99 @@ def get_all_logs_for_simulation_id(simulation_id: SimulationId) -> BytesIO | Non
 
 def get_all_data_for_simulation_id(simulation_id: SimulationId) -> BytesIO:
     return data_handler.get_all_data_for_simulation_id(simulation_id)
+
+
+def _validate_uploaded_files(
+    files: typing.List[UploadFile], fmu_files: typing.List[UploadFile]
+) -> tuple[str, UploadFile | None]:
+    json_file: UploadFile | None = None
+    for file in files:
+        filename = file.filename.lower()
+
+        if filename.endswith(".json") and json_file is None:
+            json_file = file
+        elif filename.endswith(".fmu"):
+            fmu_files.append(file)
+        else:
+            return (
+                f"Invalid file type: {file.filename}. Only ONE .json and .fmu are allowed.",
+                None,
+            )
+
+    if json_file is None:
+        return (
+            "No JSON file uploaded. Please upload one .json file with the simulation configuration.",
+            None,
+        )
+
+    if len(fmu_files) == 0:
+        return "No FMU files uploaded. Please upload at least one .fmu file.", None
+
+    return "", json_file
+
+
+def _validate_simulation_json(
+    json_file: UploadFile,
+) -> tuple[str, SimulationPost | None]:
+    try:
+        simulation_post_val = SimulationPost.model_validate(
+            json.loads(json_file.file.read())
+        )
+    except json.JSONDecodeError as e:
+        return f"Invalid JSON file: {e}", None
+    except ValidationError as e:
+        return f"JSON does not conform to SimulationPost schema: {e}", None
+
+    return "", simulation_post_val
+
+
+def _validate_uploaded_fmus(
+    fmu_files: typing.List[UploadFile], simulation_id: str
+) -> str:
+    ret_val = ""
+    file_problems_dict = {}
+    for fmu_file in fmu_files:
+        upload_dir: Path = Path(__file__).parent / "uploaded_fmus" / simulation_id
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        path: Path = upload_dir / fmu_file.filename
+        problems = []
+        with open(path, "wb") as f:
+            f.write(fmu_file.file.read())
+
+        try:
+            problems.extend(validate_fmu(str(path)))
+        except BadZipFile as e:
+            problems.append(f"File {fmu_file.filename} is not a valid zip file: {e}")
+
+        path.unlink()
+        upload_dir.rmdir()
+        if len(problems) > 0:
+            file_problems_dict[fmu_file.filename] = problems
+
+    if len(file_problems_dict) > 0:
+        ret_val = json.dumps(file_problems_dict)
+
+    return ret_val
+
+
+def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
+    fmu_files: typing.List[UploadFile] = []
+
+    error_msg, json_file = _validate_uploaded_files(files, fmu_files)
+    if error_msg != "":
+        return FmuSimulationStatus(True, error_msg, None)
+
+    error_msg, simulation_post = _validate_simulation_json(json_file)
+    if error_msg != "":
+        return FmuSimulationStatus(True, error_msg, None)
+
+    simulation_id = simulation_inventory.add_simulation(
+        create_new_simulation(simulation_post)
+    )
+    error_msg = _validate_uploaded_fmus(fmu_files, simulation_id)
+    if error_msg != "":
+        simulation_inventory.remove_simulation(simulation_id)
+        return FmuSimulationStatus(True, error_msg, None)
+
+    return FmuSimulationStatus(False, "", simulation_id)

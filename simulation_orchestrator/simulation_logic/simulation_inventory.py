@@ -115,6 +115,10 @@ class SimulationInventory:
         self.activeSimulations.update({new_simulation.simulation_id: new_simulation})
         return new_simulation.simulation_id
 
+    def remove_simulation(self, simulation_id: SimulationId):
+        if simulation_id in self.activeSimulations:
+            self.activeSimulations.pop(simulation_id)
+
     def queue_simulation(self, new_simulation: Simulation) -> SimulationId:
         new_simulation.simulation_id = self.add_simulation(new_simulation)
         self.simulationQueue.append(new_simulation.simulation_id)
@@ -257,19 +261,3 @@ class SimulationInventory:
             return f"Simulation id '{simulation_id}' could not be found."
         else:
             return progress_state_description[state]
-
-    def start_step_calculation_time_counting(self, simulation_id: SimulationId):
-        self.get_simulation(
-            simulation_id
-        ).current_step_calculation_start_datetime = datetime.now()
-
-    def start_model_parameters_time_counting(self, simulation_id: SimulationId):
-        self.get_simulation(
-            simulation_id
-        ).modelparameters_start_datetime = datetime.now()
-
-    def lock_simulation(self, simulation_id: SimulationId):
-        self.get_simulation(simulation_id).lock.acquire()
-
-    def release_simulation(self, simulation_id: SimulationId):
-        self.get_simulation(simulation_id).lock.release()

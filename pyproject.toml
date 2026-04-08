@@ -34,9 +34,10 @@ dependencies = [
   "bcrypt==4.1.1",
   "python-jose==3.4.0",
   "helics==3.6.1",
-  "dots-infrastructure==1.0.2",
+  "dots-infrastructure==1.0.9",
   "pandas==2.2.3",
-  "pre-commit"
+  "pre-commit",
+  'FMPy==0.3.27'
 ]
 
 [project.optional-dependencies]
