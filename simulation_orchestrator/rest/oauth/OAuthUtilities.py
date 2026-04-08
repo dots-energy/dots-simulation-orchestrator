@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from passlib.context import CryptContext
 from simulation_orchestrator.rest.schemas.user_schemas import UserInDB, TokenData
-from datetime import datetime, timedelta
+import datetime
 
 from simulation_orchestrator.io.log import LOGGER
 
@@ -16,7 +16,9 @@ USE_AUTH = True
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/simulation/token", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/simulation/token", auto_error=False
+)
 
 users = {
     "DotsUser": {
@@ -52,12 +54,14 @@ def authenticate_user(username: str, password: str):
     return user
 
 
-def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
+def create_access_token(
+    data: dict, expires_delta: Union[datetime.timedelta, None] = None
+):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.datetime.now(datetime.UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
