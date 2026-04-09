@@ -25,6 +25,7 @@ class Model:
         esdl_ids: typing.List[str],
         calc_service: CalculationServiceInfo,
         current_state: ProgressState,
+        required_fmus: typing.List[str],
     ):
         self.model_id = model_id
         self.model_instance = model_instance
@@ -32,6 +33,7 @@ class Model:
         self.calc_service = calc_service
         self.current_state = current_state
         self.pod_name = ""
+        self.required_fmus = required_fmus
 
 
 StateChangeObserver = typing.Callable[

@@ -6,14 +6,17 @@ from pathlib import Path
 import typing
 from zipfile import BadZipFile
 
+import esdl
 from fastapi import UploadFile
 from pydantic import ValidationError
 from fmpy.validation import validate_fmu
+from fmpy.model_description import ModelDescription, read_model_description
 
 from simulation_orchestrator.data_handler.data_handler import DataHandler
 from simulation_orchestrator.rest.schemas.FmuSimulationStatus import FmuSimulationStatus
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator import parse_esdl
+from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.simulation_logic.simulation_inventory import (
     SimulationInventory,
     Simulation,
@@ -178,7 +181,9 @@ def _validate_simulation_json(
 
 
 def _validate_uploaded_fmus(
-    fmu_files: typing.List[UploadFile], simulation_id: str
+    fmu_files: typing.List[UploadFile],
+    simulation_id: str,
+    model_descriptions: dict[str, ModelDescription],
 ) -> str:
     ret_val = ""
     file_problems_dict = {}
@@ -196,15 +201,51 @@ def _validate_uploaded_fmus(
         except BadZipFile as e:
             problems.append(f"File {fmu_file.filename} is not a valid zip file: {e}")
 
-        path.unlink()
-        upload_dir.rmdir()
         if len(problems) > 0:
             file_problems_dict[fmu_file.filename] = problems
+        else:
+            model_descriptions[fmu_file.filename] = read_model_description(str(path))
+        path.unlink()
+        upload_dir.rmdir()
 
     if len(file_problems_dict) > 0:
         ret_val = json.dumps(file_problems_dict)
 
     return ret_val
+
+
+def _esdl_obj_descriptions_contains_all_parameter_values(
+    description: str, fmu_model: ModelDescription
+) -> bool:
+    parameters = json.loads(description)
+    fmu_model_parameters_names = [
+        var.name for var in fmu_model.modelVariables if var.causality == "parameter"
+    ]
+    return all(
+        parameter_name in parameters for parameter_name in fmu_model_parameters_names
+    )
+
+
+def _validate_all_fmu_models_have_valid_parameters(
+    fmu_model_descriptions: dict[str, ModelDescription],
+    models: typing.List[Model],
+    esdl_id_obj_mapping: dict[str, esdl.Asset],
+) -> str:
+    fmu_models = [model for model in models if len(model.required_fmus) > 0]
+
+    for fmu_model in fmu_models:
+        for esdl_id in fmu_model.esdl_ids:
+            esdl_obj = esdl_id_obj_mapping[esdl_id]
+            if not hasattr(esdl_obj, "description") or not hasattr(esdl_obj, "name"):
+                return f"ESDL object with id {esdl_id} does not have required attributes 'name' and 'description'"
+            elif esdl_obj.name not in fmu_model_descriptions:
+                return f"ESDL object with id {esdl_id} has name {esdl_obj.name} which does not match any of the uploaded FMU model names"
+            elif not _esdl_obj_descriptions_contains_all_parameter_values(
+                esdl_obj.description, fmu_model_descriptions[esdl_obj.name]
+            ):
+                return f"ESDL object with id {esdl_id} has description which does not contain all parameter values required by the FMU model {esdl_obj.name}"
+
+    return ""
 
 
 def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
@@ -221,9 +262,31 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
     simulation_id = simulation_inventory.add_simulation(
         create_new_simulation(simulation_post)
     )
-    error_msg = _validate_uploaded_fmus(fmu_files, simulation_id)
+
+    model_descriptions: dict[str, ModelDescription] = {}
+    error_msg = _validate_uploaded_fmus(fmu_files, simulation_id, model_descriptions)
     if error_msg != "":
         simulation_inventory.remove_simulation(simulation_id)
         return FmuSimulationStatus(True, error_msg, None)
+
+    new_simulation = create_new_simulation(simulation_post)
+
+    esdl_id_obj_mapping: dict[str, esdl.Asset] = {}
+    model_list = parse_esdl.get_model_list(
+        new_simulation.calculation_services,
+        new_simulation.esdl_base64string,
+        esdl_id_obj_mapping,
+    )
+
+    error_msg = _validate_all_fmu_models_have_valid_parameters(
+        model_descriptions, model_list, esdl_id_obj_mapping
+    )
+    if error_msg != "":
+        simulation_inventory.remove_simulation(simulation_id)
+        return FmuSimulationStatus(True, error_msg, None)
+
+    simulation_inventory.add_models_to_simulation(
+        new_simulation.simulation_id, model_list
+    )
 
     return FmuSimulationStatus(False, "", simulation_id)

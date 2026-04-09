@@ -39,12 +39,21 @@ class TestActions(unittest.TestCase):
         self.parse_esdl_get_energy_system = parse_esdl.get_energy_system
         self.actions_simulation_executor = actions.simulation_executor.deploy_simulation
         actions.simulation_executor.deploy_simulation = MagicMock()
+
+    def tearDown(self):
+        actions.simulation_executor.deploy_simulation = self.actions_simulation_executor
+
+
+class TestActionsLogic(TestActions):
+    def setUp(self):
+        super().setUp()
         self.mock_model = Model(
             "test",
             1,
             ["test"],
             CalculationServiceInfo("test", "test", 1, "test", ["test"], []),
             ProgressState.DEPLOYED,
+            [],
         )
         parse_esdl.get_model_list = MagicMock(return_value=[self.mock_model])
         parse_esdl.get_energy_system = MagicMock(return_value=None)
@@ -52,7 +61,6 @@ class TestActions(unittest.TestCase):
     def tearDown(self) -> None:
         parse_esdl.get_model_list = self.parse_esdl_get_model_list
         parse_esdl.get_energy_system = self.parse_esdl_get_energy_system
-        actions.simulation_executor.deploy_simulation = self.actions_simulation_executor
 
     def test_start_simulations_registers_and_deploys_simulation_correctly(self):
         # execute
@@ -85,6 +93,8 @@ class TestActions(unittest.TestCase):
         # assert
         actions.simulation_executor.deploy_simulation.assert_called_once()
 
+
+class TestFmuActions(TestActions):
     def test_given_invalid_fmu_file_upload_status_error_is_returned(self):
         # Arrange
         test_path = Path(__file__).parent / "fmu_testcases" / "invalid"
