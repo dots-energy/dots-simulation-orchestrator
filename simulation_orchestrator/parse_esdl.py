@@ -131,7 +131,7 @@ def add_service_models(
         ):
             if i_esdl_id < len(service_info.esdl_ids):
                 esdl_id_to_append = service_info.esdl_ids[i_esdl_id]
-                esdl_ids.append(service_info.esdl_ids[esdl_id_to_append])
+                esdl_ids.append(esdl_id_to_append)
                 esdl_obj = esdl_id_obj_mapping[esdl_id_to_append]
                 if hasattr(esdl_obj, "name") and str(esdl_obj.name).endswith(".fmu"):
                     required_fmus.append(esdl_obj.name)

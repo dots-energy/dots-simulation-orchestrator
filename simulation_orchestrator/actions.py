@@ -269,7 +269,7 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
         simulation_inventory.remove_simulation(simulation_id)
         return FmuSimulationStatus(True, error_msg, None)
 
-    new_simulation = create_new_simulation(simulation_post)
+    new_simulation = simulation_inventory.get_simulation(simulation_id)
 
     esdl_id_obj_mapping: dict[str, esdl.Asset] = {}
     model_list = parse_esdl.get_model_list(
@@ -285,8 +285,6 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
         simulation_inventory.remove_simulation(simulation_id)
         return FmuSimulationStatus(True, error_msg, None)
 
-    simulation_inventory.add_models_to_simulation(
-        new_simulation.simulation_id, model_list
-    )
+    simulation_inventory.add_models_to_simulation(simulation_id, model_list)
 
     return FmuSimulationStatus(False, "", simulation_id)
