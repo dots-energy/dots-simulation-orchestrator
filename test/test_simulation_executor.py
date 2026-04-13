@@ -32,12 +32,13 @@ class TestSimulationExecutor(unittest.TestCase):
             ["test"],
             CalculationServiceInfo("test", "test", 1, "test", ["test"], []),
             ProgressState.DEPLOYED,
+            [],
         )
         h.helicsFederateEnterExecutingMode = MagicMock()
         h.helicsFederateGetTimeProperty = MagicMock(return_value=3)
         self.simulation_inventory = SimulationInventory()
         self.simulation = Simulation(
-            "test", "test-name", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
+            "test", "test-name", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
         )
 
     def tearDown(self) -> None:
@@ -152,7 +153,7 @@ class TestSimulationExecutor(unittest.TestCase):
             self.simulation
         )
         next_queued_simulation = Simulation(
-            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
+            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
         )
         next_queued_simulation_id = self.simulation_inventory.queue_simulation(
             next_queued_simulation
@@ -201,11 +202,12 @@ class TestSimulationExecutor(unittest.TestCase):
                     ["test2"],
                     CalculationServiceInfo("test2", "test", 3, "test2", ["test2"], []),
                     ProgressState.DEPLOYED,
+                    [],
                 ),
             ],
         )
         simulation_executor = SimulationExecutor(K8sApi(), self.simulation_inventory)
-        simulation_executor._send_esdl_file = MagicMock()
+        simulation_executor._send_init_data = MagicMock()
 
         # Execute
         simulation_executor._init_simulation(self.simulation)
@@ -355,7 +357,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         self.simulation_inventory.queue_simulation(self.simulation)
         next_queued_simulation = Simulation(
-            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
+            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
         )
         self.simulation_inventory.queue_simulation(next_queued_simulation)
         self.simulation.model_inventory.add_models_to_simulation(
@@ -382,7 +384,7 @@ class TestSimulationExecutor(unittest.TestCase):
         simulation_executor.k8s_api.await_pod_to_running_state = MagicMock(
             return_value="localhost"
         )
-        simulation_executor._send_esdl_file = MagicMock()
+        simulation_executor._send_init_data = MagicMock()
         simulation_executor._terminate_simulation_loop = MagicMock()
 
         # Execute
