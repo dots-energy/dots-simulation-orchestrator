@@ -26,6 +26,7 @@ class Model:
         calc_service: CalculationServiceInfo,
         current_state: ProgressState,
         required_fmus: typing.List[str],
+        database_variables: typing.List[str],
     ):
         self.model_id = model_id
         self.model_instance = model_instance
@@ -34,6 +35,7 @@ class Model:
         self.current_state = current_state
         self.pod_name = ""
         self.required_fmus = required_fmus
+        self.database_variables = database_variables
 
 
 StateChangeObserver = typing.Callable[

@@ -59,6 +59,7 @@ def add_esdl_object(
                 type(esdl_obj).__name__,
                 [esdl_obj.id],
                 calc_service.additional_env_variable,
+                calc_service.fmu_database_variables,
             )
 
 
@@ -144,5 +145,6 @@ def add_service_models(
                 calc_service=service_info,
                 current_state=ProgressState.REGISTERED,
                 required_fmus=required_fmus,
+                database_variables=service_info.fmu_database_variables,
             )
         )

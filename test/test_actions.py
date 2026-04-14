@@ -51,8 +51,9 @@ class TestActionsLogic(TestActions):
             "test",
             1,
             ["test"],
-            CalculationServiceInfo("test", "test", 1, "test", ["test"], []),
+            CalculationServiceInfo("test", "test", 1, "test", ["test"], [], []),
             ProgressState.DEPLOYED,
+            [],
             [],
         )
         parse_esdl.get_model_list = MagicMock(return_value=[self.mock_model])

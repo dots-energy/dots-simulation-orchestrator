@@ -201,6 +201,11 @@ class K8sApi:
         env_vars["log_level"] = simulation.log_level
         for env_var_value in model.calc_service.additional_environment_variables:
             env_vars[env_var_value.name] = env_var_value.value
+
+        if len(model.required_fmus) > 0:
+            env_vars["required_fmus"] = ";".join(model.required_fmus)
+            env_vars["fmu_database_variables"] = ";".join(model.database_variables)
+
         return self.deploy_new_pod(
             pod_name,
             model.calc_service.service_image_url,
