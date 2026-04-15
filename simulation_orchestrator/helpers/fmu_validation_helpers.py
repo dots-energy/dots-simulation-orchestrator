@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import UploadFile
 import typing
 
+from simulation_orchestrator.rest.schemas.FmuInputVariable import FmuInputVariable
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 
@@ -60,6 +61,7 @@ def validate_uploaded_fmus(
     fmu_files: typing.List[UploadFile],
     simulation_id: str,
     model_descriptions: dict[str, ModelDescription],
+    input_variable_mapping: list[FmuInputVariable],
 ) -> str:
     ret_val = ""
     file_problems_dict = {}
@@ -77,10 +79,30 @@ def validate_uploaded_fmus(
         except BadZipFile as e:
             problems.append(f"File {fmu_file.filename} is not a valid zip file: {e}")
 
+        if len(problems) == 0:
+            model_description = read_model_description(str(path))
+            model_descriptions[fmu_file.filename] = model_description
+            fmu_input_var_names = [
+                input_var.fmu_input_name for input_var in input_variable_mapping
+            ]
+            input_fmu_vars = [
+                var
+                for var in model_description.modelVariables
+                if var.causality == "input"
+            ]
+            all_inputs_have_mapping = [
+                var for var in input_fmu_vars if var.name not in fmu_input_var_names
+            ]
+            problems.extend(
+                [
+                    f"Variable {var} has no input mapping"
+                    for var in all_inputs_have_mapping
+                ]
+            )
+
         if len(problems) > 0:
             file_problems_dict[fmu_file.filename] = problems
-        else:
-            model_descriptions[fmu_file.filename] = read_model_description(str(path))
+
         path.unlink()
         upload_dir.rmdir()
 

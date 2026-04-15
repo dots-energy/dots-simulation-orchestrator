@@ -13,7 +13,8 @@ from simulation_orchestrator.helpers.fmu_validation_helpers import (
     validate_uploaded_files,
     validate_uploaded_fmus,
 )
-from simulation_orchestrator.rest.schemas.FmuSimulationStatus import FmuSimulationStatus
+from simulation_orchestrator.helpers.generic_helpers import ListHelpers
+from simulation_orchestrator.dataclasses.FmuSimulationStatus import FmuSimulationStatus
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.simulation_logic.simulation_inventory import (
@@ -154,7 +155,16 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
     )
 
     model_descriptions: dict[str, ModelDescription] = {}
-    error_msg = validate_uploaded_fmus(fmu_files, simulation_id, model_descriptions)
+    all_input_mappings = ListHelpers.flatten_list_of_lists(
+        [
+            calc_service.fmu_input_variables
+            for calc_service in simulation_post.calculation_services
+        ]
+    )
+
+    error_msg = validate_uploaded_fmus(
+        fmu_files, simulation_id, model_descriptions, all_input_mappings
+    )
     if error_msg != "":
         simulation_inventory.remove_simulation(simulation_id)
         return FmuSimulationStatus(True, error_msg, None)

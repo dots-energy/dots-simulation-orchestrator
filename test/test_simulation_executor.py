@@ -30,9 +30,8 @@ class TestSimulationExecutor(unittest.TestCase):
             "test",
             1,
             ["test"],
-            CalculationServiceInfo("test", "test", 1, "test", ["test"], [], []),
+            CalculationServiceInfo("test", "test", 1, "test", ["test"], [], [], []),
             ProgressState.DEPLOYED,
-            [],
             [],
         )
         h.helicsFederateEnterExecutingMode = MagicMock()
@@ -202,10 +201,9 @@ class TestSimulationExecutor(unittest.TestCase):
                     1,
                     ["test2"],
                     CalculationServiceInfo(
-                        "test2", "test", 3, "test2", ["test2"], [], []
+                        "test2", "test", 3, "test2", ["test2"], [], [], []
                     ),
                     ProgressState.DEPLOYED,
-                    [],
                     [],
                 ),
             ],

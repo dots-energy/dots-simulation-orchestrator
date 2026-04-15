@@ -204,7 +204,12 @@ class K8sApi:
 
         if len(model.required_fmus) > 0:
             env_vars["required_fmus"] = ";".join(model.required_fmus)
-            env_vars["fmu_database_variables"] = ";".join(model.database_variables)
+            env_vars["fmu_database_variables"] = ";".join(
+                model.calc_service.fmu_database_variables
+            )
+            env_vars["fmu_input_mapping"] = (
+                f"[{','.join([instance.model_dump_json() for instance in model.calc_service.fmu_input_variables])}]"
+            )
 
         return self.deploy_new_pod(
             pod_name,

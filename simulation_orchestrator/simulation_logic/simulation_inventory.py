@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 
 from fastapi import UploadFile
 
-from simulation_orchestrator.helpers.string_helpers import StringHelpers
+from simulation_orchestrator.helpers.generic_helpers import StringHelpers
 
 from threading import Lock
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService

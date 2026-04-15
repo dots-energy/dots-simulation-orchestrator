@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from simulation_orchestrator.rest.schemas.FmuInputVariable import FmuInputVariable
 from simulation_orchestrator.rest.schemas.EnvironmentVariable import EnvironmentVariable
 
 
@@ -26,4 +27,8 @@ class CalculationService(BaseModel):
     fmu_database_variables: list[str] = Field(
         default=[],
         description="For FMU Models only list of variables that should be stored in the database each time step for FMU Models",
+    )
+    fmu_input_variables: list[FmuInputVariable] = Field(
+        default=[],
+        description="For FMU Models only list of variables that should be passed as input to the FMU each time step",
     )

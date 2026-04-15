@@ -4,7 +4,7 @@ from typing import List
 from esdl import esdl, EnergySystem
 from esdl.esdl_handler import EnergySystemHandler
 from base64 import b64decode
-from simulation_orchestrator.helpers.string_helpers import StringHelpers
+from simulation_orchestrator.helpers.generic_helpers import StringHelpers
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
     CalculationServiceInfo,
@@ -60,6 +60,7 @@ def add_esdl_object(
                 [esdl_obj.id],
                 calc_service.additional_env_variable,
                 calc_service.fmu_database_variables,
+                calc_service.fmu_input_variables,
             )
 
 
@@ -145,6 +146,5 @@ def add_service_models(
                 calc_service=service_info,
                 current_state=ProgressState.REGISTERED,
                 required_fmus=required_fmus,
-                database_variables=service_info.fmu_database_variables,
             )
         )
