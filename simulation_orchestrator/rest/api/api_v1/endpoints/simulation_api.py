@@ -84,8 +84,9 @@ def start_new_simulation(
 
 
 @router.post("/start_fmu_simulation")
-async def upload_files(
+def start_fmu_simulation(
     current_user: Annotated[User, Depends(get_current_user)],
+    *,
     files: List[UploadFile] = File(...),
 ):
     if not files:
