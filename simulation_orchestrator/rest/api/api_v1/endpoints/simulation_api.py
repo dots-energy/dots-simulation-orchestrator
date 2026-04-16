@@ -88,7 +88,8 @@ def start_fmu_simulation(
     current_user: Annotated[User, Depends(get_current_user)],
     *,
     files: Annotated[
-        list[UploadFile], File(description="Files required to start the FMU simulation")
+        list[UploadFile],
+        File(..., description="Files required to start the FMU simulation"),
     ],
 ):
     if not files:
