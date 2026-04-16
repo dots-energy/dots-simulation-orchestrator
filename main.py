@@ -33,7 +33,7 @@ BASE_PATH = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "rest/templates/"))
 
 root_router = APIRouter()
-app = FastAPI(title="DOTS Simulation Orchestrator API")
+app = FastAPI(title="DOTS Simulation Orchestrator API", openapi_version="3.0.3")
 app.mount(
     "/rest/images/",
     StaticFiles(directory=str(BASE_PATH / "rest/images/")),
