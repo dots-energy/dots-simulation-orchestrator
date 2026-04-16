@@ -83,10 +83,8 @@ def start_new_simulation(
     return simulation_status
 
 
-@router.post("/start_fmu_simulation")
+@router.post("/start_fmu_simulation", status_code=201, response_model=SimulationStatus)
 def start_fmu_simulation(
-    current_user: Annotated[User, Depends(get_current_user)],
-    *,
     files: list[UploadFile],
 ):
     if not files:
