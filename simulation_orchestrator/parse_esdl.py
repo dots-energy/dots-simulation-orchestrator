@@ -135,7 +135,11 @@ def add_service_models(
                 esdl_id_to_append = service_info.esdl_ids[i_esdl_id]
                 esdl_ids.append(esdl_id_to_append)
                 esdl_obj = esdl_id_obj_mapping[esdl_id_to_append]
-                if hasattr(esdl_obj, "name") and str(esdl_obj.name).endswith(".fmu"):
+                if (
+                    hasattr(esdl_obj, "name")
+                    and str(esdl_obj.name).endswith(".fmu")
+                    and esdl_obj.name not in required_fmus
+                ):
                     required_fmus.append(esdl_obj.name)
 
         model_list.append(
