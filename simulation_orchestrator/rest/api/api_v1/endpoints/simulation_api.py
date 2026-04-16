@@ -1,5 +1,5 @@
-from typing import Annotated, List
-from fastapi import APIRouter, File, HTTPException, Depends, UploadFile, status
+from typing import Annotated
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, status
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -87,7 +87,7 @@ def start_new_simulation(
 def start_fmu_simulation(
     current_user: Annotated[User, Depends(get_current_user)],
     *,
-    files: List[UploadFile] = File(...),
+    files: list[UploadFile],
 ):
     if not files:
         raise HTTPException(status_code=400, detail="No files uploaded")
