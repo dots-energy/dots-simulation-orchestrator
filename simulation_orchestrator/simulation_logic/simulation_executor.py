@@ -72,24 +72,28 @@ class SimulationExecutor:
     def _send_message_to_models(
         self,
         data: bytes,
-        endpoint: str,
+        endpoint_name: str,
         message_enpoint: h.HelicsEndpoint,
         models: List[Model],
     ):
         new_message = h.helicsEndpointCreateMessage(message_enpoint)
         h.helicsMessageSetData(new_message, data)
         for model in models:
-            endpoint = f"{model.model_id}/{endpoint}"
+            endpoint = f"{model.model_id}/{endpoint_name}"
             h.helicsMessageSetDestination(message_enpoint, endpoint)
-            LOGGER.info(f"Sending esdl file to: {endpoint}")
             h.helicsEndpointSendMessage(message_enpoint, new_message)
 
     def _send_init_data(
         self, simulation: Simulation, models: List[Model], broker_ip: str
     ):
-        fmu_files_as_bytes = {
-            fmu_file.filename: fmu_file.file.read() for fmu_file in simulation.fmu_files
-        }
+        fmu_files_as_bytes: dict[str, bytes] = {}
+
+        for fmu_file in simulation.fmu_files:
+            with open(fmu_file, "rb") as f:
+                fmu_files_as_bytes[fmu_file.name] = f.read()
+            fmu_file.unlink()
+
+        simulation.fmu_files[0].parent.rmdir()
 
         federate_info = self._create_new_so_federate_info(broker_ip)
 
@@ -103,10 +107,10 @@ class SimulationExecutor:
 
         step_size = 10000000
         full_esdl_as_bytes = simulation.esdl_base64string.encode()
-        file_lenghts = [
-            len(fmu_file) for fmu_file_name, fmu_file in fmu_files_as_bytes.items()
-        ]
-        file_lenghts.append(full_esdl_as_bytes)
+        file_lenghts = [len(fmu_file) for fmu_file in fmu_files_as_bytes.values()]
+        file_lenghts.append(len(full_esdl_as_bytes))
+
+        LOGGER.info(f"File lengths: {file_lenghts}")
 
         h.helicsFederateEnterExecutingMode(message_federate)
 

@@ -13,6 +13,22 @@ from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 
 
+def write_fmu_to_upload_dir(
+    files: typing.List[UploadFile], simulation_id: str
+) -> list[Path]:
+    fmu_file_paths = []
+    for fmu_file in files:
+        upload_dir: Path = Path(__file__).parent / "uploaded_fmus" / simulation_id
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        path: Path = upload_dir / fmu_file.filename
+        fmu_file_paths.append(path)
+        with open(path, "wb") as f:
+            f.write(fmu_file.file.read())
+
+    return fmu_file_paths
+
+
 def validate_uploaded_files(
     files: typing.List[UploadFile], fmu_files: typing.List[UploadFile]
 ) -> tuple[str, UploadFile | None]:
@@ -58,30 +74,23 @@ def validate_simulation_json(
 
 
 def validate_uploaded_fmus(
-    fmu_files: typing.List[UploadFile],
-    simulation_id: str,
+    fmu_files: list[Path],
     model_descriptions: dict[str, ModelDescription],
     input_variable_mapping: list[FmuInputVariable],
 ) -> str:
     ret_val = ""
     file_problems_dict = {}
-    for fmu_file in fmu_files:
-        upload_dir: Path = Path(__file__).parent / "uploaded_fmus" / simulation_id
-        upload_dir.mkdir(parents=True, exist_ok=True)
-
-        path: Path = upload_dir / fmu_file.filename
+    for path in fmu_files:
         problems = []
-        with open(path, "wb") as f:
-            f.write(fmu_file.file.read())
 
         try:
             problems.extend(validate_fmu(str(path)))
         except BadZipFile as e:
-            problems.append(f"File {fmu_file.filename} is not a valid zip file: {e}")
+            problems.append(f"File {path.name} is not a valid zip file: {e}")
 
         if len(problems) == 0:
             model_description = read_model_description(str(path))
-            model_descriptions[fmu_file.filename] = model_description
+            model_descriptions[path.name] = model_description
             fmu_input_var_names = [
                 input_var.fmu_input_name for input_var in input_variable_mapping
             ]
@@ -101,10 +110,7 @@ def validate_uploaded_fmus(
             )
 
         if len(problems) > 0:
-            file_problems_dict[fmu_file.filename] = problems
-
-        path.unlink()
-        upload_dir.rmdir()
+            file_problems_dict[path.name] = problems
 
     if len(file_problems_dict) > 0:
         ret_val = json.dumps(file_problems_dict)

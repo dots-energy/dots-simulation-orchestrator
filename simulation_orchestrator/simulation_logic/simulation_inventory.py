@@ -12,11 +12,11 @@
 #  Manager:
 #      TNO
 
+from pathlib import Path
 import typing
 import uuid
 from datetime import datetime, timedelta
 
-from fastapi import UploadFile
 
 from simulation_orchestrator.helpers.generic_helpers import StringHelpers
 
@@ -52,7 +52,7 @@ class Simulation:
 
     current_time_step_nr: int
     calculation_start_datetime: datetime
-    fmu_files: typing.List[UploadFile]
+    fmu_files: typing.List[Path]
     calculation_end_datetime: typing.Optional[datetime]
     current_step_calculation_start_datetime: typing.Optional[datetime]
     modelparameters_start_datetime: typing.Optional[datetime]
@@ -73,7 +73,6 @@ class Simulation:
         log_level: str,
         calculation_services: typing.List[CalculationService],
         esdl_base64string: str,
-        fmu_files: typing.List[UploadFile],
     ):
         self.simulator_id = simulator_id
         self.simulation_name = simulation_name
@@ -94,7 +93,7 @@ class Simulation:
         self.error_message = ""
         self.terminated = False
         self.deployed_correctly = False
-        self.fmu_files = fmu_files
+        self.fmu_files = []
 
         self.lock = Lock()
 

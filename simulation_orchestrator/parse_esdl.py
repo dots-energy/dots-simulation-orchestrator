@@ -141,7 +141,6 @@ def add_service_models(
                     and esdl_obj.name not in required_fmus
                 ):
                     required_fmus.append(esdl_obj.name)
-
         model_list.append(
             Model(
                 model_id=model_id,

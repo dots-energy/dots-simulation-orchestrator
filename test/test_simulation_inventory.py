@@ -14,7 +14,7 @@ from simulation_orchestrator.types import ProgressState
 class TestSimulationExecutor(unittest.TestCase):
     simulations_to_test = {
         Simulation(
-            "test", "hello world!", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
+            "test", "hello world!", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
         ): "hello-world",
         Simulation(
             "test",
@@ -25,7 +25,6 @@ class TestSimulationExecutor(unittest.TestCase):
             "DEBUG",
             [],
             "",
-            [],
         ): "test-name",
     }
 
@@ -91,7 +90,6 @@ class TestSimulationExecutor(unittest.TestCase):
                     "DEBUG",
                     [],
                     "",
-                    [],
                 )
                 simulation_id = simulation_inventory.add_simulation(simulation)
                 simulation_inventory.add_models_to_simulation(simulation_id, [model])

@@ -1,8 +1,13 @@
 from datetime import datetime
+from io import BytesIO
+from pathlib import Path
+import time
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock, call
 import zipfile
+from fastapi import UploadFile
 import helics as h
+from simulation_orchestrator import actions
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
     CalculationServiceInfo,
 )
@@ -25,7 +30,18 @@ class TestSimulationExecutor(unittest.TestCase):
     def setUp(self):
         self.helicsFederateEnterExecutingMode = h.helicsFederateEnterExecutingMode
         self.helicsFederateGetTimeProperty = h.helicsFederateGetTimeProperty
-        self.helicsFederateRequestTime = h.helicsFederateRequestTime
+
+        h.helicsFederateEnterExecutingMode = MagicMock()
+        h.helicsFederateGetTimeProperty = MagicMock(return_value=3)
+
+    def tearDown(self):
+        h.helicsFederateEnterExecutingMode = self.helicsFederateEnterExecutingMode
+        h.helicsFederateGetTimeProperty = self.helicsFederateGetTimeProperty
+
+
+class TestSimulationExecutorLogic(TestSimulationExecutor):
+    def setUp(self):
+        super().setUp()
         self.test_model = Model(
             "test",
             1,
@@ -34,17 +50,11 @@ class TestSimulationExecutor(unittest.TestCase):
             ProgressState.DEPLOYED,
             [],
         )
-        h.helicsFederateEnterExecutingMode = MagicMock()
-        h.helicsFederateGetTimeProperty = MagicMock(return_value=3)
-        self.simulation_inventory = SimulationInventory()
         self.simulation = Simulation(
-            "test", "test-name", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
+            "test", "test-name", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
         )
 
-    def tearDown(self) -> None:
-        h.helicsFederateEnterExecutingMode = self.helicsFederateEnterExecutingMode
-        h.helicsFederateGetTimeProperty = self.helicsFederateGetTimeProperty
-        h.helicsFederateRequestTime = self.helicsFederateRequestTime
+        self.simulation_inventory = SimulationInventory()
 
     def test_simulation_state_is_set_to_succesfull_when_all_pods_have_success_state(
         self,
@@ -153,7 +163,7 @@ class TestSimulationExecutor(unittest.TestCase):
             self.simulation
         )
         next_queued_simulation = Simulation(
-            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
+            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
         )
         next_queued_simulation_id = self.simulation_inventory.queue_simulation(
             next_queued_simulation
@@ -359,7 +369,7 @@ class TestSimulationExecutor(unittest.TestCase):
         # Arrange
         self.simulation_inventory.queue_simulation(self.simulation)
         next_queued_simulation = Simulation(
-            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], "", []
+            "test2", "test-name2", datetime(2024, 1, 1), 900, 2.0, "DEBUG", [], ""
         )
         self.simulation_inventory.queue_simulation(next_queued_simulation)
         self.simulation.model_inventory.add_models_to_simulation(
@@ -399,6 +409,79 @@ class TestSimulationExecutor(unittest.TestCase):
             ),
             ProgressState.DEPLOYED,
         )
+
+
+class TestDeploymentLogic(TestSimulationExecutor):
+    def setUp(self):
+        super().setUp()
+        self.helicsMessageSetDestination = h.helicsMessageSetDestination
+        self.helicsEndpointSendMessage = h.helicsEndpointSendMessage
+        self.helicsMessageSetData = h.helicsMessageSetData
+        self.helicsEndpointCreateMessage = h.helicsEndpointCreateMessage
+        self.helicsFederateRegisterEndpoint = h.helicsFederateRegisterEndpoint
+        self.helicsCreateMessageFederate = h.helicsCreateMessageFederate
+        self.helicsFederateRequestTime = h.helicsFederateRequestTime
+        self.helicsFederateDisconnect = h.helicsFederateDisconnect
+        self.helicsFederateDestroy = h.helicsFederateDestroy
+
+        h.helicsMessageSetDestination = MagicMock()
+        h.helicsEndpointSendMessage = MagicMock()
+        h.helicsMessageSetData = MagicMock()
+        h.helicsEndpointCreateMessage = MagicMock()
+        h.helicsFederateRegisterEndpoint = MagicMock()
+        h.helicsCreateMessageFederate = MagicMock()
+        h.helicsFederateRequestTime = MagicMock()
+        h.helicsFederateDisconnect = MagicMock()
+        h.helicsFederateDestroy = MagicMock()
+
+    def tearDown(self):
+        super().tearDown()
+        h.helicsMessageSetDestination = self.helicsMessageSetDestination
+        h.helicsEndpointSendMessage = self.helicsEndpointSendMessage
+        h.helicsMessageSetData = self.helicsMessageSetData
+        h.helicsEndpointCreateMessage = self.helicsEndpointCreateMessage
+        h.helicsFederateRegisterEndpoint = self.helicsFederateRegisterEndpoint
+        h.helicsCreateMessageFederate = self.helicsCreateMessageFederate
+        h.helicsFederateRequestTime = self.helicsFederateRequestTime
+        h.helicsFederateDisconnect = self.helicsFederateDisconnect
+        h.helicsFederateDestroy = self.helicsFederateDestroy
+
+    def test_when_deployment_is_started_esdl_file_is_send_in_parts(self):
+        actions.simulation_inventory = SimulationInventory()
+        actions.simulation_executor = SimulationExecutor(
+            K8sApi(), actions.simulation_inventory
+        )
+        actions.simulation_executor._terminate_simulation_loop = MagicMock()
+        test_path = Path(__file__).parent / "fmu_testcases" / "valid"
+        for test_case_folder in test_path.iterdir():
+            with self.subTest(test_case=str(test_case_folder)):
+                # Arrange
+                files = []
+                for file in test_case_folder.iterdir():
+                    with open(file, "rb") as test_file:
+                        io = BytesIO(test_file.read())
+                        files.append(UploadFile(filename=file.name, file=io))
+
+                # Act
+                fmu_simulation_status = actions.add_fmu_simulation(files)
+
+                # Assert
+                simulation = actions.simulation_inventory.get_simulation(
+                    fmu_simulation_status.simulation_id
+                )
+                model_ids = simulation.model_inventory.active_models.keys()
+                esdl_calls = [call(ANY, f"{model_id}/esdl") for model_id in model_ids]
+                fmu_calls = [
+                    call(ANY, f"{model_id}/fmu/valid_fmu_2.fmu")
+                    for model_id in model_ids
+                    if len(
+                        simulation.model_inventory.active_models[model_id].required_fmus
+                    )
+                    > 0
+                ]
+                time.sleep(3)  # sleep because add_fmu_simulation creates new threads
+
+                h.helicsMessageSetDestination.assert_has_calls(esdl_calls + fmu_calls)
 
 
 if __name__ == "__main__":

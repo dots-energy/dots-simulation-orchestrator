@@ -133,6 +133,14 @@ class TestFmuActions(TestActions):
                 self.assertEqual(fmu_simulation_status.error_message, "")
                 self.assertEqual(len(actions.simulation_inventory.activeSimulations), 1)
 
+                simulation_id = list(
+                    actions.simulation_inventory.activeSimulations.keys()
+                )[0]
+                self.assertEqual(
+                    len(actions.simulation_inventory.activeSimulations[simulation_id]),
+                    2,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

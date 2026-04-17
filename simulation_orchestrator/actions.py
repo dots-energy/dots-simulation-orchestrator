@@ -12,6 +12,7 @@ from simulation_orchestrator.helpers.fmu_validation_helpers import (
     validate_simulation_json,
     validate_uploaded_files,
     validate_uploaded_fmus,
+    write_fmu_to_upload_dir,
 )
 from simulation_orchestrator.helpers.generic_helpers import ListHelpers
 from simulation_orchestrator.dataclasses.FmuSimulationStatus import FmuSimulationStatus
@@ -32,9 +33,7 @@ simulation_executor: SimulationExecutor
 data_handler: DataHandler
 
 
-def create_new_simulation(
-    simulation_post: SimulationPost, fmu_files: typing.List[UploadFile]
-) -> Simulation:
+def create_new_simulation(simulation_post: SimulationPost) -> Simulation:
     # check if esdl is readable
     parse_esdl.get_energy_system(simulation_post.esdl_base64string)
 
@@ -49,14 +48,13 @@ def create_new_simulation(
         log_level=simulation_post.log_level,
         calculation_services=simulation_post.calculation_services,
         esdl_base64string=simulation_post.esdl_base64string,
-        fmu_files=fmu_files,
     )
 
     return new_simulation
 
 
 def start_new_simulation(simulation_post: SimulationPost) -> SimulationId:
-    new_simulation = create_new_simulation(simulation_post, [])
+    new_simulation = create_new_simulation(simulation_post)
 
     model_list = parse_esdl.get_model_list(
         new_simulation.calculation_services, new_simulation.esdl_base64string
@@ -74,7 +72,7 @@ def start_new_simulation(simulation_post: SimulationPost) -> SimulationId:
 
 
 def queue_new_simulation(simulation_post: SimulationPost) -> SimulationId:
-    new_simulation = create_new_simulation(simulation_post, [])
+    new_simulation = create_new_simulation(simulation_post)
     model_list = parse_esdl.get_model_list(
         new_simulation.calculation_services, new_simulation.esdl_base64string
     )
@@ -151,8 +149,10 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
         return FmuSimulationStatus(True, error_msg, None)
 
     simulation_id = simulation_inventory.add_simulation(
-        create_new_simulation(simulation_post, fmu_files)
+        create_new_simulation(simulation_post)
     )
+
+    paths = write_fmu_to_upload_dir(fmu_files, simulation_id)
 
     model_descriptions: dict[str, ModelDescription] = {}
     all_input_mappings = ListHelpers.flatten_list_of_lists(
@@ -162,9 +162,8 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
         ]
     )
 
-    error_msg = validate_uploaded_fmus(
-        fmu_files, simulation_id, model_descriptions, all_input_mappings
-    )
+    error_msg = validate_uploaded_fmus(paths, model_descriptions, all_input_mappings)
+
     if error_msg != "":
         simulation_inventory.remove_simulation(simulation_id)
         return FmuSimulationStatus(True, error_msg, None)
@@ -185,6 +184,7 @@ def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
         simulation_inventory.remove_simulation(simulation_id)
         return FmuSimulationStatus(True, error_msg, None)
 
+    new_simulation.fmu_files.extend(paths)
     simulation_inventory.add_models_to_simulation(simulation_id, model_list)
     simulation_executor.deploy_simulation(new_simulation)
 
