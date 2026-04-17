@@ -2,6 +2,8 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 import unittest
+import shutil
+
 from unittest.mock import MagicMock
 
 from fastapi import UploadFile
@@ -95,6 +97,15 @@ class TestActionsLogic(TestActions):
 
 
 class TestFmuActions(TestActions):
+    def tearDown(self):
+        upload_path = (
+            Path(__file__).parent.parent
+            / "simulation_orchestrator"
+            / "helpers"
+            / "uploaded_fmus"
+        )
+        shutil.rmtree(upload_path)
+
     def test_given_invalid_fmu_file_upload_status_error_is_returned(self):
         # Arrange
         test_path = Path(__file__).parent / "fmu_testcases" / "invalid"
@@ -137,7 +148,11 @@ class TestFmuActions(TestActions):
                     actions.simulation_inventory.activeSimulations.keys()
                 )[0]
                 self.assertEqual(
-                    len(actions.simulation_inventory.activeSimulations[simulation_id]),
+                    len(
+                        actions.simulation_inventory.activeSimulations[
+                            simulation_id
+                        ].fmu_files
+                    ),
                     2,
                 )
 
