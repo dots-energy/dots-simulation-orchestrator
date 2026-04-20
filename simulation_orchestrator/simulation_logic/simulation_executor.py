@@ -76,11 +76,11 @@ class SimulationExecutor:
         message_enpoint: h.HelicsEndpoint,
         models: List[Model],
     ):
-        new_message = h.helicsEndpointCreateMessage(message_enpoint)
-        h.helicsMessageSetData(new_message, data)
         for model in models:
             endpoint = f"{model.model_id}/{endpoint_name}"
             LOGGER.info(f"Sending Message to {endpoint} with {len(data)} bytes of data")
+            new_message = h.helicsEndpointCreateMessage(message_enpoint)
+            h.helicsMessageSetData(new_message, data)
             h.helicsMessageSetDestination(message_enpoint, endpoint)
             h.helicsEndpointSendMessage(message_enpoint, new_message)
 
