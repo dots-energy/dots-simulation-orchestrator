@@ -78,11 +78,18 @@ class SimulationExecutor:
     ):
         for model in models:
             endpoint = f"{model.model_id}/{endpoint_name}"
-            LOGGER.info(f"Sending Message to {endpoint} with {len(data)} bytes of data")
+            LOGGER.info(
+                f"Sending Message from {h.helicsEndpointGetName(message_enpoint)} to {endpoint} with {len(data)} bytes of data"
+            )
             new_message = h.helicsEndpointCreateMessage(message_enpoint)
             h.helicsMessageSetData(new_message, data)
-            h.helicsMessageSetDestination(message_enpoint, endpoint)
-            h.helicsEndpointSendMessage(message_enpoint, new_message)
+            if h.helicsMessageIsValid(new_message):
+                h.helicsMessageSetDestination(message_enpoint, endpoint)
+                h.helicsEndpointSendMessage(message_enpoint, new_message)
+            else:
+                LOGGER.error(
+                    f"Helics message with {h.helicsMessageGetByteCount(new_message)} bytes is invalid "
+                )
 
     def _send_init_data(
         self, simulation: Simulation, models: List[Model], broker_ip: str
