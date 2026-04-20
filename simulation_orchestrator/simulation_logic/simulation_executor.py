@@ -80,7 +80,7 @@ class SimulationExecutor:
         h.helicsMessageSetData(new_message, data)
         for model in models:
             endpoint = f"{model.model_id}/{endpoint_name}"
-            LOGGER.info(f"Sedning Message to {endpoint}")
+            LOGGER.info(f"Sending Message to {endpoint} with {len(data)} bytes of data")
             h.helicsMessageSetDestination(message_enpoint, endpoint)
             h.helicsEndpointSendMessage(message_enpoint, new_message)
 
