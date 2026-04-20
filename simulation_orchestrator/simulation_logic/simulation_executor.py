@@ -80,6 +80,7 @@ class SimulationExecutor:
         h.helicsMessageSetData(new_message, data)
         for model in models:
             endpoint = f"{model.model_id}/{endpoint_name}"
+            LOGGER.info(f"Sedning Message to {endpoint}")
             h.helicsMessageSetDestination(message_enpoint, endpoint)
             h.helicsEndpointSendMessage(message_enpoint, new_message)
 
@@ -124,9 +125,10 @@ class SimulationExecutor:
                     f"Sending part {i / step_size} of esdl file with: {len(esdl_file_part)} bytes"
                 )
 
-            self._send_message_to_models(
-                esdl_file_part, "esdl", message_enpoint, models
-            )
+                self._send_message_to_models(
+                    esdl_file_part, "esdl", message_enpoint, models
+                )
+
             for fmu_file_name, fmu_file in fmu_files_as_bytes.items():
                 if i < len(fmu_file):
                     fmu_file_part = fmu_file[i : i + step_size]
