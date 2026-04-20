@@ -104,7 +104,8 @@ class TestFmuActions(TestActions):
             / "helpers"
             / "uploaded_fmus"
         )
-        shutil.rmtree(upload_path)
+        if upload_path.exists():
+            shutil.rmtree(upload_path)
 
     def test_given_invalid_fmu_file_upload_status_error_is_returned(self):
         # Arrange
