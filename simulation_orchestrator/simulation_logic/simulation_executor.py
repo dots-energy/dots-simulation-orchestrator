@@ -84,7 +84,7 @@ class SimulationExecutor:
             new_message = h.helicsEndpointCreateMessage(message_enpoint)
             h.helicsMessageSetData(new_message, data)
             if h.helicsMessageIsValid(new_message):
-                h.helicsMessageSetDestination(message_enpoint, endpoint)
+                h.helicsMessageSetDestination(new_message, endpoint)
                 h.helicsEndpointSendMessage(message_enpoint, new_message)
             else:
                 LOGGER.error(
