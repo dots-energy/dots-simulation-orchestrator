@@ -423,6 +423,8 @@ class TestDeploymentLogic(TestSimulationExecutor):
         self.helicsFederateRequestTime = h.helicsFederateRequestTime
         self.helicsFederateDisconnect = h.helicsFederateDisconnect
         self.helicsFederateDestroy = h.helicsFederateDestroy
+        self.helicsMessageIsValid = h.helicsMessageIsValid
+        self.helicsEndpointGetName = h.helicsEndpointGetName
 
         h.helicsMessageSetDestination = MagicMock()
         h.helicsEndpointSendMessage = MagicMock()
@@ -433,6 +435,8 @@ class TestDeploymentLogic(TestSimulationExecutor):
         h.helicsFederateRequestTime = MagicMock()
         h.helicsFederateDisconnect = MagicMock()
         h.helicsFederateDestroy = MagicMock()
+        h.helicsMessageIsValid = MagicMock(return_value=True)
+        h.helicsEndpointGetName = MagicMock(return_value="test")
 
     def tearDown(self):
         super().tearDown()
@@ -445,6 +449,8 @@ class TestDeploymentLogic(TestSimulationExecutor):
         h.helicsFederateRequestTime = self.helicsFederateRequestTime
         h.helicsFederateDisconnect = self.helicsFederateDisconnect
         h.helicsFederateDestroy = self.helicsFederateDestroy
+        h.helicsMessageIsValid = self.helicsMessageIsValid
+        h.helicsEndpointGetName = self.helicsEndpointGetName
 
     def test_when_deployment_is_started_esdl_file_is_send_in_parts(self):
         actions.simulation_inventory = SimulationInventory()
