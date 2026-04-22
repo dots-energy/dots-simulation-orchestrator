@@ -7,7 +7,7 @@ import zipfile
 
 from simulation_orchestrator.model_services_orchestrator.k8s_api import (
     K8sApi,
-    HELICS_BROKER_PORT,
+    HELICS_BROKER_INIT_PORT,
 )
 from simulation_orchestrator.io.log import LOGGER
 import helics as h
@@ -39,7 +39,7 @@ class SimulationExecutor:
     def _create_new_so_federate_info(self, broker_ip):
         federate_info = h.helicsCreateFederateInfo()
         h.helicsFederateInfoSetBroker(federate_info, broker_ip)
-        h.helicsFederateInfoSetBrokerPort(federate_info, HELICS_BROKER_PORT)
+        h.helicsFederateInfoSetBrokerPort(federate_info, HELICS_BROKER_INIT_PORT)
         h.helicsFederateInfoSetCoreType(federate_info, h.HelicsCoreType.ZMQ)
         h.helicsFederateInfoSetIntegerProperty(
             federate_info, h.HelicsProperty.INT_LOG_LEVEL, h.HelicsLogLevel.DEBUG
