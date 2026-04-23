@@ -1,6 +1,12 @@
 from datetime import datetime
+from io import BytesIO
+from pathlib import Path
 import unittest
+import shutil
+
 from unittest.mock import MagicMock
+
+from fastapi import UploadFile
 
 from simulation_orchestrator import actions, parse_esdl
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
@@ -35,12 +41,21 @@ class TestActions(unittest.TestCase):
         self.parse_esdl_get_energy_system = parse_esdl.get_energy_system
         self.actions_simulation_executor = actions.simulation_executor.deploy_simulation
         actions.simulation_executor.deploy_simulation = MagicMock()
+
+    def tearDown(self):
+        actions.simulation_executor.deploy_simulation = self.actions_simulation_executor
+
+
+class TestActionsLogic(TestActions):
+    def setUp(self):
+        super().setUp()
         self.mock_model = Model(
             "test",
             1,
             ["test"],
-            CalculationServiceInfo("test", "test", 1, "test", ["test"], []),
+            CalculationServiceInfo("test", "test", 1, "test", ["test"], [], [], []),
             ProgressState.DEPLOYED,
+            [],
         )
         parse_esdl.get_model_list = MagicMock(return_value=[self.mock_model])
         parse_esdl.get_energy_system = MagicMock(return_value=None)
@@ -48,7 +63,6 @@ class TestActions(unittest.TestCase):
     def tearDown(self) -> None:
         parse_esdl.get_model_list = self.parse_esdl_get_model_list
         parse_esdl.get_energy_system = self.parse_esdl_get_energy_system
-        actions.simulation_executor.deploy_simulation = self.actions_simulation_executor
 
     def test_start_simulations_registers_and_deploys_simulation_correctly(self):
         # execute
@@ -80,6 +94,79 @@ class TestActions(unittest.TestCase):
 
         # assert
         actions.simulation_executor.deploy_simulation.assert_called_once()
+
+
+class TestFmuActions(TestActions):
+    def tearDown(self):
+        upload_path = (
+            Path(__file__).parent.parent
+            / "simulation_orchestrator"
+            / "helpers"
+            / "uploaded_fmus"
+        )
+        if upload_path.exists():
+            shutil.rmtree(upload_path)
+
+    def test_given_invalid_fmu_file_upload_status_error_is_returned(self):
+        # Arrange
+        test_path = Path(__file__).parent / "fmu_testcases" / "invalid"
+        for test_case_folder in test_path.iterdir():
+            with self.subTest(test_case=str(test_case_folder)):
+                files = []
+                for file in test_case_folder.iterdir():
+                    with open(file, "rb") as test_file:
+                        io = BytesIO(test_file.read())
+                        files.append(UploadFile(filename=file.name, file=io))
+
+                # Act
+                fmu_simulation_status = actions.add_fmu_simulation(files)
+
+                # Assert
+                self.assertTrue(fmu_simulation_status.has_error)
+                self.assertNotEqual(fmu_simulation_status.error_message, "")
+                self.assertEqual(actions.simulation_inventory.activeSimulations, {})
+
+    def test_given_valid_fmu_simulation_file_upload_valid_status_is_returned(self):
+        # Arrange
+        test_path = Path(__file__).parent / "fmu_testcases" / "valid"
+        for test_case_folder in test_path.iterdir():
+            with self.subTest(test_case=str(test_case_folder)):
+                files = []
+                for file in test_case_folder.iterdir():
+                    with open(file, "rb") as test_file:
+                        io = BytesIO(test_file.read())
+                        files.append(UploadFile(filename=file.name, file=io))
+
+                # Act
+                fmu_simulation_status = actions.add_fmu_simulation(files)
+
+                # Assert
+                self.assertFalse(fmu_simulation_status.has_error)
+                self.assertEqual(fmu_simulation_status.error_message, "")
+                self.assertEqual(len(actions.simulation_inventory.activeSimulations), 1)
+
+                simulation_id = list(
+                    actions.simulation_inventory.activeSimulations.keys()
+                )[0]
+                simulation = actions.simulation_inventory.activeSimulations[
+                    simulation_id
+                ]
+                self.assertEqual(len(simulation.fmu_files), 2)
+
+                created_models = simulation.model_inventory.get_models()
+                self.assertEqual(len(created_models), 2)
+                econn_model = next(
+                    model
+                    for model in created_models
+                    if model.calc_service.esdl_type == "EConnection"
+                )
+                edemand_model = next(
+                    model
+                    for model in created_models
+                    if model.calc_service.esdl_type == "ElectricityDemand"
+                )
+                self.assertEqual(len(econn_model.required_fmus), 1)
+                self.assertEqual(len(edemand_model.required_fmus), 0)
 
 
 if __name__ == "__main__":

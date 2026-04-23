@@ -4,9 +4,10 @@ from threading import Thread
 import time
 from typing import List
 import zipfile
+
 from simulation_orchestrator.model_services_orchestrator.k8s_api import (
     K8sApi,
-    HELICS_BROKER_PORT,
+    HELICS_BROKER_INIT_PORT,
 )
 from simulation_orchestrator.io.log import LOGGER
 import helics as h
@@ -38,16 +39,22 @@ class SimulationExecutor:
     def _create_new_so_federate_info(self, broker_ip):
         federate_info = h.helicsCreateFederateInfo()
         h.helicsFederateInfoSetBroker(federate_info, broker_ip)
-        h.helicsFederateInfoSetBrokerPort(federate_info, HELICS_BROKER_PORT)
+        h.helicsFederateInfoSetBrokerPort(federate_info, HELICS_BROKER_INIT_PORT)
         h.helicsFederateInfoSetCoreType(federate_info, h.HelicsCoreType.ZMQ)
         h.helicsFederateInfoSetIntegerProperty(
             federate_info, h.HelicsProperty.INT_LOG_LEVEL, h.HelicsLogLevel.DEBUG
         )
         return federate_info
 
-    def _deploy_model_and_await(self, simulation: Simulation, model: Model, broker_ip: str, calculation_service_names: List[str]) -> bool:
+    def _deploy_model_and_await(
+        self,
+        simulation: Simulation,
+        model: Model,
+        broker_ip: str,
+        calculation_service_names: List[str],
+    ) -> bool:
         """Deploy a single model and wait for it to reach running state.
-        
+
         Returns True if deployment was successful, False otherwise.
         """
         self.k8s_api.deploy_model(
@@ -62,33 +69,90 @@ class SimulationExecutor:
         )
         return pod_ip is not None
 
-    def _send_esdl_file(self, simulation: Simulation, models: List[Model], broker_ip):
+    def _send_message_to_models(
+        self,
+        data: bytes,
+        endpoint_name: str,
+        message_enpoint: h.HelicsEndpoint,
+        models: List[Model],
+    ):
+        for model in models:
+            endpoint = f"{model.model_id}/{endpoint_name}"
+            LOGGER.info(
+                f"Sending Message from {h.helicsEndpointGetName(message_enpoint)} to {endpoint} with {len(data)} bytes of data"
+            )
+            new_message = h.helicsEndpointCreateMessage(message_enpoint)
+            h.helicsMessageSetData(new_message, data)
+            if h.helicsMessageIsValid(new_message):
+                h.helicsMessageSetDestination(new_message, endpoint)
+                h.helicsEndpointSendMessage(message_enpoint, new_message)
+            else:
+                LOGGER.error(
+                    f"Helics message with {h.helicsMessageGetByteCount(new_message)} bytes is invalid "
+                )
+
+    def _send_init_data(
+        self, simulation: Simulation, models: List[Model], broker_ip: str
+    ):
+        fmu_files_as_bytes: dict[str, bytes] = {}
+
+        for fmu_file in simulation.fmu_files:
+            with open(fmu_file, "rb") as f:
+                fmu_files_as_bytes[fmu_file.name] = f.read()
+            fmu_file.unlink()
+
+        simulation.fmu_files[0].parent.rmdir()
+
         federate_info = self._create_new_so_federate_info(broker_ip)
-        LOGGER.info("Creating federate to send esdl file: ")
+
+        LOGGER.info("Creating federate to send config files: ")
         message_federate = h.helicsCreateMessageFederate(
-            f"{simulation.simulation_id}-esdl_broker", federate_info
+            f"{simulation.simulation_id}-init_data_broker", federate_info
         )
         message_enpoint = h.helicsFederateRegisterEndpoint(
             message_federate, "simulation-orchestrator"
         )
+
         step_size = 10000000
+        full_esdl_as_bytes = simulation.esdl_base64string.encode()
+        file_lenghts = [len(fmu_file) for fmu_file in fmu_files_as_bytes.values()]
+        file_lenghts.append(len(full_esdl_as_bytes))
+
+        LOGGER.info(f"File lengths: {file_lenghts}")
 
         h.helicsFederateEnterExecutingMode(message_federate)
-        for i in range(0, len(simulation.esdl_base64string), step_size):
+
+        for i in range(0, max(file_lenghts), step_size):
             FEDERATE_OFFSET = 2
             time_to_request = i / step_size + FEDERATE_OFFSET
             h.helicsFederateRequestTime(message_federate, time_to_request)
-            esdl_message = h.helicsEndpointCreateMessage(message_enpoint)
-            esdl_file_part = simulation.esdl_base64string[i : i + step_size]
-            LOGGER.info(
-                f"Sending part {i / step_size} of esdl file with: {len(esdl_file_part)} characters"
-            )
-            h.helicsMessageSetData(esdl_message, esdl_file_part.encode())
-            for model in models:
-                endpoint = f"{model.model_id}/esdl"
-                h.helicsMessageSetDestination(esdl_message, endpoint)
-                LOGGER.info(f"Sending esdl file to: {endpoint}")
-                h.helicsEndpointSendMessage(message_enpoint, esdl_message)
+            if i < len(full_esdl_as_bytes):
+                esdl_file_part = full_esdl_as_bytes[i : i + step_size]
+                LOGGER.info(
+                    f"Sending part {i / step_size} of esdl file with: {len(esdl_file_part)} bytes"
+                )
+
+                self._send_message_to_models(
+                    esdl_file_part, "esdl", message_enpoint, models
+                )
+
+            for fmu_file_name, fmu_file in fmu_files_as_bytes.items():
+                if i < len(fmu_file):
+                    fmu_file_part = fmu_file[i : i + step_size]
+                    models_that_need_to_receive = [
+                        model
+                        for model in models
+                        if fmu_file_name in model.required_fmus
+                    ]
+                    self._send_message_to_models(
+                        fmu_file_part,
+                        f"fmu/{fmu_file_name}",
+                        message_enpoint,
+                        models_that_need_to_receive,
+                    )
+                    LOGGER.info(
+                        f"Sending part {i / step_size} of fmu file: {fmu_file_name} with: {len(fmu_file_part)} bytes"
+                    )
 
         h.helicsFederateRequestTime(message_federate, h.HELICS_TIME_MAXTIME)
         h.helicsFederateDisconnect(message_federate)
@@ -110,8 +174,7 @@ class SimulationExecutor:
                 calculation_service.esdl_type
                 for calculation_service in simulation.calculation_services
             ]
-            
-            # Deploy all models in parallel
+
             deploy_error = False
             with ThreadPoolExecutor(max_workers=len(models)) as executor:
                 futures = {
@@ -120,19 +183,18 @@ class SimulationExecutor:
                         simulation,
                         model,
                         broker_ip,
-                        calculation_service_names
+                        calculation_service_names,
                     ): model
                     for model in models
                 }
-                
-                # Wait for all deployments to complete and check for errors
+
                 for future in as_completed(futures):
                     success = future.result()
                     if not success:
                         deploy_error = True
 
             if not deploy_error:
-                self._send_esdl_file(simulation, models, broker_ip)
+                self._send_init_data(simulation, models, broker_ip)
                 self.simulation_inventory.set_state_for_all_models(
                     simulation.simulation_id, ProgressState.DEPLOYED
                 )

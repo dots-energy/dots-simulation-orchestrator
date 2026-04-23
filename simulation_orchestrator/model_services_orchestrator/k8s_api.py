@@ -28,8 +28,9 @@ from simulation_orchestrator.simulation_logic.simulation_inventory import Simula
 from simulation_orchestrator.types import ModelId, SimulationId, SimulatorId
 
 HELICS_BROKER_POD_NAME = "helics-broker"
-HELICS_BROKER_IMAGE_URL = "ghcr.io/dots-energy/dots-helics-broker:latest"
-HELICS_BROKER_PORT = 30000
+HELICS_BROKER_IMAGE_URL = "ghcr.io/dots-energy/dots-helics-broker:fmu_support"
+HELICS_BROKER_INIT_PORT = 30000
+HELICS_BROKER_EXEC_PORT = 30001
 
 
 class PodStatus:
@@ -154,7 +155,12 @@ class K8sApi:
             broker_pod_name,
             HELICS_BROKER_IMAGE_URL,
             [
-                client.V1EnvVar("HELICS_BROKER_PORT", str(HELICS_BROKER_PORT)),
+                client.V1EnvVar(
+                    "HELICS_BROKER_INIT_PORT", str(HELICS_BROKER_INIT_PORT)
+                ),
+                client.V1EnvVar(
+                    "HELICS_BROKER_EXEC_PORT", str(HELICS_BROKER_EXEC_PORT)
+                ),
                 client.V1EnvVar(
                     "AMOUNT_OF_INITIALIZATION_MESSAGE_FEDERATES",
                     str(amount_of_federates_esdl_message),
@@ -177,18 +183,21 @@ class K8sApi:
         esdl_types_calculation_services: typing.List[str],
     ) -> bool:
         pod_name = model.pod_name
-        LOGGER.info(f"Deploying pod {pod_name}")
+        LOGGER.info(
+            f"Deploying pod {pod_name} with model id: {model.model_id} and required fmus: {model.required_fmus}"
+        )
         labels = {
             "simulator_id": simulation.simulator_id,
             "simulation_id": simulation.simulation_id,
             "model_id": model.model_id,
             "keep_logs_hours": str(simulation.keep_logs_hours),
         }
-        env_vars = self.generic_model_env_var
+        env_vars = self.generic_model_env_var.copy()
         env_vars["esdl_ids"] = ";".join(model.esdl_ids)
         env_vars["esdl_type"] = model.calc_service.esdl_type
         env_vars["broker_ip"] = broker_ip
-        env_vars["broker_port"] = str(HELICS_BROKER_PORT)
+        env_vars["helics_broker_init_port"] = str(HELICS_BROKER_INIT_PORT)
+        env_vars["helics_broker_exec_port"] = str(HELICS_BROKER_EXEC_PORT)
         env_vars["simulation_id"] = simulation.simulation_id
         env_vars["model_id"] = model.model_id
         env_vars["calculation_services"] = ";".join(esdl_types_calculation_services)
@@ -201,6 +210,16 @@ class K8sApi:
         env_vars["log_level"] = simulation.log_level
         for env_var_value in model.calc_service.additional_environment_variables:
             env_vars[env_var_value.name] = env_var_value.value
+
+        if len(model.required_fmus) > 0:
+            env_vars["required_fmus"] = ";".join(model.required_fmus)
+            env_vars["fmu_database_variables"] = ";".join(
+                model.calc_service.fmu_database_variables
+            )
+            env_vars["fmu_input_mapping"] = (
+                f"[{','.join([instance.model_dump_json() for instance in model.calc_service.fmu_input_variables])}]"
+            )
+
         return self.deploy_new_pod(
             pod_name,
             model.calc_service.service_image_url,

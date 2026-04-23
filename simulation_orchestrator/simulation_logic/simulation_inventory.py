@@ -12,11 +12,13 @@
 #  Manager:
 #      TNO
 
+from pathlib import Path
 import typing
 import uuid
 from datetime import datetime, timedelta
 
-from simulation_orchestrator.helpers.string_helpers import StringHelpers
+
+from simulation_orchestrator.helpers.generic_helpers import StringHelpers
 
 from threading import Lock
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
@@ -50,9 +52,11 @@ class Simulation:
 
     current_time_step_nr: int
     calculation_start_datetime: datetime
+    fmu_files: typing.List[Path]
     calculation_end_datetime: typing.Optional[datetime]
     current_step_calculation_start_datetime: typing.Optional[datetime]
     modelparameters_start_datetime: typing.Optional[datetime]
+
     model_inventory: ModelInventory
     error_message: str
 
@@ -89,6 +93,7 @@ class Simulation:
         self.error_message = ""
         self.terminated = False
         self.deployed_correctly = False
+        self.fmu_files = []
 
         self.lock = Lock()
 
@@ -114,6 +119,10 @@ class SimulationInventory:
 
         self.activeSimulations.update({new_simulation.simulation_id: new_simulation})
         return new_simulation.simulation_id
+
+    def remove_simulation(self, simulation_id: SimulationId):
+        if simulation_id in self.activeSimulations:
+            self.activeSimulations.pop(simulation_id)
 
     def queue_simulation(self, new_simulation: Simulation) -> SimulationId:
         new_simulation.simulation_id = self.add_simulation(new_simulation)
@@ -257,19 +266,3 @@ class SimulationInventory:
             return f"Simulation id '{simulation_id}' could not be found."
         else:
             return progress_state_description[state]
-
-    def start_step_calculation_time_counting(self, simulation_id: SimulationId):
-        self.get_simulation(
-            simulation_id
-        ).current_step_calculation_start_datetime = datetime.now()
-
-    def start_model_parameters_time_counting(self, simulation_id: SimulationId):
-        self.get_simulation(
-            simulation_id
-        ).modelparameters_start_datetime = datetime.now()
-
-    def lock_simulation(self, simulation_id: SimulationId):
-        self.get_simulation(simulation_id).lock.acquire()
-
-    def release_simulation(self, simulation_id: SimulationId):
-        self.get_simulation(simulation_id).lock.release()

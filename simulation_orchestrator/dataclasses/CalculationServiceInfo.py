@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
+from simulation_orchestrator.rest.schemas.FmuInputVariable import FmuInputVariable
 from simulation_orchestrator.rest.schemas.EnvironmentVariable import EnvironmentVariable
 from simulation_orchestrator.types import EsdlId
 
@@ -13,3 +14,5 @@ class CalculationServiceInfo:
     esdl_type: str
     esdl_ids: List[EsdlId]
     additional_environment_variables: List[EnvironmentVariable]
+    fmu_database_variables: List[str]
+    fmu_input_variables: List[FmuInputVariable]
