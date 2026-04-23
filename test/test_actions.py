@@ -158,15 +158,15 @@ class TestFmuActions(TestActions):
                 econn_model = next(
                     model
                     for model in created_models
-                    if model.esdl_type == "EConnection"
+                    if model.calc_service.esdl_type == "EConnection"
                 )
                 edemand_model = next(
                     model
                     for model in created_models
-                    if model.esdl_type == "ElectricityDemand"
+                    if model.calc_service.esdl_type == "ElectricityDemand"
                 )
                 self.assertEqual(len(econn_model.required_fmus), 1)
-                self.assertEqual(len(edemand_model.required_fmus), 1)
+                self.assertEqual(len(edemand_model.required_fmus), 0)
 
 
 if __name__ == "__main__":

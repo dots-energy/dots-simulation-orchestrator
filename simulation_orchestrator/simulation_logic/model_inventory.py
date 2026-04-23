@@ -14,7 +14,6 @@ class Model:
     esdl_ids: typing.List[str]
     model_instance: int
     service_image_url: str
-    esdl_type: str
     pod_name: str
     current_state: ProgressState
 
