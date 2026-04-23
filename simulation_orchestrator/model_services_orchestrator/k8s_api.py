@@ -192,7 +192,7 @@ class K8sApi:
             "model_id": model.model_id,
             "keep_logs_hours": str(simulation.keep_logs_hours),
         }
-        env_vars = self.generic_model_env_var
+        env_vars = self.generic_model_env_var.copy()
         env_vars["esdl_ids"] = ";".join(model.esdl_ids)
         env_vars["esdl_type"] = model.calc_service.esdl_type
         env_vars["broker_ip"] = broker_ip
