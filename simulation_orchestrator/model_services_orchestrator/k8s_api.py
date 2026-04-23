@@ -183,7 +183,9 @@ class K8sApi:
         esdl_types_calculation_services: typing.List[str],
     ) -> bool:
         pod_name = model.pod_name
-        LOGGER.info(f"Deploying pod {pod_name}")
+        LOGGER.info(
+            f"Deploying pod {pod_name} with model id: {model.model_id} and required fmus: {model.required_fmus}"
+        )
         labels = {
             "simulator_id": simulation.simulator_id,
             "simulation_id": simulation.simulation_id,
