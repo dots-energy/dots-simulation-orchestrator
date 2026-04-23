@@ -14,3 +14,7 @@ class FmuInputVariable(BaseModel):
         default="<<CalculationServiceInputName>>",
         description="The name of the output variable of the calculation service that should be mapped to the FMU input variable",
     )
+    calculation_service_input_unit: str = Field(
+        default="<<CalculationServiceInputUnit>>",
+        description="The unit of the output variable of the calculation service that should be mapped to the FMU input variable",
+    )

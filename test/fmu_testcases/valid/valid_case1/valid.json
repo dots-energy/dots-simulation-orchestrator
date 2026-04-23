@@ -8,7 +8,7 @@
       {
         "esdl_type": "ElectricityDemand",
         "calc_service_name": "edemandservice",
-        "service_image_url": "ghcr.io/dots-energy-services/edemandservice:latest",
+        "service_image_url": "ghcr.io/dots-energy-services/edemandservice:fmu-support-test",
         "nr_of_models": 1
       }, 
       {
@@ -20,7 +20,8 @@
           {
             "fmu_input_name": "variable_input",
             "esdl_type_input": "ElectricityDemand",
-            "calculation_service_input_name": "current_active_power"
+            "calculation_service_input_name": "current_active_power",
+            "calculation_service_input_unit" : "W"
           }
         ]
       }
