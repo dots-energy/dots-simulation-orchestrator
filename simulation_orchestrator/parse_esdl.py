@@ -11,6 +11,7 @@ from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
 )
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import ProgressState
+from simulation_orchestrator.io.log import LOGGER
 
 
 def get_energy_system(esdl_base64string: str) -> EnergySystem:
@@ -141,6 +142,8 @@ def add_service_models(
                     and esdl_obj.name not in required_fmus
                 ):
                     required_fmus.append(esdl_obj.name)
+
+        LOGGER.info(f"Appending model {model_id} with fmus {required_fmus}")
         model_list.append(
             Model(
                 model_id=model_id,

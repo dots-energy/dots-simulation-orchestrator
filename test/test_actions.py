@@ -148,14 +148,25 @@ class TestFmuActions(TestActions):
                 simulation_id = list(
                     actions.simulation_inventory.activeSimulations.keys()
                 )[0]
-                self.assertEqual(
-                    len(
-                        actions.simulation_inventory.activeSimulations[
-                            simulation_id
-                        ].fmu_files
-                    ),
-                    2,
+                simulation = actions.simulation_inventory.activeSimulations[
+                    simulation_id
+                ]
+                self.assertEqual(len(simulation.fmu_files), 2)
+
+                created_models = simulation.model_inventory.get_models()
+                self.assertEqual(len(created_models), 2)
+                econn_model = next(
+                    model
+                    for model in created_models
+                    if model.esdl_type == "EConnection"
                 )
+                edemand_model = next(
+                    model
+                    for model in created_models
+                    if model.esdl_type == "ElectricityDemand"
+                )
+                self.assertEqual(len(econn_model.required_fmus), 1)
+                self.assertEqual(len(edemand_model.required_fmus), 1)
 
 
 if __name__ == "__main__":
