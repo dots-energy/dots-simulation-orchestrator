@@ -11,7 +11,8 @@ Please consider citing DOTs if you are using the platform in your research, find
 ```{toctree}
 :caption: "User Manual"
 :maxdepth: 2
-usage/introduction
+usage/co-simulations
+usage/developers
 usage/installation
 usage/running simulations
 usage/calculation services
