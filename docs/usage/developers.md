@@ -1,5 +1,12 @@
-# Introduction
-A simulation framework to model energy systems described in [ESDL](https://energytransition.gitbook.io/esdl/). The framework allows for independent development of calculation services for specific energy objects or services (e.g. PV panel, battery, EV, weather prediction, DSO). The simulations are run on a (cloud) cluster, the results are stored in an [influxdb](https://www.influxdata.com/) database which can be analyzed and viewed online using [grafana](https://grafana.com/), see the component diagram below.  
+# Developers documentation overview
+
+
+## Terminology
+- **calculation service**: a code repository containing simulation logic aimed at a specific energy (ESDL) object, for instance a PV installation, battery or heat pump. Alternatively there are general services, for instance a weather service or aggregator.
+- **calculation model**: a running instance of a calculation service, created from a docker image in the service repository. Multiple models can exist for a single service, set in the calculation service definition.
+- **calculation service definition**: describes which calculation service is used with which ESDL object type. And the calculation service docker image url (on dockerhub) and number of models (each model runs in a separate container).
+
+The framework allows for independent development of calculation services for specific energy objects or services (e.g. PV panel, battery, EV, weather prediction, DSO). The simulations are run on a (cloud) cluster, the results are stored in an [influxdb](https://www.influxdata.com/) database which can be analyzed and viewed online using [grafana](https://grafana.com/), see the component diagram below.  
 ![dots component diagram](https://github.com/EES-TUe/dots-simulation-orchestrator/blob/main/docs/images/static/dots_go-e_component_diagram.png?raw=true)
 
 ## Repositories
@@ -10,11 +17,6 @@ The following repositories are used:
 - [Dots Examples](https://github.com/dots-energy/dots-examples): A repository containing example ESDL files and example post requests to try out and see the full capabilities of DOTs.
 - [Calculation service repositories](https://github.com/dots-energy-services/): Calculation service repositories for different energy components (from 'Calculation Service' template). 
 Each repository contains a README with more information.
-
-## Terminology
-- **calculation service**: a code repository containing calculation logic aimed at a specific energy (ESDL) object, for instance a PV installation, battery or heat pump. Alternatively there are general services, for instance a weather service or aggregator.
-- **calculation model**: a running instance of a calculation service, created from a docker image in the service repository. Multiple models can exist for a single service, set in the calculation service definition.
-- **calculation service definition**: describes which calculation service is used with which ESDL object type. And the calculation service docker image url (on dockerhub) and number of models (each model runs in a separate container).
 
 ## Calculation flow
 What happens when a simulation is started is described in a detailed the sequence diagram below:
