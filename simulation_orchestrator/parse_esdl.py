@@ -4,13 +4,14 @@ from typing import List
 from esdl import esdl, EnergySystem
 from esdl.esdl_handler import EnergySystemHandler
 from base64 import b64decode
-from simulation_orchestrator.helpers.string_helpers import StringHelpers
+from simulation_orchestrator.helpers.generic_helpers import StringHelpers
 from simulation_orchestrator.rest.schemas.CalculationService import CalculationService
 from simulation_orchestrator.dataclasses.CalculationServiceInfo import (
     CalculationServiceInfo,
 )
 from simulation_orchestrator.simulation_logic.model_inventory import Model
 from simulation_orchestrator.types import ProgressState
+from simulation_orchestrator.io.log import LOGGER
 
 
 def get_energy_system(esdl_base64string: str) -> EnergySystem:
@@ -40,11 +41,13 @@ def extract_calculation_service(
 def add_esdl_object(
     service_info_dict: dict[str, CalculationServiceInfo],
     calculation_services: List[CalculationService],
+    esdl_id_obj_mapping: dict[str, esdl.Asset],
     esdl_obj: esdl,
 ):
     calc_service = extract_calculation_service(calculation_services, esdl_obj)
-
     if calc_service:
+        esdl_id_obj_mapping[esdl_obj.id] = esdl_obj
+
         if calc_service.calc_service_name in service_info_dict:
             service_info_dict[calc_service.calc_service_name].esdl_ids.append(
                 esdl_obj.id
@@ -57,11 +60,15 @@ def add_esdl_object(
                 type(esdl_obj).__name__,
                 [esdl_obj.id],
                 calc_service.additional_env_variable,
+                calc_service.fmu_database_variables,
+                calc_service.fmu_input_variables,
             )
 
 
 def get_model_list(
-    calculation_services: List[CalculationService], esdl_base64string: str
+    calculation_services: List[CalculationService],
+    esdl_base64string: str,
+    esdl_id_obj_mapping: dict[str, esdl.Asset] = {},
 ) -> List[Model]:
     try:
         energy_system = get_energy_system(esdl_base64string)
@@ -70,7 +77,9 @@ def get_model_list(
         service_info_dict: dict[str, CalculationServiceInfo] = {}
         # Iterate over all contents of an EnergySystem
         for esdl_obj in energy_system.eAllContents():
-            add_esdl_object(service_info_dict, calculation_services, esdl_obj)
+            add_esdl_object(
+                service_info_dict, calculation_services, esdl_id_obj_mapping, esdl_obj
+            )
 
         if next(
             (
@@ -80,19 +89,28 @@ def get_model_list(
             ),
             False,
         ):
-            add_esdl_object(service_info_dict, calculation_services, energy_system)
+            add_esdl_object(
+                service_info_dict,
+                calculation_services,
+                esdl_id_obj_mapping,
+                energy_system,
+            )
 
         # create model(s) per calculation service
         model_list: List[Model] = []
         for service_info in service_info_dict.values():
-            add_service_models(service_info, model_list)
+            add_service_models(service_info, esdl_id_obj_mapping, model_list)
     except Exception as ex:
         raise IOError(f"Error getting Model list from ESDL: {ex},")
 
     return model_list
 
 
-def add_service_models(service_info: CalculationServiceInfo, model_list):
+def add_service_models(
+    service_info: CalculationServiceInfo,
+    esdl_id_obj_mapping: dict[str, esdl.Asset],
+    model_list: List[Model],
+):
     nr_of_esdl_objects = len(service_info.esdl_ids)
     if service_info.nr_of_models == 0:
         nr_of_objects_in_model = 1
@@ -108,14 +126,24 @@ def add_service_models(service_info: CalculationServiceInfo, model_list):
             service_info.calc_service_name
         )
         model_id = f"{service_calc_name_sanetized}-{i_model}"
+        required_fmus = []
 
         esdl_ids = []
         for i_esdl_id in range(
             (i_model - 1) * nr_of_objects_in_model, i_model * nr_of_objects_in_model
         ):
             if i_esdl_id < len(service_info.esdl_ids):
-                esdl_ids.append(service_info.esdl_ids[i_esdl_id])
+                esdl_id_to_append = service_info.esdl_ids[i_esdl_id]
+                esdl_ids.append(esdl_id_to_append)
+                esdl_obj = esdl_id_obj_mapping[esdl_id_to_append]
+                if (
+                    hasattr(esdl_obj, "name")
+                    and str(esdl_obj.name).endswith(".fmu")
+                    and esdl_obj.name not in required_fmus
+                ):
+                    required_fmus.append(esdl_obj.name)
 
+        LOGGER.info(f"Appending model {model_id} with fmus {required_fmus}")
         model_list.append(
             Model(
                 model_id=model_id,
@@ -123,5 +151,6 @@ def add_service_models(service_info: CalculationServiceInfo, model_list):
                 esdl_ids=esdl_ids,
                 calc_service=service_info,
                 current_state=ProgressState.REGISTERED,
+                required_fmus=required_fmus,
             )
         )

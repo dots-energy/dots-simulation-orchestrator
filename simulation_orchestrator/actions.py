@@ -2,8 +2,20 @@
 
 from io import BytesIO
 import typing
+import esdl
+from fastapi import UploadFile
+from fmpy.model_description import ModelDescription
 
 from simulation_orchestrator.data_handler.data_handler import DataHandler
+from simulation_orchestrator.helpers.fmu_validation_helpers import (
+    validate_all_fmu_models_have_valid_parameters,
+    validate_simulation_json,
+    validate_uploaded_files,
+    validate_uploaded_fmus,
+    write_fmu_to_upload_dir,
+)
+from simulation_orchestrator.helpers.generic_helpers import ListHelpers
+from simulation_orchestrator.dataclasses.FmuSimulationStatus import FmuSimulationStatus
 from simulation_orchestrator.rest.schemas.SimulationPost import SimulationPost
 from simulation_orchestrator import parse_esdl
 from simulation_orchestrator.simulation_logic.simulation_inventory import (
@@ -123,3 +135,57 @@ def get_all_logs_for_simulation_id(simulation_id: SimulationId) -> BytesIO | Non
 
 def get_all_data_for_simulation_id(simulation_id: SimulationId) -> BytesIO:
     return data_handler.get_all_data_for_simulation_id(simulation_id)
+
+
+def add_fmu_simulation(files: typing.List[UploadFile]) -> FmuSimulationStatus:
+    fmu_files: typing.List[UploadFile] = []
+
+    error_msg, json_file = validate_uploaded_files(files, fmu_files)
+    if error_msg != "":
+        return FmuSimulationStatus(True, error_msg, None)
+
+    error_msg, simulation_post = validate_simulation_json(json_file)
+    if error_msg != "":
+        return FmuSimulationStatus(True, error_msg, None)
+
+    simulation_id = simulation_inventory.add_simulation(
+        create_new_simulation(simulation_post)
+    )
+
+    paths = write_fmu_to_upload_dir(fmu_files, simulation_id)
+
+    model_descriptions: dict[str, ModelDescription] = {}
+    all_input_mappings = ListHelpers.flatten_list_of_lists(
+        [
+            calc_service.fmu_input_variables
+            for calc_service in simulation_post.calculation_services
+        ]
+    )
+
+    error_msg = validate_uploaded_fmus(paths, model_descriptions, all_input_mappings)
+
+    if error_msg != "":
+        simulation_inventory.remove_simulation(simulation_id)
+        return FmuSimulationStatus(True, error_msg, None)
+
+    new_simulation = simulation_inventory.get_simulation(simulation_id)
+
+    esdl_id_obj_mapping: dict[str, esdl.Asset] = {}
+    model_list = parse_esdl.get_model_list(
+        new_simulation.calculation_services,
+        new_simulation.esdl_base64string,
+        esdl_id_obj_mapping,
+    )
+
+    error_msg = validate_all_fmu_models_have_valid_parameters(
+        model_descriptions, model_list, esdl_id_obj_mapping
+    )
+    if error_msg != "":
+        simulation_inventory.remove_simulation(simulation_id)
+        return FmuSimulationStatus(True, error_msg, None)
+
+    new_simulation.fmu_files.extend(paths)
+    simulation_inventory.add_models_to_simulation(simulation_id, model_list)
+    simulation_executor.deploy_simulation(new_simulation)
+
+    return FmuSimulationStatus(False, "", simulation_id)

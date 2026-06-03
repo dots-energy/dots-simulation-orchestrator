@@ -1,10 +1,11 @@
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, status, File
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 import typing
 from datetime import timedelta
+
 from simulation_orchestrator.rest.oauth.OAuthUtilities import (
     authenticate_user,
     create_access_token,
@@ -79,6 +80,28 @@ def start_new_simulation(
         *actions.get_simulation_and_status(simulation_id)
     )
 
+    return simulation_status
+
+
+@router.post("/start_fmu_simulation", status_code=201, response_model=SimulationStatus)
+def start_fmu_simulation(
+    current_user: Annotated[User, Depends(get_current_user)],
+    *,
+    files: Annotated[
+        list[UploadFile],
+        File(..., description="Files required to start the FMU simulation"),
+    ],
+):
+    if not files:
+        raise HTTPException(status_code=400, detail="No files uploaded")
+
+    fmu_simulation_status = actions.add_fmu_simulation(files)
+    if fmu_simulation_status.has_error:
+        raise HTTPException(status_code=400, detail=fmu_simulation_status.error_message)
+
+    simulation_status = SimulationStatus.from_simulation_and_status(
+        *actions.get_simulation_and_status(fmu_simulation_status.simulation_id)
+    )
     return simulation_status
 
 
