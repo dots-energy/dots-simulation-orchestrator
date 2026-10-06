@@ -28,7 +28,7 @@ class SimulationStatus(SimulationPost):
             start_date=simulation.simulation_start_datetime,
             nr_of_time_steps=simulation.simulation_duration_in_seconds,
             calculation_services=simulation.calculation_services,
-            esdl_base64string=simulation.esdl_base64string,
+            esdl_base64string="omitted",
             log_level=simulation.log_level,
             simulation_id=simulation.simulation_id,
             simulation_status=status,

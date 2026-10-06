@@ -45,9 +45,15 @@ class SimulationExecutor:
         )
         return federate_info
 
-    def _deploy_model_and_await(self, simulation: Simulation, model: Model, broker_ip: str, calculation_service_names: List[str]) -> bool:
+    def _deploy_model_and_await(
+        self,
+        simulation: Simulation,
+        model: Model,
+        broker_ip: str,
+        calculation_service_names: List[str],
+    ) -> bool:
         """Deploy a single model and wait for it to reach running state.
-        
+
         Returns True if deployment was successful, False otherwise.
         """
         self.k8s_api.deploy_model(
@@ -93,6 +99,7 @@ class SimulationExecutor:
         h.helicsFederateRequestTime(message_federate, h.HELICS_TIME_MAXTIME)
         h.helicsFederateDisconnect(message_federate)
         h.helicsFederateDestroy(message_federate)
+        simulation.esdl_base64string = "cleared"
 
     def _init_simulation(self, simulation: Simulation) -> SoFederateInfo:
         models = simulation.model_inventory.get_models()
@@ -110,7 +117,7 @@ class SimulationExecutor:
                 calculation_service.esdl_type
                 for calculation_service in simulation.calculation_services
             ]
-            
+
             # Deploy all models in parallel
             deploy_error = False
             with ThreadPoolExecutor(max_workers=len(models)) as executor:
@@ -120,11 +127,11 @@ class SimulationExecutor:
                         simulation,
                         model,
                         broker_ip,
-                        calculation_service_names
+                        calculation_service_names,
                     ): model
                     for model in models
                 }
-                
+
                 # Wait for all deployments to complete and check for errors
                 for future in as_completed(futures):
                     success = future.result()
