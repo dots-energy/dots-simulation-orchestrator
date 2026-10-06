@@ -34,8 +34,8 @@ dependencies = [
   "bcrypt==4.1.1",
   "python-jose==3.4.0",
   "helics==3.6.1",
-  "dots-infrastructure==1.0.2",
-  "pandas==2.2.3",
+  "dots-infrastructure==1.0.10",
+  "pandas==3.0.3",
   "pre-commit"
 ]
 

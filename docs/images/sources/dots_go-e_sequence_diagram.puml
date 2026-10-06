@@ -29,20 +29,15 @@ activate influxdb #gold
 activate deploy_plane #3970e4
 
 note over so
-    continuously checks calc step runtime
-    and stops the simulation when max exceeded
+    sets configuration parameters and monitors calculation services
 end note
 
-sim_req -> so : create simulation (http POST request): \n\
-- simulation setup\n\
-- energy system ESDL file \n\
-- calculation services definition
+sim_req -> so : create simulation (http POST request)\n- simulation setup\n- energy system ESDL file\n- calculation services definition
 
 so -> so : generate simulation id
 so --> sim_req : http POST response with simulation id
 
-so -> so : parse ESDL & calculation services\n\
-distribute ESDL objects over calc models
+so -> so : parse ESDL & calculation services\n- distribute ESDL objects over calc models
 so -> deploy_plane : instruct to deploy calculation service model containers with env var deployment parameters (Kubernetes Python Client)
 
     group deploy
@@ -66,24 +61,22 @@ so -> so : if all models are deployed: start simulation
     activate broker #darkred
     service_A -> broker : connect ('n' times) (helics)
     service_B -> broker : connect (helics)
-    so -> broker : connect (helics)
+    so -> broker : connect port 30000 (helics)
     broker -> broker : start federation
     group configure
-    so -> service_A : ESDL Endpoint ('n' times) (helics_message):\n\
-    - ESDL file
+    so -> service_A : ESDL Endpoint ('n' times) (helics_message)\n- ESDL file
+    so -> service_B : ESDL Endpoint ('n' times) (helics_message)\n- ESDL file
+    service_A -> broker : amount of calculations endpoint ('n' times) (helics_message)\n- Integer containing the amount of calculations a service has
+    service_B -> broker : amount of calculations endpoint ('n' times) (helics_message)\n- Integer containing the amount of calculations a service has
     broker -> service_B : finalize federation
     broker -> service_A :
     broker -> so
 
     service_A -> service_A : configure
-    service_B -> service_B : configure:\n\
-    - setup subscription to value topics from\n\
-      all connected ESDL objects\n\
-    - setup influxdb output
+    service_B -> service_B : configure\n - setup subscription to value topics from all connected ESDL objects\n- setup influxdb output
 
-    service_A -> broker : connect ('n' times) (helics)
-    service_B -> broker : connect (helics)
-    so -> broker : connect (helics)
+    service_A -> broker : connect port 30001 ('n' times) (helics)
+    service_B -> broker : connect port 30001 (helics)
 
     service_A -> influxdb : connect to influxdb
     service_B -> influxdb
